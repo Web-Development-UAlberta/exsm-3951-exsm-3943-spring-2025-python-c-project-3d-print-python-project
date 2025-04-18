@@ -48,3 +48,7 @@ Member Removal Policy
 
 If a member is to be removed from the group, evidence of the relevant infraction(s) will be presented to the instructor by the remaining members of the group. Upon approval by the instructor, the member will be ejected from the group and their status in the project will be addressed between them and program administration.
 
+## Ratification of Team Norms
+By committing your name to this document you agree to the subjects and terms therein.
+
+- Jarett Rude
