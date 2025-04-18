@@ -52,3 +52,4 @@ If a member is to be removed from the group, evidence of the relevant infraction
 By committing your name to this document you agree to the subjects and terms therein.
 
 - Jarett Rude
+- Athira Cherukunnam Arumughan
