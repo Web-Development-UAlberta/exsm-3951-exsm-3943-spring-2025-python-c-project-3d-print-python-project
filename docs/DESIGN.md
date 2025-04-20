@@ -167,8 +167,7 @@ Key entities include:
 + Product Catalog
 + Product Customization Page
 + Cart & Checkout
-+ Order Confirmation
-+ Order Tracking
++ Order Confirmation and Tracking
 + User Profile
 
 ### 5.2 Admin Pages
