@@ -1,5 +1,6 @@
 # 3D Printing E-Commerce Platform - Software Design Document
 
+
 ## 1. Introduction
 
 ### 1.1 Purpose
@@ -16,6 +17,7 @@ An order management system that handles order processing, pseudo payment integra
 
 An inventory management system that tracks the available filament materials and colors, automatically updates stock levels based on orders, and generates low-stock notifications for reordering.
 
+
 ## 2. System Architecture
 
 ### 2.1 High-Level Architecture
@@ -31,6 +33,7 @@ The system will follow a three-tier architecture:
 + Backend: Python, Django
 + Database: MySQL
 
+
 ## 3. Database Design
 
 ### 3.1 Entity Relationship Diagram
@@ -40,9 +43,12 @@ Key entities include:
 + Products (3D Models)
 + Materials
 + Colors
++ MaterialColors
++ Suppliers
 + Inventory
 + Orders
 + OrderItems
++ Fulfillments
 
 ### 3.2 Key Tables
 
@@ -68,31 +74,57 @@ Key entities include:
 #### Materials
 + MaterialID (PK)
 + Name
+
+#### Colors
++ ColorID (PK)
++ Name
++ HexCode
+
+#### Suppliers
++ SupplierID (PK)
++ Name
++ Phone
++ Address
++ Email
+
+#### MaterialColors
++ MaterialColorID 
++ ColorID
++ MaterialID
++ SupplierID
++ Name
 + CostPerUnit
 + LeadTime
 + WearandTear
 
-#### Colors
-+ ColorID (PK)
-+ MaterialID (FK)
-+ Name
-+ HexCode
-
 #### Inventory
 + InventoryID (PK)
-+ MaterialID (FK)
-+ ColorID (FK)
++ MaterialColorID (FK)
++ LastOrderedDate
 + QuantityAvailable
 
 #### Orders
 + OrderID (PK)
 + UserID (FK)
 + TotalPrice
-+ Status
 + CreatedAt
 + EstimatedShipDate
 + ExpediteService
 + PaymentStatus
+
+#### OrderItems
++ OrderItemID (PK)
++ OrderID (FK)
++ InventoryID (FK)
++ ProductID (FK)
++ Quantity
++ UnitPrice
+
+#### Fulfillments
++ FulfillmentID (PK)
++ Order(ID)
++ Status
++ StatusChangeDate
 
 
 ## 4. Component Design
@@ -126,6 +158,37 @@ Key entities include:
 + Order management
 + Inventory oversight
 + User management
+
+
+## 5. User Interface Design
+
+### 5.1 Customer-Facing Pages
++ Home Page
++ Product Catalog
++ Product Customization Page
++ Cart & Checkout
++ Order Confirmation
++ Order Tracking
++ User Profile
+
+### 5.2 Admin Pages
++ Dashboard
++ Order Management
++ Inventory Management
++ User Management
++ CSV Upload Interface
+
+
+## 6. Testing Strategy
+
+### 6.1 Unit Testing
++ Component-level testing
++ Business logic validation
+
+### 6.2 Integration Testing
++ Database interaction testing
++ End-to-end user flow testing
++ Admin functions testing
 
 
 # Conclusion
