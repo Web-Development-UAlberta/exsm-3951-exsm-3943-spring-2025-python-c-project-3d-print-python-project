@@ -11,11 +11,9 @@ This document outlines the software design for an e-commerce platform specializi
 
 The system will handle:
 
-A user registration, allowing customers to create accounts, save their preferences, and track their order history.
-
-An order management system that handles order processing, pseudo payment integration (always approved), order tracking, and order status updates.
-
-An inventory management system that tracks the available filament materials and colors, automatically updates stock levels based on orders, and generates low-stock notifications for reordering.
++ A user registration page
++ An order management system 
++ An inventory management system 
 
 
 ## 2. System Architecture
@@ -50,111 +48,35 @@ Key entities include:
 + OrderItems
 + Fulfillments
 
-### 3.2 Key Tables
-
-#### Users
-+ UserID (PK)
-+ Email
-+ PasswordHash
-+ Name
-+ Address
-+ Phone
-+ CreatedAt
-
-#### Products
-+ ProductID (PK)
-+ Name
-+ Description
-+ FilePath
-+ Thumbnail
-+ BasePrice
-+ EstimatedPrintTime
-+ CreatedAt
-  
-#### Materials
-+ MaterialID (PK)
-+ Name
-
-#### Colors
-+ ColorID (PK)
-+ Name
-+ HexCode
-
-#### Suppliers
-+ SupplierID (PK)
-+ Name
-+ Phone
-+ Address
-+ Email
-
-#### MaterialColors
-+ MaterialColorID 
-+ ColorID
-+ MaterialID
-+ SupplierID
-+ Name
-+ CostPerUnit
-+ LeadTime
-+ WearandTear
-
-#### Inventory
-+ InventoryID (PK)
-+ MaterialColorID (FK)
-+ LastOrderedDate
-+ QuantityAvailable
-
-#### Orders
-+ OrderID (PK)
-+ UserID (FK)
-+ TotalPrice
-+ CreatedAt
-+ EstimatedShipDate
-+ ExpediteService
-+ PaymentStatus
-
-#### OrderItems
-+ OrderItemID (PK)
-+ OrderID (FK)
-+ InventoryID (FK)
-+ ProductID (FK)
-+ Quantity
-+ UnitPrice
-
-#### Fulfillments
-+ FulfillmentID (PK)
-+ Order(ID)
-+ Status
-+ StatusChangeDate
-
 
 ## 4. Component Design
 
-## 4.1 User Management
+### 4.1 User Management
 + Registration system
 + User profile management
 + Order history tracking
 + Address management
 
-## 4.2 Product Customization
+### 4.2 Product Customization
 + 3D model selection interface
 + Material and color selection
 + Infill percentage adjustment
 + Base plate customization options
 + Quote calculation
   
-## 4.3 Inventory Management
+### 4.3 Inventory Management
 + CSV upload for materials and 3D objects
 + Automatic inventory deduction on order approval
 + Low-stock notifications
 + Reorder recommendations
 
-## 4.4 Order Processing
+### 4.4 Order Processing
 + Shopping cart functionality
 + Checkout process
 + Fake checkout confirmation page
 + Order confirmation
 
-## 4.5 Admin Dashboard
+### 4.5 Admin Dashboard
 + Order management
 + Inventory oversight
 + User management
@@ -190,6 +112,4 @@ Key entities include:
 + Admin functions testing
 
 
-# Conclusion
-This software design document provides the blueprint for developing the 3D printing e-commerce platform. The system will enable customers to customize and order 3D printed products while providing the entrepreneur with the tools needed to manage inventory, process orders, and manage users.
 
