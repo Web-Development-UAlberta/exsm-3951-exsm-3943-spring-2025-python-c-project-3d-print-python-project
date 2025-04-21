@@ -15,6 +15,10 @@ The system will handle:
 + An order management system 
 + An inventory management system 
 
+The full scope of the 3D printing e-commerce platform is defined in the separately prepared Scope Document - Refer /docs/scope-doc.md.
+
+This Software Design Document focuses on the platform’s technical architecture, component structure, and implementation details.
+
 
 ## 2. System Architecture
 
@@ -47,6 +51,8 @@ Key entities include:
 + Orders
 + OrderItems
 + Fulfillments
+
+Refer /docs/ERD.drawio for detailed ERD diagram with relationship
 
 
 ## 4. Component Design
