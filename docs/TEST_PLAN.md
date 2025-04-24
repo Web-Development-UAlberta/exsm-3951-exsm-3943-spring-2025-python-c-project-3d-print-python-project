@@ -134,7 +134,7 @@ Accessibility Testing
 + Browsers: Chrome, Edge
 + Backend: Python 3.9+, Django 4.0+
 + Database: MySQL 8.0+
-+ Frontend: Node.js 16+, React 18+, Next.js 13+
++ Frontend: React 18+, Next.js 13+
 
 ## 6. Test Cases
 
