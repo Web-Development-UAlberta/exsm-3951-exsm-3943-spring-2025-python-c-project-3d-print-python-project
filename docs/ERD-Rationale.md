@@ -8,7 +8,7 @@ As the 3D print store owner wants to auto calculate the cost of a customized 3D 
 
 - Raw materials and inventory will be calculated on a first in first out basis.
 - The cost of goods sold is calculated by:
-  - Fixed Costs + ((Starting Volume * Infill Multiplier) * Material Wieght * WearAndTear Multiplier)
+  `Cost of Goods Sold = Fixed Costs + ((Model Volume * Infill Multiplier * Density of Material * Cost Per Gram) * Wear and Tear Multiplier)`
 
 ## Tables
 
