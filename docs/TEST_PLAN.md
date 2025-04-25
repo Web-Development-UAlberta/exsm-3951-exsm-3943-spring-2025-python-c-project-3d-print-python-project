@@ -327,3 +327,74 @@ Accessibility Testing
 | AD-DASH-12     | Dashboard responsiveness        | Dashboard displays correctly on various screen sizes           | Medium |
 
 
+## 7. Test Execution
+
+### 7.1 Test Execution Process
+
++ Prepare test environment
++ Execute test cases according to priority
++ Document test results
++ Report defects
++ Retest fixed defects
++ Update test status
+
+### 7.2 Entry Criteria
+
++ Requirements analysis completed
++ Test environment set up
++ Test cases prepared
++ Test data available
+
+### 7.3 Exit Criteria
+
++ All planned test cases executed
++ No critical or high-severity defects open
++ All requirements verified
++ Test coverage metrics met
+
+
+## 8. Defect Management
+
+### 8.1 Defect Lifecycle
+
++ Defect Detection
++ Defect Logging
++ Defect Triage
++ Defect Assignment
++ Defect Resolution
++ Defect Verification
++ Defect Closure
+
+### 8.2 Defect Severity Levels
+
++ Critical : System crash, data loss, security breach
++ High     : Major functionality not working, workaround not available
++ Medium   : Functionality impaired, workaround available
++ Low      : Minor issues, cosmetic defects
+
+### 8.3 Defect Priority Levels
+
++ P1 : Must be fixed immediately
++ P2 : Must be fixed before release
++ P3 : Should be fixed if time permits
++ P4 : Can be fixed in future releases
+
+
+## 9. Test Deliverables
+
+### 9.1 Before Testing
+
++ Test Plan
++ Test Cases
++ Test Scripts
++ Test Data
+
+### 9.2 During Testing
+
++ Defect Reports
++ Status Reports
+
+### 9.3 After Testing
++ Test Summary Report
++ Test Metrics
++ Recommendations
