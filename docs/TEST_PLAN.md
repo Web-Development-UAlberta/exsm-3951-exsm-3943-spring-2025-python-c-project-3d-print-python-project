@@ -237,7 +237,7 @@ Accessibility Testing
 
 ---
 
-#### Order History Page
+#### Order Tracking Page
 
 | Test ID        | Description                    | Expected Result                                           | Priority |
 |----------------|--------------------------------|-----------------------------------------------------------|----------|
@@ -322,11 +322,10 @@ Accessibility Testing
 | AD-INV-04 | Filter by material            | Inventory list shows only items with selected material             | High |
 | AD-INV-05 | Filter by quantity            | Inventory list shows only items within selected quantity range     | High |
 | AD-INV-06 | Display inventory details     | All inventory columns (Item ID, Material Type, Qty, Cost, Action) display correctly | High |
-| AD-INV-07 | Add new material button       | Opens the CSV upload interface                                      | High |
-| AD-INV-08 | Table pagination              | Table pages through multiple inventory items if applicable         | Medium |
-| AD-INV-09 | Action buttons in table       | Action buttons in the Action column function correctly             | High |
-| AD-INV-10 | Empty table state             | Appropriate message shown when no inventory items match criteria   | Medium |
-| AD-INV-11 | Low inventory warning         | Visual indicator for inventory items below threshold              | Medium |
+| AD-INV-07 | Table pagination              | Table pages through multiple inventory items if applicable         | Medium |
+| AD-INV-08 | Action buttons in table       | Action buttons in the Action column function correctly             | High |
+| AD-INV-09 | Empty table state             | Appropriate message shown when no inventory items match criteria   | Medium |
+| AD-INV-10 | Low inventory warning         | Visual indicator for inventory items below threshold              | Medium |
 
 ---
 
