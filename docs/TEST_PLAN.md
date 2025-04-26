@@ -299,13 +299,13 @@ Accessibility Testing
 
 | Test ID        | Description                    | Expected Result                                              | Priority |
 |----------------|--------------------------------|--------------------------------------------------------------|----------|
-| AD-ORD-01 | Load order management page | Page loads with header, search field, filters, order table, and create button | High |
+| AD-ORD-01     | Load order management page | Page loads with header, search field, filters, order table, and create button | High |
 | AD-ORD-02     | Search functionality            | Search returns matching orders based on input criteria       | High |
 | AD-ORD-03     | Filter by text input            | Order list filtered according to text input                  | High |
 | AD-ORD-04     | Filter by material              | Order list shows only orders with selected material          | High |
 | AD-ORD-05     | Filter by status                | Order list shows only orders with selected status            | High |
 | AD-ORD-06     | Filter by priority              | Order list shows only orders with selected priority          | High |
-| AD-ORD-07 | Display order details | All order columns (ID, Model Name, Material, Qty, Status, Priority, Actions) display correctly | High |
+| AD-ORD-07     | Display order details | All order columns (ID, Model Name, Material, Qty, Status, Priority, Actions) display correctly | High |
 | AD-ORD-08     | Table pagination                | Table pages through multiple orders if applicable            | Medium |
 | AD-ORD-09     | Action buttons in table         | Action buttons in the Actions column function correctly      | High |
 | AD-ORD-10     | Empty table state               | Appropriate message shown when no orders match criteria      | Medium |
@@ -322,7 +322,7 @@ Accessibility Testing
 | AD-INV-04 | Filter by material            | Inventory list shows only items with selected material             | High |
 | AD-INV-05 | Filter by quantity            | Inventory list shows only items within selected quantity range     | High |
 | AD-INV-06 | Display inventory details     | All inventory columns (Item ID, Material Type, Qty, Cost, Action) display correctly | High |
-| AD-INV-07 | Add new material button       | Opens add material form/modal                                      | High |
+| AD-INV-07 | Add new material button       | Opens the CSV upload interface                                      | High |
 | AD-INV-08 | Table pagination              | Table pages through multiple inventory items if applicable         | Medium |
 | AD-INV-09 | Action buttons in table       | Action buttons in the Action column function correctly             | High |
 | AD-INV-10 | Empty table state             | Appropriate message shown when no inventory items match criteria   | Medium |
