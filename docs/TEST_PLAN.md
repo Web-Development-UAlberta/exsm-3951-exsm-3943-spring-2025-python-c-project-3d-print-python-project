@@ -215,7 +215,7 @@ Accessibility Testing
 
 ---
 
-#### Create Account Page
+#### Sign up Page
 
 | Test ID        | Description                   | Expected Result                                     | Priority |
 |----------------|-------------------------------|-----------------------------------------------------|----------|
@@ -234,6 +234,28 @@ Accessibility Testing
 | CF-ACCT-13     | Form field focus               | Proper visual indication when field is selected/focused   | Low    |
 | CF-ACCT-14     | Form accessibility             | Form is navigable via keyboard and works with screen readers | High |
 | CF-ACCT-15     | Responsive design              | Form displays properly on different screen sizes          | Medium |
+
+---
+
+#### Order History Page
+
+| Test ID        | Description                    | Expected Result                                           | Priority |
+|----------------|--------------------------------|-----------------------------------------------------------|----------|
+| CF-OH-01 | Load order history page | Page loads with navigation menu, order details, and order summary | High |
+| CF-OH-02 | Navigation menu functionality | All navigation links (Home, Catalog, Customization, Cart, Profile) work correctly | High |
+| CF-OH-03 | Logo functionality | Clicking logo redirects to homepage | Medium |
+| CF-OH-04 | Search functionality | Search icon opens search functionality | Medium |
+| CF-OH-05 | Order number display | Order number displays correctly | High |
+| CF-OH-06 | Order date display | Order date displays correctly in expected format | High |
+| CF-OH-07 | Shipping tier display | Shipping tier displays correctly | High |
+| CF-OH-08 | Payment method display | Payment method (E-Transfer) displays correctly | High |
+| CF-OH-09 | Order summary display | Order summary section shows product image, quantity, and price | High |
+| CF-OH-10 | Product image display | Product image loads properly in order summary | Medium |
+| CF-OH-11 | Delivery address display | Complete delivery address displays with proper formatting | High |
+| CF-OH-12 | Order subtotal display | Order subtotal displays with correct currency format | High |
+| CF-OH-13 | Shipping cost display | Shipping cost displays with correct currency format | High |
+| CF-OH-14 | Order total display | Order total displays with correct currency format | High |
+| CF-OH-15 | Page responsiveness | Order history page displays correctly on different screen sizes | Medium |
 
 
 ### 6.2 Admin Pages
