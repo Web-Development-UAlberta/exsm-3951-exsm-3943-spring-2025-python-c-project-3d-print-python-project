@@ -284,10 +284,9 @@ Accessibility Testing
 | AD-ORD-05     | Filter by status                | Order list shows only orders with selected status            | High |
 | AD-ORD-06     | Filter by priority              | Order list shows only orders with selected priority          | High |
 | AD-ORD-07 | Display order details | All order columns (ID, Model Name, Material, Qty, Status, Priority, Actions) display correctly | High |
-| AD-ORD-08     | Create new order button         | Opens create order form/modal                                | High |
-| AD-ORD-09     | Table pagination                | Table pages through multiple orders if applicable            | Medium |
-| AD-ORD-10     | Action buttons in table         | Action buttons in the Actions column function correctly      | High |
-| AD-ORD-11     | Empty table state               | Appropriate message shown when no orders match criteria      | Medium |
+| AD-ORD-08     | Table pagination                | Table pages through multiple orders if applicable            | Medium |
+| AD-ORD-09     | Action buttons in table         | Action buttons in the Actions column function correctly      | High |
+| AD-ORD-10     | Empty table state               | Appropriate message shown when no orders match criteria      | Medium |
 
 ---
 
