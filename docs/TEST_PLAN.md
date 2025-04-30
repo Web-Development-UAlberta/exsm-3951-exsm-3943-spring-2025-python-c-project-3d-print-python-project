@@ -692,7 +692,7 @@ Accessibility Testing
 
 ---
 
-## Edge Cases
+##### Edge Cases
 
 | Test ID        | Description                   | Expected Result                                     | Priority |
 |----------------|-------------------------------|-----------------------------------------------------|----------|
@@ -702,7 +702,7 @@ Accessibility Testing
 
 ---
 
-## Fail Cases
+##### Fail Cases
 
 | Test ID        | Description                   | Expected Result                                     | Priority |
 |----------------|-------------------------------|-----------------------------------------------------|----------|
