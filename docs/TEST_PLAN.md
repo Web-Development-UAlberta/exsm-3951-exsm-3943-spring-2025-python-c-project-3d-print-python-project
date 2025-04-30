@@ -463,22 +463,48 @@ Accessibility Testing
 
 #### CSV Upload Page
 
+##### Normal Cases
+
 | Test ID        | Description                    | Expected Result                                            | Priority |
 |----------------|--------------------------------|------------------------------------------------------------|----------|
 | AD-CSV-01 | Load CSV upload page | Page loads with header, upload type dropdown, drag-drop area, browse button, and action buttons | High |
 | AD-CSV-02      | Upload type selection          | Dropdown opens and displays available upload types         |  High    |
 | AD-CSV-03      | Drag and drop functionality    | File can be successfully uploaded via drag and drop        |  High     |
 | AD-CSV-04      | Browse button functionality    | File explorer opens and allows file selection              |  High |
-| AD-CSV-05      | Upload invalid file format     | Error message displayed for non-CSV file types             |  High |
-| AD-CSV-06      | Upload valid CSV               | File accepted and prepared for validation                  |  High |
-| AD-CSV-07      | Simple CSV download            | Template CSV file downloads with correct format            | Medium |
-| AD-CSV-08      | Validate button functionality  | CSV validation process runs and displays results           | High |
-| AD-CSV-09      | Upload button functionality    | Validated CSV uploads to the system                        | High |
-| AD-CSV-10      | File size limit                | Error message for files exceeding size limit               | Medium |
-| AD-CSV-11      | Upload with no file selected   | Error message indicating no file is selected               | Medium |
-| AD-CSV-12      | Upload with network interruption | Appropriate error handling and retry options             | Medium |
+| AD-CSV-05      | Upload valid CSV               | File accepted and prepared for validation                  |  High |
+| AD-CSV-06      | Simple CSV download            | Template CSV file downloads with correct format            | Medium |
+| AD-CSV-07      | Validate button functionality  | CSV validation process runs and displays results           | High |
+| AD-CSV-08      | Upload button functionality    | Validated CSV uploads to the system                        | High |
 
 ---
+
+##### Edge Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-CSV-09   | CSV with maximum allowed file size       | System accepts CSV at maximum allowed size (10MB)                               | Medium   |
+| AD-CSV-10   | CSV with maximum number of rows          | System handles CSV with maximum number of rows (5000)                           | Medium   |
+| AD-CSV-11   | CSV with maximum number of columns       | System handles CSV with maximum number of columns (50)                          | Medium   |
+| AD-CSV-12   | Different CSV delimiters                 | System correctly identifies and processes different delimiters (comma, semicolon) | Medium   |
+
+---
+
+##### Fail Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-CSV-13   | Upload invalid file format               | Error message displayed for non-CSV file types                                  | High     |
+| AD-CSV-14   | File size limit                          | Error message for files exceeding size limit (>10MB)                            | High     |
+| AD-CSV-15   | Upload with no file selected             | Error message indicating no file is selected                                    | Medium   |
+| AD-CSV-16   | Upload with network interruption         | Appropriate error handling and retry options                                    | Medium   |
+| AD-CSV-17   | CSV with missing required fields         | Validation error highlighting missing required fields                           | High     |
+| AD-CSV-18  | CSV with invalid data format             | Validation error highlighting incorrect data formats                            | High     |
+| AD-CSV-19   | CSV with duplicate entries               | System identifies and reports duplicate entries                                 | Medium   |
+| AD-CSV-20   | CSV with too many rows                   | Error message when CSV exceeds maximum row limit (>5000)                        | High     |
+| AD-CSV-21   | CSV with corrupt data                    | Error message for corrupt or unparseable CSV                                    | High     |
+
+---
+
 
 #### User Management Page
 
@@ -496,22 +522,54 @@ Accessibility Testing
 
 ---
 
+
 #### Order Management Page
 
-| Test ID        | Description                    | Expected Result                                              | Priority |
-|----------------|--------------------------------|--------------------------------------------------------------|----------|
-| AD-ORD-01     | Load order management page | Page loads with header, search field, filters, order table, and create button | High |
-| AD-ORD-02     | Search functionality            | Search returns matching orders based on input criteria       | High |
-| AD-ORD-03     | Filter by text input            | Order list filtered according to text input                  | High |
-| AD-ORD-04     | Filter by material              | Order list shows only orders with selected material          | High |
-| AD-ORD-05     | Filter by status                | Order list shows only orders with selected status            | High |
-| AD-ORD-06     | Filter by priority              | Order list shows only orders with selected priority          | High |
-| AD-ORD-07     | Display order details | All order columns (ID, Model Name, Material, Qty, Status, Priority, Actions) display correctly | High |
-| AD-ORD-08     | Table pagination                | Table pages through multiple orders if applicable            | Medium |
-| AD-ORD-09     | Action buttons in table         | Action buttons in the Actions column function correctly      | High |
-| AD-ORD-10     | Empty table state               | Appropriate message shown when no orders match criteria      | Medium |
+##### Normal Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-ORD-01 | Load order management page | Page loads with header, search field, filters, order table, and "Create New Order" button | High | 
+| AD-ORD-02 | Search functionality | Matching orders are displayed based on the search input | High | 
+| AD-ORD-03 | Filter by text input | Order list filters dynamically based on entered filter text | High |
+| AD-ORD-04 | Filter by material | Only orders with the selected material are shown | High | 
+| AD-ORD-05 | Filter by status | Only orders with the selected status are shown | High | 
+| AD-ORD-06 | Filter by priority | Only orders with the selected priority are shown | High |
+| AD-ORD-07 | Display order details | Order ID, Model Name, Material, Qty, Status, Priority, and Actions columns display correctly | High | 
+| AD-ORD-08 | Table pagination | Table paginates correctly when order count exceeds page size | Medium |
+| AD-ORD-09 | Action buttons in table | Action buttons (e.g., view, edit, cancel) function correctly | High |
+| AD-ORD-11 | Order status update | Status can be updated and change is saved correctly | High |
+| AD-ORD-12 | Order priority update | Priority can be updated and change is saved correctly | High
+| AD-ORD-13 | Order cancellation | Cancelling an order prompts confirmation and cancels on confirmation | High |
+| AD-ORD-14 | Inventory update on status change | Inventory is updated correctly based on the new order status | High |
+| AD-ORD-15 | Order detail view | All order details are shown in a detail view | High |
 
 ---
+
+##### Edge Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-ORD-16 | Pagination with one more order than page limit | New page created for the extra order, UI handles edge correctly | Medium | 
+| AD-ORD-17 | Filter with partial input | Results match any partial strings entered | High |
+| AD-ORD-18 | Search with leading/trailing spaces | Spaces are trimmed and matching results are returned | Medium |
+| AD-ORD-19 | Filtering by material not in any order | No results shown, appropriate empty state displayed | Medium |
+| AD-ORD-20 | Long model names or large quantity values | Table adjusts layout or text is truncated elegantly | Medium |
+
+---
+
+##### Fail Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-ORD-21 | Empty table state | Appropriate "No orders found" message shown if no orders match criteria | Medium |
+| AD-ORD-22 | Order with insufficient inventory | Warning is displayed and user is prevented from placing the order | High |
+| AD-ORD-23 | Search with unsupported characters | System handles input gracefully without crashing | Medium |
+| AD-ORD-24 | Update status without required permissions | Error message displayed; change is not applied | High |
+| AD-ORD-25 | Cancel order already completed | User is prevented with an appropriate warning message | High |
+
+---
+
 
 #### Inventory Management Page
 
