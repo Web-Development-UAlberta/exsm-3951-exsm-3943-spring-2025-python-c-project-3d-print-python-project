@@ -508,17 +508,55 @@ Accessibility Testing
 
 #### User Management Page
 
-| Test ID        | Description                    | Expected Result                                            | Priority |
-|----------------|--------------------------------|------------------------------------------------------------|----------|
-| AD-USR-01 | Load user management page | Page loads with header, search field, filters, user table, and invite button | High |
-| AD-USR-02 | Search functionality                | Search returns matching users based on input criteria       | High |
-| AD-USR-03 | Filter by text input                | User list filtered according to text input                  | High |
-| AD-USR-04 | Filter by action                    | User list displays based on available actions               | Medium |
-| AD-USR-05 | Display user details       | All user columns (ID, Name, Email, Status, Action) display correct information | High |
-| AD-USR-06 | Invite user button                  | Opens invite user form/modal                                | High |
-| AD-USR-07 | Table pagination                    | Table pages through multiple users if applicable            | Medium |
-| AD-USR-08 | Action buttons in table             | Action buttons in the table function correctly              | High |
-| AD-USR-09 | Empty table state                   | Appropriate message shown when no users match criteria      | Medium |
+##### Normal Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-USR-01  | Load user management page           | Page loads completely with the "User Management" header, search field, "Filter" section (with text input, Role dropdown, and Action dropdown), user table with columns "User ID", "Name", "Email", "Role", "Status", "Action", and the "Invite User" button visible. | High     |
+| AD-USR-02  | Search for existing user by name    | Table displays only users whose names partially or fully match the search term.                                 | High     |
+| AD-USR-03  | Search for existing user by email   | Table displays only users whose emails partially or fully match the search term.                                | High     |
+| AD-USR-04  | Filter user list by text input      | Table displays only users matching the text entered in the "Filter" text field.                                 | High     |
+| AD-USR-05  | Filter user list by Role            | Table displays only users whose role matches the selected option in the "Role" dropdown.                         | Medium   |
+| AD-USR-06  | Filter user list by Action          | Table displays only users for whom the selected action in the "Action" dropdown is available.                     | Medium   |
+| AD-USR-07  | Display details of a user           | Each row in the user table correctly displays the user's ID, Name, Email, Role, Status, and available Actions.    | High     |
+| AD-USR-08  | Click the 'Invite User' button      | An 'Invite User' form or modal is displayed to the user.                                                        | High     |
+| AD-USR-09  | Navigate through table pages        | When multiple users exist, the table paginates correctly, allowing navigation to different pages of users.        | Medium   |
+| AD-USR-10  | Click a valid action button (e.g., 'Edit') | The corresponding action (e.g., opens the edit user form/modal for that user) is initiated.                  | High     |
+| AD-USR-11  | Successfully create a new user      | A new user is created and appears in the user table with the correct details (including Role).                   | High     |
+| AD-USR-12  | Edit an existing user's details     | The user's details, including Role, are updated correctly and reflected in the user table.                      | High     |
+
+---
+
+##### Edge Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-USR-13  | Search with a very long string              | The search functionality handles the long input without errors and returns no results if no match is found.        | Medium   |
+| AD-USR-14  | Search with special characters               | The search functionality handles special characters appropriately (e.g., ignores them or uses them in the search).  | Medium   |
+| AD-USR-15  | Filter with a very long text input           | The filter functionality handles the long input without errors and returns no results if no match is found.          | Medium   |
+| AD-USR-16  | Filter with special characters               | The filter functionality handles special characters appropriately.                                                 | Medium   |
+| AD-USR-17  | Filter by a Role that has no users          | The user table displays no users, or a "No matching users found" message is shown.                               | Medium   |
+| AD-USR-18  | Filter by an Action that is not available for any users | The user table displays no users, or a "No matching users found" message is shown.                      | Medium   |
+| AD-USR-19  | Navigate to the last page of a long user list | The last page of users loads correctly.                                                                        | Medium   |
+| AD-USR-20  | Attempt to navigate beyond the last page     | The application prevents navigation beyond the last available page (e.g., disables the 'Next' button).        | Medium   |
+| AD-USR-21  | Attempt to navigate before the first page    | The application prevents navigation before the first page (e.g., disables the 'Previous' button).             | Medium   |
+| AD-USR-22  | No users match the initial load criteria     | The user table area displays an appropriate message indicating that no users are currently available.             | Medium   |
+| AD-USR-23  | Edit a user's details with maximum length inputs | The updated details (including Role) are saved correctly up to the maximum allowed length for each field.      | Medium   |
+
+---
+
+##### Fail Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-USR-24  | Search for a non-existent user                   | No users are displayed in the table, or a clear "No matching users found" message is shown.                      | High     |
+| AD-USR-25  | Filter by text input that matches no users       | The user table displays no users, or a clear "No matching users found" message is shown.                        | High     |
+| AD-USR-26  | Filter by a Role that does not exist in the system | The "Role" dropdown should either not allow such a selection or display an error/no results message.           | High     |
+| AD-USR-27  | Filter by an Action that is not valid            | The "Action" dropdown should either not allow such a selection or display an error/no results message.         | High     |
+| AD-USR-28  | Attempt to save edits with invalid data          | The system displays appropriate and specific error messages for the invalid data fields, and the user details are not updated. | High     |
+| AD-USR-29  | Attempt to save edits with missing required fields | The system displays error messages for the missing required fields, and the user details are not updated.       | High     |
+| AD-USR-30  | Click an action button when no user is selected | The system either disables the action button or provides clear feedback that a user needs to be selected.      | High     |
+| AD-USR-31  | Attempt to edit a user with fields exceeding maximum allowed length | The system prevents saving changes with input beyond the maximum allowed length and/or displays a clear error message. | High     |
 
 ---
 
@@ -573,37 +611,111 @@ Accessibility Testing
 
 #### Inventory Management Page
 
-| Test ID         | Description                    | Expected Result                                            | Priority |
-|-----------------|--------------------------------|------------------------------------------------------------|----------|
-| AD-INV-01 | Load inventory management page | Page loads with header, search field, filters, inventory table, and add button | High |
-| AD-INV-02 | Search functionality          | Search returns matching inventory items based on input criteria    | High |
-| AD-INV-03 | Filter by text input          | Inventory list filtered according to text input                    | High |
-| AD-INV-04 | Filter by material            | Inventory list shows only items with selected material             | High |
-| AD-INV-05 | Filter by quantity            | Inventory list shows only items within selected quantity range     | High |
-| AD-INV-06 | Display inventory details     | All inventory columns (Item ID, Material Type, Qty, Cost, Action) display correctly | High |
-| AD-INV-07 | Table pagination              | Table pages through multiple inventory items if applicable         | Medium |
-| AD-INV-08 | Action buttons in table       | Action buttons in the Action column function correctly             | High |
-| AD-INV-09 | Empty table state             | Appropriate message shown when no inventory items match criteria   | Medium |
-| AD-INV-10 | Low inventory warning         | Visual indicator for inventory items below threshold              | Medium |
+##### Normal Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-INV-01  | Load inventory management page          | Page loads completely with the "Inventory Management" header, search field, "Filter" section (with text input, Material dropdown, and Quantity range input), inventory table with columns "Item ID", "Material Type", "Qty", "Cost", "Action", and the "Add New Material" button visible. | High     |
+| AD-INV-02  | Search for existing item by Item ID       | Table displays only inventory items whose Item IDs partially or fully match the search term.                                                | High     |
+| AD-INV-03  | Search for existing item by Material Type | Table displays only inventory items whose Material Types partially or fully match the search term.                                           | High     |
+| AD-INV-04  | Filter inventory list by text input     | Table displays only inventory items matching the text entered in the "Filter" text field.                                                    | High     |
+| AD-INV-05  | Filter inventory list by Material        | Table displays only inventory items whose Material Type matches the selected option in the "Material" dropdown.                               | High     |
+| AD-INV-06  | Filter inventory list by Quantity        | Table displays only inventory items whose quantity falls within the range specified in the "Quantity" input fields (if applicable).          | High     |
+| AD-INV-07  | Display details of an inventory item    | Each row in the inventory table correctly displays the Item ID, Material Type, Quantity, Cost, and available Actions for each item.             | High     |
+| AD-INV-08  | Navigate through table pages            | When multiple inventory items exist, the table paginates correctly, allowing navigation to different pages of items.                            | Medium   |
+| AD-INV-09  | Click a valid action button (e.g., 'Edit')| The corresponding action (e.g., opens the edit inventory item form/modal for that item) is initiated.                                       | High     |
+| AD-INV-10  | No inventory items match initial load criteria | The inventory table area displays an appropriate message indicating that no inventory items are currently available.                       | Medium   |
+| AD-INV-11  | Add a new inventory item successfully    | A new inventory item is added and appears in the inventory table with the correct details.                                                   | High     |
+| AD-INV-12  | Edit an existing inventory item's details | The inventory item's details are updated correctly and reflected in the inventory table.                                                      | High     |
+| AD-INV-13  | Adjust inventory quantity (increase)    | The inventory quantity for the selected item is increased correctly, and a reason for the adjustment can be recorded.         | High     |
+| AD-INV-14  | Adjust inventory quantity (decrease)    | The inventory quantity for the selected item is decreased correctly, and a reason for the adjustment can be recorded.         | High     |
+| AD-INV-15  | Delete an existing inventory item       | After confirmation, the inventory item is removed from the table.                                                                           | High     |
 
 ---
 
+##### Edge Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-INV-16  | Search with a very long string                 | The search functionality handles the long input without errors and returns no results if no match is found.          | Medium   |
+| AD-INV-17  | Search with special characters                  | The search functionality handles special characters appropriately (e.g., ignores them or uses them in the search).    | Medium   |
+| AD-INV-18  | Filter with a very long text input              | The filter functionality handles the long input without errors and returns no results if no match is found.            | Medium   |
+| AD-INV-19  | Filter with special characters                  | The filter functionality handles special characters appropriately.                                                   | Medium   |
+| AD-INV-20  | Filter by a Material that has no items         | The inventory table displays no items, or a "No matching items found" message is shown.                            | Medium   |
+| AD-INV-21  | Filter by a Quantity range with no matching items | The inventory table displays no items, or a "No matching items found" message is shown.                            | Medium   |
+| AD-INV-22  | Filter by a Quantity range with only one boundary | The inventory table displays items matching that single quantity value (if the range allows).                     | Medium   |
+| AD-INV-23  | Navigate to the last page of a long item list   | The last page of inventory items loads correctly.                                                                 | Medium   |
+| AD-INV-24  | Attempt to navigate beyond the last page        | The application prevents navigation beyond the last available page (e.g., disables the 'Next' button).            | Medium   |
+| AD-INV-25  | Attempt to navigate before the first page       | The application prevents navigation before the first page (e.g., disables the 'Previous' button).                 | Medium   |
+| AD-INV-26  | Inventory item at the low inventory threshold   | The visual indicator for low inventory is displayed for items exactly at the defined threshold.                   | High     |
+| AD-INV-27  | Add a new item with maximum length inputs      | The form accepts the maximum allowed length for each field without errors.                                       | Medium   |
+| AD-INV-28  | Edit an item with maximum length inputs         | The updated details are saved correctly up to the maximum allowed length for each field.                          | Medium   |
+| AD-INV-29 | Empty table state             | Appropriate message shown when no inventory items match criteria   | Medium |
+| AD-INV-30 | Low inventory warning         | Visual indicator for inventory items below threshold              | Medium |
+---
+
+##### Fail Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-INV-31  | Search for a non-existent item                     | No items are displayed in the table, or a clear "No matching items found" message is shown.                        | High     |
+| AD-INV-32  | Filter by text input that matches no items         | The inventory table displays no items, or a clear "No matching items found" message is shown.                      | High     |
+| AD-INV-33  | Filter by a Material that does not exist in the system | The "Material" dropdown should either not allow such a selection or display an error/no results message.         | High     |
+| AD-INV-34  | Filter by an invalid Quantity range | The system should either prevent such input or display an error message.                                         | High     |
+| AD-INV-35  | Attempt to add a new item with missing required fields | The system displays specific error messages indicating the missing required fields, and the item is not added.    | High     |
+| AD-INV-36  | Attempt to add/edit with invalid data format       | The system displays clear error messages for the invalid data fields, and the item is not added/edited.          | High     |
+| AD-INV-37  | Attempt to manually set a negative quantity        | The system prevents the user from setting a negative quantity and displays an appropriate error message.           | High     |
+| AD-INV-38  | Attempt to save edits with missing required fields  | The system displays error messages for the missing required fields, and the item details are not updated.        | High     |
+| AD-INV-39  | Attempt to delete an item without confirmation     | The system should not delete the item without explicit user confirmation.                                       | High     |
+| AD-INV-40  | Attempt to add an item with fields exceeding maximum allowed length | The system prevents input beyond the maximum allowed length and/or displays a clear error message.                  | High     |
+| AD-INV-41  | Attempt to edit an item with fields exceeding maximum allowed length | The system prevents saving changes with input beyond the maximum allowed length and/or displays a clear error message. | High     |
+
+---
+
+
 #### Dashboard Page
 
-| Test ID        | Description                     | Expected Result                                               | Priority |
-|----------------|---------------------------------|---------------------------------------------------------------|----------|
-| AD-DASH-01     | Load dashboard page             | Dashboard loads with navigation menu and all widgets/statistics | High |
-| AD-DASH-02     | Navigation menu                 | All navigation links function correctly                        | High |
-| AD-DASH-03     | Total Orders display            | Shows accurate count of total orders                           | High |
-| AD-DASH-04     | Active Orders display           | Shows accurate count of active orders                          | High |
-| AD-DASH-05     | Pending Uploads display         | Shows accurate count of pending uploads                        | High |
-| AD-DASH-06     | Inventory Warnings display      | Shows accurate count of inventory warnings                     | High |
-| AD-DASH-07     | Navigation to Order Management  | Clicking Order Management navigates to order page              | High |
-| AD-DASH-08     | Navigation to Inventory Management | Clicking Inventory Management navigates to inventory page | High |
-| AD-DASH-09     | Navigation to User Management   | Clicking User Management navigates to user page              | High |
-| AD-DASH-10     | Navigation to CSV Upload        | Clicking CSV Upload navigates to upload page                  | High |
-| AD-DASH-11     | Mail/notification icon          | Opens notifications or mail interface                          | Low |
-| AD-DASH-12     | Dashboard responsiveness        | Dashboard displays correctly on various screen sizes           | Medium |
+##### Normal Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-DASH-01  | Load dashboard page                   | Dashboard loads completely with the "3D Printing" header, navigation menu (Dashboard, Order Management, Inventory Management, User Management, CSV Upload), mail/notification icon, "Total Orders", "Active Orders", "Pending Uploads", "Inventory Warnings" widgets displaying numerical values, "Orders Over Time" bar graph, and "Material Usage" pie chart. | High     |
+| AD-DASH-02 | Navigate to Order Management          | Clicking "Order Management" in the navigation menu navigates the user to the Order Management page.                                                                                                  | High     |
+| AD-DASH-03 | Navigate to Inventory Management      | Clicking "Inventory Management" in the navigation menu navigates the user to the Inventory Management page.                                                                                              | High     |
+| AD-DASH-04 | Navigate to User Management             | Clicking "User Management" in the navigation menu navigates the user to the User Management page.                                                                                                     | High     |
+| AD-DASH-05 | Navigate to CSV Upload                  | Clicking "CSV Upload" in the navigation menu navigates the user to the CSV Upload page.                                                                                                              | High     |
+| AD-DASH-06  | Total Orders display accuracy         | The "Total Orders" widget displays the correct, up-to-date count of all orders in the system.                                                                                                          | High     |
+| AD-DASH-07  | Active Orders display accuracy        | The "Active Orders" widget displays the correct, up-to-date count of all currently active orders in the system.                                                                                         | High     |
+| AD-DASH-08  | Pending Uploads display accuracy      | The "Pending Uploads" widget displays the correct, up-to-date count of all files currently pending upload.                                                                                             | High     |
+| AD-DASH-09  | Inventory Warnings display accuracy   | The "Inventory Warnings" widget displays the correct, up-to-date count of all active inventory warnings (items below threshold).                                                                         | High     |
+| AD-DASH-10 | Dashboard display on desktop resolution | The dashboard layout and all elements are displayed correctly and are well-aligned on a standard desktop screen resolution.                                               | High     |
+
+---
+
+## Edge Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-DASH-11 | Load dashboard with zero data                  | Dashboard loads without errors, and all numerical widgets display "0" or an appropriate "No data" indicator. The charts might be empty or display a "No data" message.                                       | Medium   |
+| AD-DASH-12 | Load dashboard with a very large amount of data | Dashboard loads within an acceptable timeframe without performance issues. All widgets and charts display data appropriately without visual overflow or errors.                                                | Medium   |
+| AD-DASH-13 | Click mail/notification icon with no new alerts  | If no new notifications or mail are present, clicking the icon might open an empty interface or indicate "No new notifications".                                                                             | Low      |
+
+---
+
+## Fail Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| AD-DASH-14 | Load dashboard with backend data errors         | If there are errors retrieving data from the backend, the affected widgets or charts should display an appropriate error message to the user instead of crashing or showing incorrect data.                    | High     |
+| AD-DASH-15 | Navigate to a broken navigation link             | If any of the navigation links are broken or misconfigured, clicking them should either result in an error page or a clear indication that the link is not working.                                          | High     |
+| AD-DASH-16 | Total Orders display shows incorrect count      | The "Total Orders" widget displays a count that does not match the actual number of total orders in the database.                                                                                            | High     |
+| AD-DASH-17 | Active Orders display shows incorrect count     | The "Active Orders" widget displays a count that does not match the actual number of active orders in the database.                                                                                           | High     |
+| AD-DASH-18 | Pending Uploads display shows incorrect count   | The "Pending Uploads" widget displays a count that does not match the actual number of pending uploads.                                                                                                      | High     |
+| AD-DASH-19 | Inventory Warnings display shows incorrect count | The "Inventory Warnings" widget displays a count that does not match the actual number of active inventory warnings.                                                                                          | High     |
+| AD-DASH-20 | Click mail/notification icon with backend error | If there's an error fetching notifications or mail, clicking the icon should display an error message instead of failing silently.                                                                            | Low      |
+| AD-DASH-21 | Dashboard display breaks on specific resolution | The dashboard layout or elements break, overlap, or become unusable on specific screen resolutions.                                                                                                         | High     |
+
+---
 
 
 ## 7. Test Execution
