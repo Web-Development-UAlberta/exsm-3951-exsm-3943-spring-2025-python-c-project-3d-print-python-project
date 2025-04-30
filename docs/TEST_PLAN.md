@@ -142,6 +142,8 @@ Accessibility Testing
 
 #### Home Page
 
+##### Normal Cases
+
 | Test ID     | Description                 | Expected Result                                                                 | Priority |
 |-------------|-----------------------------|---------------------------------------------------------------------------------|---------|
 | CF-HOME-01  | Load homepage successfully  | Homepage loads with hero banner, featured products, and navigation              | High     |
@@ -152,7 +154,29 @@ Accessibility Testing
 
 ---
 
+##### Edge Cases
+
+| Test ID     | Description                        | Expected Result                               | Priority |
+|-------------|------------------------------------|-----------------------------------------------|----------|
+| CF-HOME-06 | Search with special characters | System handles special characters appropriately | Medium |
+| CF-HOME-07 | Very long search query | System truncates or properly handles very long search queries | Medium |
+| CF-HOME-08 | Rapid navigation clicking | System handles rapid navigation clicks without errors | Low |
+
+---
+
+##### Fail Cases
+
+| Test ID     | Description                        | Expected Result                               | Priority |
+|-------------|------------------------------------|-----------------------------------------------|----------|
+| CF-HOME-09 | Network disconnection | Appropriate offline message displayed when network disconnects | Medium | 
+| CF-HOME-10 | Server error on page load | Appropriate error message displayed for server errors | High |
+
+---
+
+
 #### Product Catalog / Customization Page
+
+##### Normal Cases
 
 | Test ID     | Description                        | Expected Result                               | Priority |
 |-------------|------------------------------------|-----------------------------------------------|----------|
@@ -160,12 +184,40 @@ Accessibility Testing
 | CF-CAT-02   | Search                             | Able to search products and the correct products load   | Medium   |
 | CF-CAT-03   | Logo redirects to Home             | Clicking Logo button redirects to Home page             | Medium   |
 | CF-CAT-04   | Navigation link works              | Clicking Home / Products / About Us / Contact Us redirects correctly   | High     |
-| CF-CAT-05   | Size, color and material works   | Able to select Size, color and material by clicking on the appropriate buutons | High |
+| CF-CAT-05   | Size, color and material selection works separately   | Able to select Size, color and material by clicking on the appropriate buttons | High |
 | CF-CAT-06   | Add to cart                  | Clicking add to cart adds the product with the selected Size, color and material | High   |
+| CF-CAT-07 | Combined customization | All three customization options are properly saved and displayed as selected | High |
+| CF-CAT-08 | Price update | Price updates according to selected customization options | High |
 
 ---
 
+##### Edge Cases
+
+| Test ID     | Description                        | Expected Result                               | Priority |
+|-------------|------------------------------------|-----------------------------------------------|----------|
+| CF-CAT-09 | Option compatibility verification | Incompatible combinations are disabled/unavailable | High |
+| CF-CAT-10 | Default selections | Products have appropriate default selections or clear indication to select options | Medium |
+| CF-CAT-11 | Navigate away and return | Previous selections are either preserved or reset as appropriate | Medium |
+| CF-CAT-12 | Multiple sequential customizations | System handles rapid changes correctly  | Low | 
+
+---
+
+##### Fail Cases
+
+| Test ID     | Description                        | Expected Result                               | Priority |
+|-------------|------------------------------------|-----------------------------------------------|----------|
+| CF-CAT-13 | Out of stock customization | Out of stock indication is shown and System prevents adding out-of-stock combination to cart | High |
+| CF-CAT-14 | Model size limitation message | Error message appears when model exceeds maximum size (over 300x300x300mm) | High |
+| CF-CAT-15 | Unavailable combinations | System prevents selection of invalid combinations and Appropriate error message displayed | High | 
+| CF-CAT-16 | Server error during customization | Appropriate error message when customization fails | High |
+| CF-CAT-17 | Add to cart without selections | System either prevents action or uses defaults with clear user notification | Medium |
+
+---
+
+
 #### Cart / Checkout Page
+
+##### Normal Cases
 
 | Test ID            | Description                            | Expected Result                              | Priority |
 |--------------------|----------------------------------------|----------------------------------------------|----------|
@@ -174,16 +226,42 @@ Accessibility Testing
 | CF-CHECKOUT-03   | Decrease quantity           | Quantity decreases by 1 (not below 1); subtotal updates      | High     |
 | CF-CHECKOUT-04   | Subtotal calculation        | Subtotal correctly reflects total cost                       | High     |
 | CF-CHECKOUT-05   | Proceed to checkout         | Redirects to payment (Mock)                                  | High     |
-| CF-CHECKOUT-06   | Responsive layout           | Page remains readable and interactive                        | Medium   |
-| CF-CHECKOUT-07   | Newsletter subscription - valid email  | Confirmation message displayed                    | Medium   |
-| CF-CHECKOUT-08   | Newsletter subscription - invalid email| Error message displayed                           | Medium   |
-| CF-CHECKOUT-09   | Brand Name                             | Brand Name loads correctly                        | High  |
-| CF-CHECKOUT-10   | Search                                 | Search loads the result accurately                | Medium   |
-| CF-CHECKOUT-11   | Subscribe newsletter | Clicking on subscribe button sends an email with a successful subscription message | Medium  |
+| CF-CHECKOUT-06   | Newsletter subscription - valid email  | Confirmation message displayed                    | Medium   |
+| CF-CHECKOUT-07   | Click Home button and Logo | User is redirected to homepage                           | Medium   |
+| CF-CHECKOUT-08   | Brand Name                             | Brand Name loads correctly                        | High  |
+| CF-CHECKOUT-09   | Search                                 | Search loads the result accurately                | Medium   |
+| CF-CHECKOUT-10   | Subscribe newsletter | Clicking on subscribe button sends an email with a successful subscription message | Medium  |
 
 ---
 
+##### Edge Cases
+
+| Test ID            | Description                            | Expected Result                              | Priority |
+|--------------------|----------------------------------------|----------------------------------------------|----------|
+| CF-CHECKOUT-11 | Attempt to reduce quantity below 1 | System prevents reduction below 1 item | High |
+| CF-CHECKOUT-12 | Attempt to exceed maximum order quantity | System prevents exceeding maximum allowed quantity (limit: 10 per item) | High | 
+| CF-CHECKOUT-13 | Checkout with maximum allowed quantity | System allows checkout with maximum allowed quantity (10 per item) | Medium | 
+| CF-CHECKOUT-14 |Rapid quantity adjustments | System handles rapid quantity changes correctly | Medium |
+| CF-CHECKOUT-15 | Session timeout during checkout | System handles timeout gracefully with proper user notification | Medium |
+
+---
+
+##### Fail Cases
+
+| Test ID            | Description                            | Expected Result                              | Priority |
+|--------------------|----------------------------------------|----------------------------------------------|----------|
+| CF-CHECKOUT-16 | Newsletter subscription - invalid email | Error message displayed | Medium | 
+| CF-CHECKOUT-17 | Newsletter subscription with empty email | Error message preventing empty submission | Medium |
+| CF-CHECKOUT-18 | Out of stock during checkout | Appropriate error message displayed when item becomes unavailable | High | 
+| CF-CHECKOUT-19 | Empty cart checkout attempt | System prevents checkout with empty cart | High |
+| CF-CHECKOUT-20 | Network disconnection during checkout | System handles connection loss gracefully with proper error handling | High |
+
+---
+
+
 #### Profile / Orders Page
+
+##### Normal Cases
 
 | Test ID            | Description                            | Expected Result                                  | Priority |
 |--------------------|----------------------------------------|--------------------------------------------------|----------|
@@ -192,70 +270,193 @@ Accessibility Testing
 | CF-ORDERS-03  | Display shipping orders       | Shows "Shipping" section with items and total                               | High     |
 | CF-ORDERS-04  | Display completed orders      | Shows "Completed" section with items and total                              | High     |
 | CF-ORDERS-05  | Sign out link                 | User is logged out and redirected to login page                             | High     |
-| CF-ORDERS-06  | Responsive layout             | Page layout adjusts properly                                                | Medium   |
-| CF-ORDERS-07  | Newsletter subscription       | Confirmation shown for valid email, error for invalid                       | Medium   |
-| CF-ORDERS-08  | Navigation links              | All navigation links work                                                   | Medium   |
+| CF-ORDERS-06  | Click on processing order arrow            | User is redirected to processing order details page                                                | High   |
+| CF-ORDERS-07 | Click on shipping order arrow | User is redirected to shipping order details page | High | 
+| CF-ORDERS-08 | Click on completed order arrow | User is redirected to completed order details page | High |
+| CF-ORDERS-00  | Newsletter subscription email      | Confirmation shown for valid email                       | Medium   |
+| CF-ORDERS-10  | Navigation links              | All navigation links work                                                   | Medium   |
 | CF-ORDERS-09  | Subscribe newsletter   | Clicking on subscribe button sends an email with a successful subscription message | Medium   |
+| CF-ORDERS-10 | Click logo | User is redirected to homepage | Medium | 
+| CF-ORDERS-11 | Click search icon | Search functionality activates | Medium |
+
+---
+
+##### Edge Cases
+
+| Test ID            | Description                            | Expected Result                                  | Priority |
+|--------------------|----------------------------------------|--------------------------------------------------|----------|
+| CF-ORDERS-12 | No processing orders | "Processing" section either hidden or displays "No orders in processing" message | Medium | 
+| CF-ORDERS-13 | No shipping orders | "Shipping" section either hidden or displays "No orders in shipping" message | Medium | 
+| CF-ORDERS-14 | No completed orders | "Completed" section either hidden or displays "No completed orders" message | Medium | 
+| CF-ORDERS-15 | No orders at all | Page displays appropriate "No orders found" message | Medium |
+| CF-ORDERS-16 | Large number of orders in a category | System properly handles pagination or scrolling for many orders | Medium| 
+| CF-ORDERS-17 | Very long order history | Page loads efficiently even with extensive order history| Medium |
+| CF-ORDERS-18 | Orders with very high totals | Currency values display correctly for large amounts | Low |
+
+---
+
+##### Fail Cases
+
+| Test ID            | Description                            | Expected Result                                  | Priority |
+|--------------------|----------------------------------------|--------------------------------------------------|----------|
+| CF-ORDERS-19 | Newsletter subscription with invalid email | Error shown for invalid email | Medium | 
+| CF-ORDERS-20 | Server error while loading orders | Appropriate error message when orders fail to load | High | 
+| CF-ORDERS-21 | Newsletter subscription with empty email | Error message preventing empty submission | Medium| 
+| CF-ORDERS-22 | Session timeout | User is redirected to login page with appropriate message | High | 
+| CF-ORDERS-23 | Network disconnection while on page | System handles connection loss gracefully | Medium | 
+| CF-ORDERS-24 | Access profile page without authentication | User is redirected to login page | High |
 
 ---
 
 #### Login Page
 
+##### Normal Cases
+
 | Test ID       | Description                    | Expected Result                                                  | Priority |
 |---------------|--------------------------------|------------------------------------------------------------------|----------|
-| CF-LOGIN-01   | Load login page                | Login page loads with logo, nav bar, login form, and sign-up link   | High     |
+| CF-LOGIN-01   | Load login page                | Login page loads with logo, nav bar, login form, and create account link   | High     |
 | CF-LOGIN-02   | Valid login credentials        | Redirect to user dashboard or home page                             | High     |
-| CF-LOGIN-03   | Invalid credentials            | Show error message "Invalid credentials"                            | High     |
-| CF-LOGIN-04   | Empty fields and click sign in | Show validation errors for both fields                              | High     |
-| CF-LOGIN-05   | Only username filled           | Show validation error for password                                  | High     |
-| CF-LOGIN-06   | Only password filled           | Show validation error for username                                  | High     |
-| CF-LOGIN-07   | Password masking               | Password should be hidden (masked with dots/asterisks)              | High     |
-| CF-LOGIN-08   | Sign Up redirection            | Redirects to create account page                                    | High     |
-| CF-LOGIN-09   | Navigation links               | Correct pages open in the same tab                                  | Medium   |
+| CF-LOGIN-03   | Click logo | User is redirected to homepage | Medium |
+| CF-LOGIN-04   | Click search icon | Search functionality activates | Medium | 
+| CF-LOGIN-05   | Newsletter subscription with valid email | Subscription confirmation message displayed | Medium | 
+| CF-LOGIN-06   | Password masking               | Password should be hidden (masked with dots/asterisks)              | High     |
+| CF-LOGIN-07   | Create account redirection            | Redirects to create account page                                    | High     |
+| CF-LOGIN-08   | Navigation links               | Each navigation item (Home, Catalog, Customization, Cart, Orders) redirects to correct page | Medium |
 
 ---
 
-#### Sign up Page
+##### Edge Cases
 
 | Test ID        | Description                   | Expected Result                                     | Priority |
 |----------------|-------------------------------|-----------------------------------------------------|----------|
-| CF-ACCT-01     | Load account creation page    | Account creation page loads with logo, navigation bar, form fields (First Name, Last Name, Email, Password), newsletter checkbox, and buttons | High |
-| CF-ACCT-02     | Valid account creation        | New account is created and user is redirected to appropriate page | High |
-| CF-ACCT-03     | Empty form submission         | Show validation errors for all required fields           | High |
-| CF-ACCT-04     | Email format validation       | Show error for invalid email format                      | High |
-| CF-ACCT-05     | Password complexity validation | Show error if password doesn't meet complexity requirements | High |
-| CF-ACCT-06     | Duplicate email submission     | Show error that account with email already exists             | High |
-| CF-ACCT-07     | Newsletter checkbox functionality | Newsletter preference is saved correctly with account | Medium |
-| CF-ACCT-08     | Navigation to Sign In          | "Sign in" button redirects to login page                  | High |
-| CF-ACCT-09     | Field character limits         | Form accepts appropriate length for all fields            | Medium |
-| CF-ACCT-10     | Navigation bar functionality   | All navigation links work correctly                       | Medium |
-| CF-ACCT-11     | Logo clickability              | Logo redirects to homepage                                | Medium |
-| CF-ACCT-12     | Search functionality           | Search icon opens search functionality                    | Medium |
-| CF-ACCT-13     | Form field focus               | Proper visual indication when field is selected/focused   | Low    |
-| CF-ACCT-14     | Form accessibility             | Form is navigable via keyboard and works with screen readers | High |
-| CF-ACCT-15     | Responsive design              | Form displays properly on different screen sizes          | Medium |
+| CF-LOGIN-09 | Tab key navigation | Form fields and buttons can be navigated in logical order using Tab key| Medium | 
+| CF-LOGIN-10 | Enter key submission | Pressing Enter key while focus is in email/password field submits the form | Medium | 
+| CF-LOGIN-11 | Password autocomplete | Browser's password autocomplete functions correctly | Medium | 
+| CF-LOGIN-12 | Form field validation | Email field validates proper email format | High | 
+| CF-LOGIN-13 | Very long email address | System handles very long email addresses appropriately | Medium | 
+| CF-LOGIN-14 | Copy-paste credentials | System handles copy-paste of credentials correctly | Medium | 
+| CF-LOGIN-15 | Session persistence | Login state persists appropriately according to system requirements | High | 
 
 ---
 
+##### Fail Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| CF-LOGIN-16 | Invalid credentials | Appropriate error message displayed for incorrect email/password | High | 
+| CF-LOGIN-17 | Empty email field | Validation error shown for empty email field | High | 
+| CF-LOGIN-18 | Empty password field | Validation error shown for empty password field | High | 
+| CF-LOGIN-19 | Empty all fields | Validation errors shown for all required fields | High | 
+| CF-LOGIN-20 | Invalid email format | Validation error shown for incorrectly formatted email | High | 
+| CF-LOGIN-21 | Newsletter subscription with invalid email | Error message displayed for invalid email format | Medium | 
+| CF-LOGIN-22 | Server error during authentication | Appropriate error message when login process fails | High | 
+| CF-LOGIN-23 | Network disconnection during login | System handles connection loss gracefully | Medium | 
+
+---
+
+
+#### Sign up Page
+
+##### Normal Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| CF-ACCT-01 | Load account creation page | Page loads with logo, navigation menu (Home, Catalog, Customization, Cart, Orders), "Create Account" heading, form fields (First Name, Last Name, Email, Password), newsletter checkbox, "Create" button, and "Sign in" button | High |
+| CF-ACCT-02 | Valid account creation | Account is created successfully when all fields are filled correctly and "Create" button is clicked | High |
+| CF-ACCT-03 | Click "Sign in" button | User is redirected to login page | High |
+| CF-ACCT-04 | Click logo | User is redirected to homepage | Medium |
+| CF-ACCT-05 | Click navigation links | Each navigation item (Home, Catalog, Customization, Cart, Orders) redirects to correct page | Medium |
+| CF-ACCT-06 | Click search icon | Search functionality activates | Medium |
+| CF-ACCT-07 | Newsletter checkbox functionality | Checkbox toggles between checked and unchecked states | Medium |
+| CF-ACCT-08 | Password field masking | Password input is masked (hidden with asterisks/dots) | High |
+
+---
+
+##### Edge Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| CF-ACCT-09 | Tab key navigation | Form fields and buttons can be navigated in logical order using Tab key | Medium |
+| CF-ACCT-10 | Enter key submission | Pressing Enter key while focus is in any field submits the form | Medium |
+| CF-ACCT-11 | Field character limits | System handles appropriate length for all fields (First Name: 2-50, Last Name: 2-50, Email: 5-100, Password: 8-64) | Medium |
+| CF-ACCT-12 | Form field focus | Proper visual indication when field is selected/focused | Low |
+| CF-ACCT-13 | Form accessibility | Form is navigable via keyboard and works with screen readers | High |
+| CF-ACCT-14 | Special characters in name fields | System handles special characters in name fields appropriately | Medium |
+| CF-ACCT-15 | Password with special characters | System accepts passwords with special characters | High |
+| CF-ACCT-16 | Password with minimum/maximum length | System validates password length requirements | High |
+| CF-ACCT-17 | Copy-paste functionality | System handles copy-paste into form fields correctly | Medium |
+| CF-ACCT-18 | Double submission prevention | System prevents double form submission when Create button is clicked multiple times rapidly | Medium |
+
+---
+
+##### Fail Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| CF-ACCT-19 | Empty form submission | Validation errors shown for all required fields | High |
+| CF-ACCT-20 | Empty first name field | Validation error shown for empty first name field | High |
+| CF-ACCT-21 | Empty last name field | Validation error shown for empty last name field | High |
+| CF-ACCT-22 | Empty email field | Validation error shown for empty email field | High |
+| CF-ACCT-23 | Empty password field | Validation error shown for empty password field | High |
+| CF-ACCT-24 | Invalid email format | Validation error shown for incorrectly formatted email | High |
+| CF-ACCT-25 | Password too short | Validation error when password doesn't meet minimum length requirement | High |
+| CF-ACCT-26 | Password complexity validation | Error if password doesn't meet complexity requirements (uppercase, number, special character) | High |
+| CF-ACCT-27 | Duplicate email submission | Error message that account with email already exists | High |
+| CF-ACCT-28 | First/last name too short | Error for names shorter than minimum required length | Medium |
+| CF-ACCT-29 | Server error during account creation | Appropriate error message when account creation process fails | High |
+| CF-ACCT-30 | Network disconnection during submission | System handles connection loss gracefully | Medium |
+| CF-ACCT-31 | XSS attempt in form fields | Form sanitizes inputs and prevents XSS attacks | High |
+
+---
+
+
 #### Order Tracking Page
 
-| Test ID        | Description                    | Expected Result                                           | Priority |
-|----------------|--------------------------------|-----------------------------------------------------------|----------|
-| CF-OH-01 | Load order history page | Page loads with navigation menu, order details, and order summary | High |
-| CF-OH-02 | Navigation menu functionality | All navigation links (Home, Catalog, Customization, Cart, Profile) work correctly | High |
-| CF-OH-03 | Logo functionality | Clicking logo redirects to homepage | Medium |
-| CF-OH-04 | Search functionality | Search icon opens search functionality | Medium |
-| CF-OH-05 | Order number display | Order number displays correctly | High |
-| CF-OH-06 | Order date display | Order date displays correctly in expected format | High |
-| CF-OH-07 | Shipping tier display | Shipping tier displays correctly | High |
-| CF-OH-08 | Payment method display | Payment method (E-Transfer) displays correctly | High |
-| CF-OH-09 | Order summary display | Order summary section shows product image, quantity, and price | High |
-| CF-OH-10 | Product image display | Product image loads properly in order summary | Medium |
-| CF-OH-11 | Delivery address display | Complete delivery address displays with proper formatting | High |
-| CF-OH-12 | Order subtotal display | Order subtotal displays with correct currency format | High |
-| CF-OH-13 | Shipping cost display | Shipping cost displays with correct currency format | High |
-| CF-OH-14 | Order total display | Order total displays with correct currency format | High |
-| CF-OH-15 | Page responsiveness | Order history page displays correctly on different screen sizes | Medium |
+##### Normal Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| CF-TRACK-01 | Load order tracking page | Page loads with logo, navigation menu (Home, Catalog, Customization, Cart, Profile), "Order History" heading, order details (number, date, shipping tier, payment method), order summary with product image and quantity, delivery address, and order cost breakdown | High |
+| CF-TRACK-02 | Order number display | Order number (12345678) displays correctly | High |
+| CF-TRACK-03 | Order date display | Order date (1/11/2025) displays correctly | High |
+| CF-TRACK-04 | Shipping tier display | Shipping tier (Basic) displays correctly | High |
+| CF-TRACK-05 | Payment method display | Payment method (E-Transfer) displays correctly | High |
+| CF-TRACK-06 | Order summary display | Order summary shows product image, quantity indicator, and price | High |
+| CF-TRACK-07 | Delivery address display | Delivery address shows correctly with proper formatting (name, street, city, province, country) | High |
+| CF-TRACK-08 | Cost breakdown display | Order subtotal, shipping cost, and total all display with correct currency format | High |
+| CF-TRACK-09 | Click logo | User is redirected to homepage | Medium |
+| CF-TRACK-10 | Click navigation links | Each navigation item redirects to correct page | Medium |
+| CF-TRACK-11 | Click search icon | Search functionality activates | Medium |
+| CF-TRACK-12 | Product image display | Product image loads properly in order summary | Medium |
+
+---
+
+##### Edge Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| CF-TRACK-13 | Very long order number | System handles and displays very long order number appropriately | Medium |
+| CF-TRACK-14 | Multiple items in order | System correctly displays orders with multiple items | High |
+| CF-TRACK-15 | Very long product name | System handles very long product names appropriately | Medium |
+| CF-TRACK-16 | Very long delivery address | System handles very long delivery addresses appropriately | Medium |
+| CF-TRACK-17 | Large order total | System correctly formats and displays large monetary values | Medium |
+| CF-TRACK-18 | International address format | System handles international address formats correctly | Medium |
+
+---
+
+##### Fail Cases
+
+| Test ID        | Description                   | Expected Result                                     | Priority |
+|----------------|-------------------------------|-----------------------------------------------------|----------|
+| CF-TRACK-19 | Invalid order number access | Appropriate error message when accessing non-existent order | High |
+| CF-TRACK-20 | Access order without authentication | Redirect to login page with appropriate message | High |
+| CF-TRACK-21 | Server error while loading order | Appropriate error message when order details fail to load | High |
+| CF-TRACK-22 | Broken product image | Placeholder image or appropriate error when product image fails to load | Medium |
+| CF-TRACK-23 | Missing order details | System handles gracefully if certain order details are missing | Medium |
+| CF-TRACK-24 | Network disconnection while viewing | System handles connection loss gracefully | Medium |
+| CF-TRACK-25 | Session timeout while viewing | User is redirected to login page with appropriate message | High |
+
+---
 
 
 ### 6.2 Admin Pages
