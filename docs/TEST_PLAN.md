@@ -8,7 +8,7 @@ This test plan outlines the testing strategy for the 3D Printing E-Commerce Plat
 +	Verify all in-scope features function as expected
 +	Ensure the system handles normal and boundary conditions appropriately
 +	Confirm integration between frontend, backend, and database components
-+	Validate that out-of-scope features are properly exclude
++	Validate that out-of-scope features are properly excluded
 
 ### 1.2 References
 + Design Document
@@ -107,7 +107,7 @@ End-to-End User Flow
 + Customize with colors/materials
 + Receive quote and proceed to checkout
 + Complete pseudo-checkout
-+ View order in history
++ View order history
 
 Admin Order Processing Flow 
 + New order notification
