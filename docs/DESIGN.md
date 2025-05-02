@@ -31,7 +31,7 @@ The system will follow a three-tier architecture:
 - Data Storage Layer (Database)
 
 ## 2.2 Technology Stack
-+ Frontend: React, Next.js
++ Frontend: Django
 + Backend: Python, Django
 + Database: MySQL
 
