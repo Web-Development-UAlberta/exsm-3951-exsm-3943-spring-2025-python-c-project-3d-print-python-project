@@ -17,3 +17,6 @@ Create a copy of the `.env.example` file with the name `.env`
 
 ## Credits
 [Environment Variables](https://alicecampkin.medium.com/how-to-set-up-environment-variables-in-django-f3c4db78c55f)
+
+[Extend User Model OneToOneField](https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#extending-the-existing-user-model)
+[Example of Extending User Model](https://www.crunchydata.com/blog/extending-djangos-user-model-with-onetoonefield)
