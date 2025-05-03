@@ -138,7 +138,7 @@ class OrderItems(models.Model):
     """Table to store all order items"""
 
     InventoryChange = models.ForeignKey(InventoryChange, on_delete=models.CASCADE)
-    Order = models.ForeignKey(Orders, on_delete=models.CASCADE)
+    Order = models.ForeignKey(Orders, on_delete=models.CASCADE, null=True, blank=True)
     Model = models.ForeignKey(Models, on_delete=models.CASCADE)
     InfillMultiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.00)
     TotalWeight = models.IntegerField()
