@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404, messages
 from .forms import FilamentForm
-from ..models import Filament
+from ...models import Filament
 
 # List all filaments
 def filament_list(request):

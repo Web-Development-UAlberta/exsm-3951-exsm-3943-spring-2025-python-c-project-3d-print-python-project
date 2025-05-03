@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404, messages
 from .forms import SuppliersForm
-from ..models import Suppliers
+from ...models import Suppliers
 
 # List all suppliers
 def supplier_list(request):

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404, messages
 from .forms import ModelsForm
-from ..models import Models
+from ...models import Models
 
 
 # List all models
