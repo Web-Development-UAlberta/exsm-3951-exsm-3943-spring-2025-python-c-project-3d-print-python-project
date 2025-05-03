@@ -283,5 +283,156 @@ class SignupPageTests(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertFormError(response, 'form', 'email', 'User with this email already exists.')
+
+
+class HomePageTests(TestCase):
+    """Tests for the home page functionality"""
+    
+    def setUp(self):
+        # Create client for testing
+        self.client = Client()
+        self.home_url = reverse('home') 
+
+        self.product = Models.objects.create(
+            Name="Test Product",
+            Description="Test Description",
+            FixedCost=10.00,
+            EstimatedPrintVolume=100,
+            BaseInfill=0.2,
+        )
+    
+    def test_home_page_load(self):
+        """Test Home page loads successfully"""
+        response = self.client.get(self.home_url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'home.html')
+        self.assertContains(response, 'hero banner')
+
+    def test_navigation_links(self):
+        """Test Navigation links on the home page"""
+        response = self.client.get(self.home_url)
+        
+        self.assertContains(response, reverse('profile'))
+        self.assertContains(response, reverse('cart'))
+        self.assertContains(response, reverse('catalog'))
+        self.assertContains(response, reverse('customization'))
+        self.assertContains(response, reverse('orders'))
+        self.assertContains(response, reverse('shop'))
+
+    def test_search_functionality(self):
+        """Test Search functionality on the home page"""
+        response = self.client.get(self.home_url, {'search': 'Test'})
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Search results for "Test"')
+    
+
+class CatalogPageTests(TestCase):
+    """Tests for the catalog page functionality"""
+    
+    def setUp(self):
+        # Create client for testing
+        self.client = Client()
+        self.catalog_url = reverse('catalog') 
+
+        self.product = Models.objects.create(
+            Name="Test Product",
+            Description="Test Description",
+            FixedCost=10.00,
+            EstimatedPrintVolume=100,
+            BaseInfill=0.2,
+        )
+
+        self.material = Materials.objects.create(Name="PLA")
+        self.filament = Filament.objects.create(
+            Name="PLA Filament",
+            Material=self.material,
+            ColorHexCode="FF0000"
+        )
+    
+    def test_catalog_page_load(self):
+        """Test Catalog page loads successfully"""
+        response = self.client.get(self.catalog_url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'catalog.html')
+        self.assertContains(response, 'Catalog')
+
+    def test_product_display(self):
+        """Test Product display on the catalog page"""
+        response = self.client.get(self.catalog_url)
+        
+        self.assertContains(response, self.product.Name)
+        self.assertContains(response, self.product.Description)
+        self.assertContains(response, self.product.FixedCost)
+        self.assertContains(response, self.product.EstimatedPrintVolume)
+        self.assertContains(response, self.product.BaseInfill)
+
+    
+    def test_customization_options(self):
+        """Test Customization options on the catalog page"""
+        product_details_url = reverse('product_details', args=[self.product.id])
+        response = self.client.get(product_details_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'PLA Filament')
+        self.assertContains(response, 'PLA')
+        self.assertContains(response, 'FF0000')
+        self.assertContains(response, 'Add to Cart')
+        
+
+    def test_add_to_cart_functionality(self):
+        """Test Add to Cart functionality on the catalog page"""
+        add_to_cart_url = reverse('add_to_cart', args=[self.product.id])
+        response = self.client.post(add_to_cart_url, {'quantity': 1})
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('cart'))
+        self.assertContains(response, 'Product added to cart')
+
+
+class CartPageTests(TestCase):
+    """Tests for the cart page functionality"""
+    
+    def setUp(self):
+        # Create client for testing
+        self.client = Client()
+        self.cart_url = reverse('cart') 
+
+        self.product = Models.objects.create(
+            Name="Test Product",
+            Description="Test Description",
+            FixedCost=10.00,
+            EstimatedPrintVolume=100,
+            BaseInfill=0.2,
+        )
+
+        
+    def test_cart_page_load(self):
+        """Test Cart page loads successfully"""
+        response = self.client.get(self.cart_url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'cart.html')
+        self.assertContains(response, 'Cart')
+
+
+    # def test_increase_quantity(self):
+    #     """Test Increase quantity of product in cart"""
+    #     add_to_cart_url = reverse('add_to_cart', args=[self.product.id])
+    #     self.client.post(add_to_cart_url, {'quantity': 1})
+        
+    #     response = self.client.post(reverse('update_cart'), {
+    #         'product_id': self.product.id,
+    #         'quantity': 2
+    #     })
+        
+    #     self.assertEqual(response.status_code, 302)
+    #     self.assertRedirects(response, reverse('cart'))
+    #     self.assertContains(response, 'Quantity updated successfully')
+
+
+      
+
     
     
