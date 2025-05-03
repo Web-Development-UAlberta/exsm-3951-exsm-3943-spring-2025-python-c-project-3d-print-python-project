@@ -1,0 +1,34 @@
+# Python Project - 3D Print Store
+
+## Backend Development Setup
+
+1. It is recommended to first create a virtual environment to contain python dependencies:
+`python -m venv .venv`
+
+2. And activate it:
+`source .venv/bin/activate`
+
+3. Install requirements into root of the repo:
+`pip install requirements.txt`
+
+4. Spin up a database in MySQL or MariaDB named `print_shop`
+
+5. Create a copy of the `.env.example` file with the name `.env`
+
+6. Update the `DATABASE_URL` variable with your username and password for MySQL/ MariaDB
+
+7. Run migrations:
+`python manage.py migrate`
+
+8. Dev superuser: `admin` && `admin`
+
+9. Run server:
+`python manage.py runserver`
+
+
+## Credits
+
+[Environment Variables](https://alicecampkin.medium.com/how-to-set-up-environment-variables-in-django-f3c4db78c55f)
+
+[Extend User Model OneToOneField](https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#extending-the-existing-user-model)
+[Example of Extending User Model](https://www.crunchydata.com/blog/extending-djangos-user-model-with-onetoonefield)
