@@ -1,0 +1,54 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .forms import OrderItemsForm
+from ...models import OrderItems
+
+
+# List all order items
+def order_items_list(request):
+    order_items = OrderItems.objects.all()
+    return render(request, "orders/order_items_list.html", {"order_items": order_items})
+
+
+# Create a new order item
+def add_order_item(request):
+    if request.method == "POST":
+        form = OrderItemsForm(request.POST)
+        if form.is_valid():
+            order_item = form.save()
+            messages.success(
+                request, f"Order item {order_item.Model.Name} was created successfully"
+            )
+            return redirect("order-items-list")
+    else:
+        form = OrderItemsForm()
+    return render(request, "orders/order_items_form.html", {"form": form})
+
+
+# Edit an existing order item
+def edit_order_item(request, pk):
+    order_item = get_object_or_404(OrderItems, pk=pk)
+    if request.method == "POST":
+        form = OrderItemsForm(request.POST, instance=order_item)
+        if form.is_valid():
+            order_item = form.save()
+            messages.success(
+                request, f"Order item {order_item.Model.Name} was updated successfully"
+            )
+            return redirect("order-items-list")
+    else:
+        form = OrderItemsForm(instance=order_item)
+    return render(request, "orders/order_items_form.html", {"form": form})
+
+
+# Delete an order item
+def delete_order_item(request, pk):
+    order_item = get_object_or_404(OrderItems, pk=pk)
+    if request.method == "POST":
+        name = order_item.Model.Name
+        order_item.delete()
+        messages.success(request, f"Order item {name} was deleted successfully")
+        return redirect("order-items-list")
+    return render(
+        request, "orders/order_items_confirm_delete.html", {"order_item": order_item}
+    )
