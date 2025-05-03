@@ -2,6 +2,8 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 from store.models import Materials, Filament, Suppliers, RawMaterials, InventoryChange, Models, UserProfiles, Shipping, Orders, OrderItems, FulfillmentStatus
+from django.utils import timezone
+import datetime
 
 class LoginPageTests(TestCase):
 
@@ -525,7 +527,6 @@ class ProfileOrdersPageTests(TestCase):
     def setUp(self):
         # Create client for testing
         self.client = Client()
-        self.profile_url = reverse('profile')
         self.user = User.objects.create_user(
             username='test@example.com',
             email='test@example.com',
@@ -533,16 +534,191 @@ class ProfileOrdersPageTests(TestCase):
         )
         
         # Create user profile
-        self.profile = UserProfiles.objects.create(
-            user=self.user,
-            Address="123 Test St.",
-            Phone="123-456-7890"
+        self.profile = UserProfiles.objects.create(user=self.user)
+        
+        self.shipping = Shipping.objects.create(
+            Name="Standard Shipping",
+            Rate=5.00,
+            ShipTime=7,
+        )
+        self.order = Orders.objects.create(
+            User=self.user,
+            Shipping=self.shipping,
+            TotalPrice=100.00,
+            CreatedAt="2023-10-01",
+            EstimatedShipDate=None,
+            ExpeditedService=False,
+        )
+        self.fullfillment_status = FulfillmentStatus.objects.create(
+            Order=self.order,
+            Status="shipped",
         )
         self.client.login(username='test@example.com', password='testpassword123')
 
+    def test_orders_page_load_authenticated(self):
+        """Test Orders page loads successfully for authenticated user"""
+       
+        response = self.client.get(reverse('profile_orders'))
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'test@example.com') 
+        self.assertTemplateUsed(response, 'profile/orders.html')
+
+    def test_display_processing_orders(self):
+        """Test Display processing orders"""
+        response = self.client.get(reverse('profile_orders'))
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Processing')
+       
+    def test_display_shipping_orders(self):
+        """Test Display shipping orders"""
+        response = self.client.get(reverse('profile_orders'))
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Shipped')
+    
+    def test_display_completed_orders(self):
+        """Test Display completed orders"""
+        response = self.client.get(reverse('profile_orders'))
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Completed')
+
+    def test_signout_link(self):
+        """Test Signout link"""
+        response = self.client.get(reverse('logout'), follow=True)
+        
+        self.assertRedirects(response, reverse('login'))
+
+
+class OrderTrackingPageTests(TestCase):
+    """Tests for the order tracking page functionality"""
+    
+    def setUp(self):
+        """Set up test data"""
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpassword"
+        )
+        self.client = Client()
+        self.user_profile = self.user.user_profile
+        self.user_profile.Address = "123 Test Street"
+        self.user_profile.Phone = "555-1234"
+        self.user_profile.save()
+        
+        self.shipping = Shipping.objects.create(
+            Name="Basic Shipping", 
+            Rate=5.99, 
+            ShipTime=5
+        )
+        
+        self.material = Materials.objects.create(Name="PLA")
+        
+        self.filament = Filament.objects.create(
+            Name="Standard PLA",
+            Material=self.material,
+            ColorHexCode="FF0000"  
+        )
+        
+        self.supplier = Suppliers.objects.create(
+            Name="Filament Supply Co",
+            Address="456 Supply St",
+            Phone="555-5678",
+            Email="supply@example.com"
+        )
+        
+        self.raw_material = RawMaterials.objects.create(
+            Supplier=self.supplier,
+            Filament=self.filament,
+            BrandName="PrintWell",
+            Cost=20.00,
+            MaterialWeightPurchased=1000,
+            MaterialDensity=1.24,
+            ReorderLeadTime=7,
+            WearAndTearMultiplier=1.05
+        )
+        
+        self.inventory = InventoryChange.objects.create(
+            RawMaterial=self.raw_material,
+            QuantityWeightAvailable=950,
+            UnitCost=0.02 
+        )
+     
+        self.model = Models.objects.create(
+            Name="Test Model",
+            Description="A test 3D model",
+            FilePath="models/test_model.stl",
+            FixedCost=2.50,
+            EstimatedPrintVolume=100,
+            BaseInfill=0.20
+        )
+        
+        self.order = Orders.objects.create(
+            User=self.user,
+            Shipping=self.shipping,
+            TotalPrice=35.75,
+            EstimatedShipDate=timezone.now() + datetime.timedelta(days=7),
+            ExpeditedService=False
+        )
+        
+        self.order_item = OrderItems.objects.create(
+            InventoryChange=self.inventory,
+            Order=self.order,
+            Model=self.model,
+            InfillMultiplier=1.0,
+            TotalWeight=50,
+            CostOfGoodsSold=3.50,
+            Markup=0.15,
+            ItemPrice=29.76,
+            ItemQuantity=1,
+            IsCustom=False
+        )
+        
+        self.fulfillment = FulfillmentStatus.objects.create(
+            Order=self.order,
+            OrderStatus=FulfillmentStatus.Status.PAID
+        )
+
+    def test_order_tracking_page_authenticated(self):
+        """Test that authenticated users can access the order tracking page"""
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.get(reverse('order_tracking'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Order History")
+
+    
+    def test_order_tracking_page_unauthenticated(self):
+        """Test that unauthenticated users are redirected to login"""
+        response = self.client.get(reverse('order_tracking'))
+        self.assertEqual(response.status_code, 302)  
+        self.assertTrue(response.url.startswith('/accounts/login/'))
+
+    def test_order_history_display(self):
+        """Test that order history is displayed correctly"""
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.get(reverse('order_tracking'))
+        
+        self.assertContains(response, "Order History")
+        self.assertContains(response, "Order Date")
+        self.assertContains(response, "Order Number")
+        self.assertContains(response, "Total Price")
+        self.assertContains(response, "Basic Shipping")
+       
+
+    def test_order_summary_display(self):
+        """Test that order summary is displayed correctly"""
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.get(reverse('order_tracking'))
+        
+        self.assertContains(response, "Order Summary")
+        self.assertContains(response, "Delivery Address")
+        self.assertContains(response, "Order subtotal")
+        self.assertContains(response, "Total")
+
+
+            
+
         
 
-      
-
-    
-    
+        
+        
