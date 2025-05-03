@@ -13,6 +13,9 @@ class Materials(models.Model):
 
     Name = models.CharField(max_length=100)
 
+    def __str__(self):
+        return f"{self.Name}"
+
 
 class Filament(models.Model):
     """Child table to store all filament names and their properties - Parent to RawMaterials"""
@@ -20,6 +23,9 @@ class Filament(models.Model):
     Name = models.CharField(max_length=255)
     Material = models.ForeignKey(Materials, on_delete=models.CASCADE)
     ColorHexCode = models.CharField(max_length=6)
+
+    def __str__(self):
+        return f"{self.Material.Name} - {self.ColorHexCode}"
 
 
 class Suppliers(models.Model):
@@ -29,6 +35,9 @@ class Suppliers(models.Model):
     Address = models.CharField(max_length=255)
     Phone = models.CharField(max_length=25)
     Email = models.EmailField(max_length=255)
+
+    def __str__(self):
+        return f"{self.Name}"
 
 
 class RawMaterials(models.Model):
@@ -46,6 +55,9 @@ class RawMaterials(models.Model):
     )
     PurchasedDate = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.Filament.Name} - {self.Filament.ColorHexCode} - {self.MaterialWeightPurchased}g"
+
 
 class InventoryChange(models.Model):
     """Child table to store all inventory changes"""
@@ -54,6 +66,9 @@ class InventoryChange(models.Model):
     QuantityWeightAvailable = models.IntegerField()
     InventoryChangeDate = models.DateTimeField(auto_now_add=True)
     UnitCost = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.RawMaterial.Filament.Name} - {self.QuantityWeightAvailable}g"
 
 
 class Models(models.Model):
@@ -68,6 +83,9 @@ class Models(models.Model):
     BaseInfill = models.DecimalField(max_digits=3, decimal_places=2)
     CreatedAt = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.Name}"
+
 
 class UserProfiles(models.Model):
     """Table to store all user profiles"""
@@ -78,6 +96,9 @@ class UserProfiles(models.Model):
     Address = models.CharField(max_length=255)
     Phone = models.CharField(max_length=25)
 
+    def __str__(self):
+        return f"{self.user.username}"
+
 
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
@@ -85,7 +106,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfiles.objects.create(user=instance)
     else:
-        instance.profile.save()
+        instance.user_profile.save()
 
 
 class Shipping(models.Model):
@@ -94,6 +115,9 @@ class Shipping(models.Model):
     Name = models.CharField(max_length=255)
     Rate = models.DecimalField(max_digits=10, decimal_places=2)
     ShipTime = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.Name} - {self.Rate} - {self.ShipTime} days"
 
 
 class Orders(models.Model):
@@ -105,6 +129,9 @@ class Orders(models.Model):
     CreatedAt = models.DateTimeField(auto_now_add=True)
     EstimatedShipDate = models.DateTimeField(null=True)
     ExpeditedService = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.User.username} - {self.CreatedAt} - {self.TotalPrice}"
 
 
 class OrderItems(models.Model):
@@ -120,6 +147,9 @@ class OrderItems(models.Model):
     ItemPrice = models.DecimalField(max_digits=10, decimal_places=2)
     ItemQuantity = models.IntegerField()
     IsCustom = models.BooleanField()
+
+    def __str__(self):
+        return f"{self.Model.Name} - {self.ItemQuantity}"
 
 
 class FulfillmentStatus(models.Model):
@@ -139,3 +169,8 @@ class FulfillmentStatus(models.Model):
     Order = models.ForeignKey(Orders, on_delete=models.CASCADE)
     OrderStatus = Status.choices
     StatusChangeDate = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return (
+            f"{self.Order.User.username} - {self.OrderStatus} - {self.StatusChangeDate}"
+        )
