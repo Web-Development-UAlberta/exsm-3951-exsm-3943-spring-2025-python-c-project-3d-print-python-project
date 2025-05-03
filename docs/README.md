@@ -2,20 +2,29 @@
 
 ## Backend Development Setup
 
-It is recommended to first create a virtual environment to contain python dependencies:
+1. It is recommended to first create a virtual environment to contain python dependencies:
 `python -m venv .venv`
 
-And activate it:
+2. And activate it:
 `source .venv/bin/activate`
 
-Install requirements into root of the repo:
+3. Install requirements into root of the repo:
 `pip install requirements.txt`
 
-Spin up a database in MySQL or MariaDB named `print_shop`
+4. Spin up a database in MySQL or MariaDB named `print_shop`
 
-Create a copy of the `.env.example` file with the name `.env`
+5. Create a copy of the `.env.example` file with the name `.env`
 
-- Update the `DATABASE_URL` variable with your username and password for MySQL/ MariaDB
+6. Update the `DATABASE_URL` variable with your username and password for MySQL/ MariaDB
+
+7. Run migrations:
+`python manage.py migrate`
+
+8. Dev superuser: `admin` && `admin`
+
+9. Run server:
+`python manage.py runserver`
+
 
 ## Credits
 
