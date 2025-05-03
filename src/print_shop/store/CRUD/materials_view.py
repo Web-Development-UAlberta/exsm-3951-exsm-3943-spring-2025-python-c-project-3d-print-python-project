@@ -37,8 +37,9 @@ def edit_material(request, pk):
 def delete_material(request, pk):
     material = get_object_or_404(Materials, pk=pk)
     if request.method == 'POST':
+        name = material.Name
         material.delete()
-        messages.success(request, f'Material {material.Name} was deleted successfully')
+        messages.success(request, f'Material {name} was deleted successfully')
         return redirect('materials-list')
     return render(request, 'materials/material_confirm_delete.html', {'material': material})
 
