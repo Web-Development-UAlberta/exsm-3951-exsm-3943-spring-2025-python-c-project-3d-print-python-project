@@ -167,7 +167,9 @@ class FulfillmentStatus(models.Model):
         REFUNDED = "Refunded", "Refunded"
 
     Order = models.ForeignKey(Orders, on_delete=models.CASCADE)
-    OrderStatus = Status.choices
+    # OrderStatus = Status.choices
+    OrderStatus = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.DRAFT)
     StatusChangeDate = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
