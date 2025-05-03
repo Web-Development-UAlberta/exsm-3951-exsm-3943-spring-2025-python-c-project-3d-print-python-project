@@ -1,5 +1,6 @@
 from django.test import TestCase
 from store.models import Materials, Filament, Suppliers, RawMaterials, InventoryChange, Models, UserProfiles, Shipping, Orders, OrderItems, FulfillmentStatus
+from django.core.exceptions import ValidationError
 
 class MaterialsModelTestCase(TestCase):
     """Test case for the Materials model."""
@@ -36,4 +37,14 @@ class FilamentModelTestCase(TestCase):
     def test_filament_relationship(self):
         """Test the relationship between Filament and Materials."""
         self.assertEqual(self.filament.Material.Name, "PLA")
+
+    def test_color_code_valid(self):
+        """Test that the color hex code is valid."""
+        filament = Filament.objects.create(
+            Name="Green Filament",
+            Material=self.material,
+            ColorHexCode="00FF00"
+        )   
+        self.assertEqual(filament.ColorHexCode, "00FF00")
         
+    
