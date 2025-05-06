@@ -1,0 +1,18 @@
+MODELS LIST TEMPLATE
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Models</h1>
+  <a href="{% url 'add-model' %}">Add New Model</a>
+  <ul>
+    {% for model in models %}
+      <li>
+        {{ model.Name }} 
+        <a href="{% url 'edit-model' model.pk %}">Edit</a>
+        <a href="{% url 'delete-model' model.pk %}">Delete</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}
