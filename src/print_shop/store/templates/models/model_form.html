@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ form.instance.pk|yesno:"Edit Model,Add New Model" }}</h1>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">{{ form.instance.pk|yesno:"Save Changes,Create Model" }}</button>
+  </form>
+{% endblock %}
