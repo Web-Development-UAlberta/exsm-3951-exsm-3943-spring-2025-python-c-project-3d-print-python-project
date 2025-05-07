@@ -1,29 +1,15 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Shipping Methods</h1>
-    <a href="{% url 'add-shipping' %}">Add Shipping Method</a>
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Rate</th>
-                <th>Ship Time</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in shipping %}
-                <tr>
-                    <td>{{ item.Name }}</td>
-                    <td>{{ item.Rate }}</td>
-                    <td>{{ item.ShipTime }}</td>
-                    <td>
-                        <a href="{% url 'edit-shipping' item.pk %}">Edit</a> |
-                        <a href="{% url 'delete-shipping' item.pk %}">Delete</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <h1>Shipping</h1>
+  <a href="{% url 'add-shipping' %}">Add Shipping Method</a>
+  <ul>
+    {% for item in shipping %}
+      <li>
+        {{ item.Name }} — {{ item.Rate }} — {{ item.ShipTime }} days —
+        <a href="{% url 'edit-shipping' item.pk %}">Edit</a> |
+        <a href="{% url 'delete-shipping' item.pk %}">Delete</a>
+      </li>
+    {% endfor %}
+  </ul>
 {% endblock %}
