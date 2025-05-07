@@ -1,0 +1,22 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <title>3D Print Shop</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		{% tailwind_css %}
+	</head>
+    <body>
+		<header>
+            <nav>
+			</nav>
+		</header>
+		<main>
+			{% block content %}
+			{% endblock %}
+		</main>
+		<footer>
+		</footer>
+	</body>
+</html>
