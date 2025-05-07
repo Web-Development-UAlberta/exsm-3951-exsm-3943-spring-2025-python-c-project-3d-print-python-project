@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{% if form.instance.pk %}Edit Supplier{% else %}Add New Supplier{% endif %}</h1>
+
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">
+      {% if form.instance.pk %}Update Supplier{% else %}Add Supplier{% endif %}
+    </button>
+  </form>
+{% endblock %}

@@ -1,22 +1,84 @@
-{% load static tailwind_tags %}
 <!DOCTYPE html>
-<html lang="en">
-	<head>
-    <title>3D Print Shop</title>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		{% tailwind_css %}
-	</head>
-    <body>
-		<header>
-            <nav>
-			</nav>
-		</header>
-		<main>
-			{% block content %}
-			{% endblock %}
-		</main>
-		<footer>
-		</footer>
-	</body>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Our Site{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <!-- Sticky Header -->
+    <header class="sticky top-0 bg-black text-white shadow-md z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <!-- Logo and Nav -->
+            <div class="flex items-center">
+                <div class="mr-8">
+                    <img src="/api/placeholder/150/50" alt="Logo" class="h-10" />
+                </div>
+                <nav class="flex space-x-6">
+                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Home</a>
+                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Catalog</a>
+                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Customization</a>
+                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Cart</a>
+                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Orders</a>
+                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Profile</a>
+                </nav>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="flex items-center">
+                <div class="relative">
+                    <input type="text" placeholder="Search..." class="bg-gray-800 text-white px-4 py-1 rounded-full focus:outline-none">
+                    <button class="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <div class="container mx-auto px-4 py-8">
+            {% block content %}
+            <h1 class="text-3xl font-bold mb-6">Welcome to our website</h1>
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Sticky Footer -->
+    <footer class="sticky bottom-0 bg-black text-white py-6 shadow-inner z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <!-- Newsletter -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-2">Newsletter</h2>
+                    <p class="text-gray-400 text-sm">Stay updated with our latest news and offers</p>
+                </div>
+
+                <!--Email Form -->
+                <div class="flex">
+                    <input type="email" placeholder="Your email address" class="px-4 py-2 rounded-l bg-gray-800 text-white focus:outline-none">
+                    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-r text-white transition duration-300">Subscribe</button>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center text-sm text-gray-400">
+                <p>© {% now "Y" %} 3D Print Store. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
 </html>

@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .forms import SuppliersForm
+from store.forms.suppliers_form import SuppliersForm
 from ...models import Suppliers
 
 
 # List all suppliers
 def supplier_list(request):
     suppliers = Suppliers.objects.all()
-    return render(request, "supplier/supplier_list.html", {"suppliers": suppliers})
+    return render(request, "suppliers/supplier_list.html", {"suppliers": suppliers})
 
 
 # Create a new supplier
