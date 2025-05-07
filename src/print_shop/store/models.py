@@ -24,7 +24,9 @@ class Filament(models.Model):
 
     Name = models.CharField(max_length=255)
     Material = models.ForeignKey(Materials, on_delete=models.CASCADE)
-    ColorHexCode = models.CharField(max_length=6, validators=[RegexValidator(r'^[0-9A-Fa-f]{6}$')])
+    ColorHexCode = models.CharField(
+        max_length=6, validators=[RegexValidator(r"^[0-9A-Fa-f]{6}$")]
+    )
 
     def __str__(self):
         return f"{self.Material.Name} - {self.ColorHexCode}"
@@ -53,17 +55,21 @@ class RawMaterials(models.Model):
     MaterialDensity = models.DecimalField(max_digits=3, decimal_places=2)
     ReorderLeadTime = models.IntegerField()
     WearAndTearMultiplier = models.DecimalField(
-        max_digits=3, decimal_places=2, default=1.00, validators=[MinValueValidator(1.00)]
+        max_digits=3,
+        decimal_places=2,
+        default=1.00,
+        validators=[MinValueValidator(1.00)],
     )
     PurchasedDate = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.Filament.Name} - {self.Filament.ColorHexCode} - {self.MaterialWeightPurchased}g"
-    
+
     @property
     def current_inventory(self):
-      """Get the most recent inventory level"""
-      return self.inventorychange_set.order_by('-InventoryChangeDate').first()
+        """Get the most recent inventory level"""
+        return self.inventorychange_set.order_by("-InventoryChangeDate").first()
+
 
 class InventoryChange(models.Model):
     """Child table to store all inventory changes"""
@@ -98,17 +104,31 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
         InventoryChange.objects.create(
             RawMaterial=instance,
             QuantityWeightAvailable=instance.MaterialWeightPurchased,
-            UnitCost=instance.Cost / instance.MaterialWeightPurchased
+            UnitCost=instance.Cost / instance.MaterialWeightPurchased,
         )
     else:
-        initial_inventory = InventoryChange.objects.filter(RawMaterial=instance).order_by('InventoryChangeDate').first()
+        initial_inventory = (
+            InventoryChange.objects.filter(RawMaterial=instance)
+            .order_by("InventoryChangeDate")
+            .first()
+        )
         if initial_inventory:
-            inventory_count = InventoryChange.objects.filter(RawMaterial=instance).count()
-            has_orders = OrderItems.objects.filter(InventoryChange__RawMaterial=instance).exists()
+            inventory_count = InventoryChange.objects.filter(
+                RawMaterial=instance
+            ).count()
+            has_orders = OrderItems.objects.filter(
+                InventoryChange__RawMaterial=instance
+            ).exists()
             if inventory_count == 1 or not has_orders:
-                initial_inventory.QuantityWeightAvailable = instance.MaterialWeightPurchased
-                initial_inventory.UnitCost = instance.Cost / instance.MaterialWeightPurchased
-                initial_inventory.save(update_fields=['QuantityWeightAvailable', 'UnitCost'])
+                initial_inventory.QuantityWeightAvailable = (
+                    instance.MaterialWeightPurchased
+                )
+                initial_inventory.UnitCost = (
+                    instance.Cost / instance.MaterialWeightPurchased
+                )
+                initial_inventory.save(
+                    update_fields=["QuantityWeightAvailable", "UnitCost"]
+                )
 
 
 class Models(models.Model):
@@ -172,17 +192,19 @@ class Orders(models.Model):
 
     def __str__(self):
         return f"{self.User.username} - {self.CreatedAt} - {self.TotalPrice}"
-    
+
     def save(self, *args, **kwargs):
         """Calculate total price before saving"""
         if self.pk:
             order_items = self.orderitems_set.all()
-            items_total = sum(item.ItemPrice * item.ItemQuantity for item in order_items)
+            items_total = sum(
+                item.ItemPrice * item.ItemQuantity for item in order_items
+            )
             shipping_cost = self.Shipping.Rate
             self.TotalPrice = items_total + shipping_cost
             if self.ExpeditedService:
                 self.TotalPrice *= 1.5
-        
+
         super().save(*args, **kwargs)
 
 
@@ -194,27 +216,39 @@ class OrderItems(models.Model):
     Model = models.ForeignKey(Models, on_delete=models.PROTECT)
     InfillMultiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.00)
     TotalWeight = models.IntegerField()
-    CostOfGoodsSold = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    Markup = models.DecimalField(max_digits=3, decimal_places=2, default=1.15, validators=[MinValueValidator(1.00)])
+    CostOfGoodsSold = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
+    )
+    Markup = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=1.15,
+        validators=[MinValueValidator(1.00)],
+    )
     ItemPrice = models.DecimalField(max_digits=10, decimal_places=2)
     ItemQuantity = models.IntegerField()
     IsCustom = models.BooleanField()
 
     def __str__(self):
         return f"{self.Model.Name} - {self.ItemQuantity}"
-    
+
     def save(self, *args, **kwargs):
         """Calculate costs before saving"""
         cost_per_gram = self.InventoryChange.UnitCost
         density = self.InventoryChange.RawMaterial.MaterialDensity
         wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
-        volume_cm3 = self.Model.EstimatedPrintVolume * self.Model.BaseInfill * self.InfillMultiplier
+        volume_cm3 = (
+            self.Model.EstimatedPrintVolume
+            * self.Model.BaseInfill
+            * self.InfillMultiplier
+        )
         self.TotalWeight = int(volume_cm3 * density)
         material_cost = self.TotalWeight * cost_per_gram * wear_tear
         self.CostOfGoodsSold = self.Model.FixedCost + material_cost
         self.ItemPrice = self.CostOfGoodsSold * self.Markup
-        
+
         super().save(*args, **kwargs)
+
 
 @receiver(post_save, sender=OrderItems)
 def create_inventory_change(sender, instance, created, **kwargs):
@@ -225,7 +259,7 @@ def create_inventory_change(sender, instance, created, **kwargs):
         InventoryChange.objects.create(
             RawMaterial=inventory.RawMaterial,
             QuantityWeightAvailable=new_quantity,
-            UnitCost=inventory.UnitCost
+            UnitCost=inventory.UnitCost,
         )
 
 
@@ -246,7 +280,8 @@ class FulfillmentStatus(models.Model):
     Order = models.ForeignKey(Orders, on_delete=models.CASCADE)
     # OrderStatus = Status.choices
     OrderStatus = models.CharField(
-        max_length=20, choices=Status.choices, default=Status.DRAFT)
+        max_length=20, choices=Status.choices, default=Status.DRAFT
+    )
     StatusChangeDate = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
