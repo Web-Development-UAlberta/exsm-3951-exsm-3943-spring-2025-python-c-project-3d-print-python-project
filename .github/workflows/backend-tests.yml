@@ -17,8 +17,6 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: test_db
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_pass
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=5
@@ -41,7 +39,7 @@ jobs:
 
       - name: Wait for MariaDB to be ready
         run: |
-          while ! mysqladmin ping -h 127.0.0.1 -P 3306 -u test_user -ptest_pass --silent; do
+          while ! mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot --silent; do
             echo "Waiting for MariaDB to be ready..."
             sleep 5
           done
@@ -49,7 +47,7 @@ jobs:
       - name: Set environment variables
         run: |
           cd src/print_shop
-          echo "DATABASE_URL=mysql://test_user:test_pass@127.0.0.1:3306/test_db" > .env
+          echo "DATABASE_URL=mysql://root:root@127.0.0.1:3306/test_db" > .env
 
       - name: Run tests
         run: |
