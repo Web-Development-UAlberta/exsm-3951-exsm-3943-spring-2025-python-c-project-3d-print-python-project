@@ -5,6 +5,7 @@ from .views.CRUD import materials_view
 from .views.CRUD import filament_view
 from .views.CRUD import raw_materials_view
 from .views.CRUD import shipping_view
+from .views.CRUD import fulfillment_status_view
 
 urlpatterns = [
     path("", models_view.models_list, name="models-list"),
@@ -37,4 +38,10 @@ urlpatterns = [
     path("shipping/add/", shipping_view.add_shipping, name="add-shipping"),
     path("shipping/edit/<int:pk>/", shipping_view.edit_shipping, name="edit-shipping"),
     path("shipping/delete/<int:pk>/", shipping_view.delete_shipping, name="delete-shipping"),
+    
+    # Fulfillment Status URLs disabled until Orders forms/templates are created
+    # path("fulfillment-status/", fulfillment_status_view.fulfillment_status_list, name="fulfillment-status-list"),
+    # path("fulfillment-status/add/", fulfillment_status_view.add_fulfillment_status, name="add-fulfillment-status"),
+    # path("fulfillment-status/edit/<int:pk>/", fulfillment_status_view.edit_fulfillment_status, name="edit-fulfillment-status"),
+    # path("fulfillment-status/delete/<int:pk>/", fulfillment_status_view.delete_fulfillment_status, name="delete-fulfillment-status"),
 ]
