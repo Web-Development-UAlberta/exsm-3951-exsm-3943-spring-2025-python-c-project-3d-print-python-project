@@ -2,6 +2,7 @@ from django.urls import path
 from .views.CRUD import models_view
 from .views.CRUD import suppliers_view
 from .views.CRUD import materials_view
+from .views.CRUD import filament_view
 
 urlpatterns = [
     path("", models_view.models_list, name="models-list"),
@@ -19,4 +20,9 @@ urlpatterns = [
     path("materials/add/", materials_view.add_material, name="add-material"),
     path("materials/edit/<int:pk>/", materials_view.edit_material, name="edit-material"),
     path("materials/delete/<int:pk>/", materials_view.delete_material, name="delete-material"),
+
+    path("filaments/", filament_view.filament_list, name="filament-list"),
+    path("filaments/add/", filament_view.add_filament, name="add-filament"),
+    path("filaments/edit/<int:pk>/", filament_view.edit_filament, name="edit-filament"),
+    path("filaments/delete/<int:pk>/", filament_view.delete_filament, name="delete-filament"),
 ]
