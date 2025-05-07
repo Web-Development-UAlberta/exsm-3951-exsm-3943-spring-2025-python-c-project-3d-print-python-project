@@ -48,7 +48,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "DATABASE_URL=mysql://test_user:test_pass@localhost:3306/test_db" >> $GITHUB_ENV
+          cd src/print_shop
+          echo "DATABASE_URL=mysql://test_user:test_pass@127.0.0.1:3306/test_db" > .env
 
       - name: Run tests
         run: |
