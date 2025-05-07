@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Raw Materials</h1>
+  <a href="{% url 'add-raw-material' %}">Add Raw Material</a>
+  <ul>
+    {% for rm in raw_materials %}
+      <li>
+        {{ rm }} —
+        <a href="{% url 'edit-raw-material' rm.pk %}">Edit</a> |
+        <a href="{% url 'delete-raw-material' rm.pk %}">Delete</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}
