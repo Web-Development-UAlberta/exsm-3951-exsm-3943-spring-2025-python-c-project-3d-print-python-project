@@ -2,7 +2,7 @@ name: Django Backend Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, Test_Workflow]
   pull_request:
     branches: [main]
   workflow_dispatch:
