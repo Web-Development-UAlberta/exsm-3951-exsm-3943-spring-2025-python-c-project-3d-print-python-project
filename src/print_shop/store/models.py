@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import RegexValidator, MinValueValidator
-from django.db.models import Max, OuterRef, Subquery
 
 
 class Materials(models.Model):
