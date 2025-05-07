@@ -4,7 +4,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.validators import RegexValidator, MinValueValidator
 
@@ -19,12 +19,17 @@ class Materials(models.Model):
 
 
 class Filament(models.Model):
-    """Child table to store all filament names and their properties - Parent to RawMaterials"""
+    """
+    Child table of Materials to store all filament names and their properties
+    Parent to RawMaterials
+    """
 
     Name = models.CharField(max_length=255)
     Material = models.ForeignKey(Materials, on_delete=models.CASCADE)
     ColorHexCode = models.CharField(
-        max_length=6, validators=[RegexValidator(r"^[0-9A-Fa-f]{6}$")]
+        # Regex Validator to ensure valid hex color code
+        max_length=6,
+        validators=[RegexValidator(r"^[0-9A-Fa-f]{6}$")],
     )
 
     def __str__(self):
@@ -44,7 +49,15 @@ class Suppliers(models.Model):
 
 
 class RawMaterials(models.Model):
-    """Child table to store all raw materials and their properties"""
+    """
+    Child table to store all raw materials and their properties
+    Parent to Inventory change, when a new raw material is added
+    it will create an inventory change record
+    and set the quantity available to the amount purchased
+    and the unit cost to the cost per gram
+    This will be used to track the inventory of raw materials
+    and to calculate the cost of goods sold for each order item.
+    """
 
     Supplier = models.ForeignKey(Suppliers, on_delete=models.PROTECT)
     Filament = models.ForeignKey(Filament, on_delete=models.PROTECT)
@@ -66,7 +79,10 @@ class RawMaterials(models.Model):
 
     @property
     def current_inventory(self):
-        """Get the most recent inventory level"""
+        """
+        Get the most recent inventory level
+        So that we can check it more easily.
+        """
         return self.inventorychange_set.order_by("-InventoryChangeDate").first()
 
 
@@ -131,7 +147,7 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
 
 
 class Models(models.Model):
-    """Table to store all models"""
+    """Parent table to store all models"""
 
     Name = models.CharField(max_length=255)
     Description = models.TextField(null=True)
@@ -161,7 +177,11 @@ class UserProfiles(models.Model):
 
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
-    """Create or update the user profile when the user is created or updated."""
+    """
+    Create or update the user profile when the user is created or updated.
+    By adding UserProfile as a one-to-one field to the User model,
+    it keeps authentication seperate from the user profile but allows us to access it easily.
+    """
     if created:
         UserProfiles.objects.create(user=instance)
     else:
@@ -169,7 +189,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 
 
 class Shipping(models.Model):
-    """Table to store all shipping information"""
+    """Parent table to store all shipping information"""
 
     Name = models.CharField(max_length=255)
     Rate = models.DecimalField(max_digits=10, decimal_places=2)
@@ -232,7 +252,14 @@ class OrderItems(models.Model):
         return f"{self.Model.Name} - {self.ItemQuantity}"
 
     def save(self, *args, **kwargs):
-        """Calculate costs before saving"""
+        """
+        Override save to calculate costs before saving.
+        Cost of goods sold is calculated as:
+        Totalweight = Volume * Base infill * Infill multiplier * Material density
+        Material cost = Total weight * cost per gram * wear and tear
+        Cost of goods sold = Fixed cost + material cost
+        Item price = Cost of goods sold * markup
+        """
         cost_per_gram = self.InventoryChange.UnitCost
         density = self.InventoryChange.RawMaterial.MaterialDensity
         wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
@@ -250,8 +277,10 @@ class OrderItems(models.Model):
 
 
 @receiver(post_save, sender=OrderItems)
-def create_inventory_change(sender, instance, created, **kwargs):
-    """Create inventory change when order item is created"""
+def create_inventory_change(sender, instance, created, deleted, **kwargs):
+    """
+    Create inventory change when order item is created
+    """
     if created:
         inventory = instance.InventoryChange
         new_quantity = inventory.QuantityWeightAvailable - instance.TotalWeight
@@ -260,6 +289,20 @@ def create_inventory_change(sender, instance, created, **kwargs):
             QuantityWeightAvailable=new_quantity,
             UnitCost=inventory.UnitCost,
         )
+
+
+@receiver(post_delete, sender=OrderItems)
+def restore_inventory_on_delete(sender, instance, **kwargs):
+    """
+    Restore inventory when order item is deleted
+    """
+    inventory = instance.InventoryChange
+    new_quantity = inventory.QuantityWeightAvailable + instance.TotalWeight
+    InventoryChange.objects.create(
+        RawMaterial=inventory.RawMaterial,
+        QuantityWeightAvailable=new_quantity,
+        UnitCost=inventory.UnitCost,
+    )
 
 
 class FulfillmentStatus(models.Model):
