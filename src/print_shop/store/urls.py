@@ -3,6 +3,7 @@ from .views.CRUD import models_view
 from .views.CRUD import suppliers_view
 from .views.CRUD import materials_view
 from .views.CRUD import filament_view
+from .views.CRUD import raw_materials_view
 
 urlpatterns = [
     path("", models_view.models_list, name="models-list"),
@@ -25,4 +26,9 @@ urlpatterns = [
     path("filaments/add/", filament_view.add_filament, name="add-filament"),
     path("filaments/edit/<int:pk>/", filament_view.edit_filament, name="edit-filament"),
     path("filaments/delete/<int:pk>/", filament_view.delete_filament, name="delete-filament"),
+
+    path("raw-materials/", raw_materials_view.raw_materials_list, name="raw-materials-list"),
+    path("raw-materials/add/", raw_materials_view.add_raw_material, name="add-raw-material"),
+    path("raw-materials/edit/<int:pk>/", raw_materials_view.edit_raw_material, name="edit-raw-material"),
+    path("raw-materials/delete/<int:pk>/", raw_materials_view.delete_raw_material, name="delete-raw-material"),
 ]
