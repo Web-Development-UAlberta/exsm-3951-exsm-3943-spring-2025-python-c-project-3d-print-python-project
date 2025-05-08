@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Fulfillment Statuses</h1>
+  <a href="{% url 'add-fulfillment-status' %}">Add Fulfillment Status</a>
+  <ul>
+    {% for item in fulfillment_statuses %}
+      <li>
+        {{ item.Order.User.username }} — {{ item.OrderStatus }} — {{ item.StatusChangeDate }} —
+        <a href="{% url 'edit-fulfillment-status' item.pk %}">Edit</a> |
+        <a href="{% url 'delete-fulfillment-status' item.pk %}">Delete</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

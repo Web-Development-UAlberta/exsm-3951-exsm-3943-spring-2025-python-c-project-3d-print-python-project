@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Current Inventory Levels</h1>
+  <ul>
+    {% for entry in raw_materials_with_inventory %}
+      <li>
+        {{ entry.raw_material.Filament.Name }} - {{ entry.raw_material.Filament.ColorHexCode }}:
+        {{ entry.inventory_change.QuantityWeightAvailable }}g (Last updated: {{ entry.inventory_change.InventoryChangeDate }}){% if entry.needs_reorder %}
+          <strong>Reorder Needed</strong>
+        {% endif %}
+      </li>
+    {% empty %}
+      <li>No raw materials found.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
