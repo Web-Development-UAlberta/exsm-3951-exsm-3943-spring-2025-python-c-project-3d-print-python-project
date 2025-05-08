@@ -432,3 +432,50 @@ class TestShippingForm(TestCase):
         }
         form = ShippingForm(data=form_data)
         self.assertFalse(form.is_valid())  
+
+
+class TestSuppliersForm(TestCase):
+    """Test suite for the SuppliersForm."""
+
+    def test_valid_suppliers_form(self):
+        """Test that the SuppliersForm is valid with correct data."""
+        form_data = {
+            "Name": "Supplier A",
+            "Address": "123 Supply Street",
+            "Phone": "123-456-7890",
+            "Email": "supplier@example.com",
+        }
+        form = SuppliersForm(data=form_data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_missing_required_fields(self):
+        """Test that the form is invalid when required fields are missing."""
+        form = SuppliersForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn("Name", form.errors)
+        self.assertIn("Address", form.errors)
+        self.assertIn("Phone", form.errors)
+        self.assertIn("Email", form.errors)
+
+    def test_invalid_email(self):
+        """Test that invalid email format is rejected."""
+        form_data = {
+            "Name": "Supplier B",
+            "Address": "456 Vendor Rd",
+            "Phone": "123-456-7890",
+            "Email": "not-an-email", 
+        }
+        form = SuppliersForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("Email", form.errors)
+
+    def test_optional_phone_format(self):
+        """Test that phone field accepts any format """
+        form_data = {
+            "Name": "Supplier C",
+            "Address": "789 Market Lane",
+            "Phone": "(999) 999 9999",  
+            "Email": "supplierc@example.com",
+        }
+        form = SuppliersForm(data=form_data)
+        self.assertTrue(form.is_valid())
