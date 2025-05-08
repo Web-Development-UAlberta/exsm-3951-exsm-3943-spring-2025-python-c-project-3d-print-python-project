@@ -232,3 +232,22 @@ class InventoryChangeFormTest(TestCase):
         }
         form = InventoryChangeForm(data=form_data)
         self.assertTrue(form.is_valid())
+
+class TestMaterialsForm(TestCase):
+    """Test suite for the MaterialsForm."""
+
+    def test_materials_form_valid(self):
+        """Test that the MaterialsForm is valid with correct data."""
+        form_data = {
+            "Name": "PLA",
+        }
+        form = MaterialsForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_materials_form_invalid(self):
+        """Test that the MaterialsForm is invalid with incorrect data."""
+        form_data = {
+            "Name": "",
+        }
+        form = MaterialsForm(data=form_data)
+        self.assertFalse(form.is_valid())
