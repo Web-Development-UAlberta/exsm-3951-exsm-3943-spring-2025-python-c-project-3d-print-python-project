@@ -96,3 +96,59 @@ class LoginPageUITests(StaticLiveServerTestCase):
 
         subscribe_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Subscribe')]")
         self.assertIsNotNone(subscribe_button)
+
+class SignUpPageUITests(StaticLiveServerTestCase):
+    """Test suite for the sign-up page UI of the print shop website."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        options = Options()
+        # Run browser in headless mode
+        options.add_argument('--headless')  
+        cls.driver = webdriver.Chrome(options=options)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
+        super().tearDownClass()
+
+    def test_signup_page_ui_elements(self):
+        # Update with your signup URL name
+        self.driver.get(self.live_server_url + reverse('signup'))  
+
+        # Check page title
+        heading = self.driver.find_element(By.TAG_NAME, 'h1')
+        self.assertEqual(heading.text.strip(), 'Create Account')
+
+        # Check First Name field
+        first_name_field = self.driver.find_element(By.CSS_SELECTOR, 'input[name="first_name"]')
+        self.assertIsNotNone(first_name_field)
+        self.assertEqual(first_name_field.get_attribute('placeholder').lower(), 'first name')
+
+        # Check Last Name field
+        last_name_field = self.driver.find_element(By.CSS_SELECTOR, 'input[name="last_name"]')
+        self.assertIsNotNone(last_name_field)
+        self.assertEqual(last_name_field.get_attribute('placeholder').lower(), 'last name')
+
+        # Check email field
+        email_field = self.driver.find_element(By.CSS_SELECTOR, 'input[type="email"]')
+        self.assertIsNotNone(email_field)
+        self.assertEqual(email_field.get_attribute('placeholder').lower(), 'email')
+
+        # Check password field
+        password_field = self.driver.find_element(By.CSS_SELECTOR, 'input[type="password"]')
+        self.assertIsNotNone(password_field)
+        self.assertEqual(password_field.get_attribute('placeholder').lower(), 'password')
+
+        # Checkbox for Register to newsletter
+        newsletter_checkbox = self.driver.find_element(By.CSS_SELECTOR, 'input[type="checkbox"]')
+        self.assertIsNotNone(newsletter_checkbox)
+        self.assertEqual(newsletter_checkbox.get_attribute('value'), 'on')
+
+        # Check buttons
+        sign_up_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Create')]")
+        self.assertIsNotNone(sign_up_btn)
+
+        login_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Sign in')]")
+        self.assertIsNotNone(login_btn)
