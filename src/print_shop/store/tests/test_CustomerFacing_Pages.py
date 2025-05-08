@@ -519,7 +519,7 @@ class CartPageTests(TestCase):
         response = self.client.get(checkout_url)
         self.assertIn(response.status_code, [200, 302])
 
-
+    
 
 class ProfileOrdersPageTests(TestCase):
     """Tests for the profile page functionality"""
