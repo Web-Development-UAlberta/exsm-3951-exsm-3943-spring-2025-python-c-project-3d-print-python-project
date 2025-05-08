@@ -379,3 +379,56 @@ class TestRawMaterialsForm(TestCase):
         form = RawMaterialsForm(data=form_data)
         # This will currently pass unless MinValueValidator is added to Cost
         self.assertTrue(form.is_valid())
+
+class TestShippingForm(TestCase):
+    """Test suite for the ShippingForm."""
+
+    def test_valid_shipping_form(self):
+        """Test that the ShippingForm is valid with all required fields."""
+        form_data = {
+            "Name": "Standard Shipping",
+            "Rate": "5.00",
+            "ShipTime": "7"
+        }
+        form = ShippingForm(data=form_data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_missing_required_fields(self):
+        """Test that the form is invalid when required fields are missing."""
+        form = ShippingForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn("Name", form.errors)
+        self.assertIn("Rate", form.errors)
+        self.assertIn("ShipTime", form.errors)
+
+    def test_invalid_rate_type(self):
+        """Test that non-numeric rate is rejected."""
+        form_data = {
+            "Name": "Invalid Rate",
+            "Rate": "abc",  
+            "ShipTime": "3"
+        }
+        form = ShippingForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("Rate", form.errors)
+
+    def test_invalid_ship_time_type(self):
+        """Test that non-integer ship time is rejected."""
+        form_data = {
+            "Name": "Invalid Time",
+            "Rate": "10.00",
+            "ShipTime": "fast"  
+        }
+        form = ShippingForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("ShipTime", form.errors)
+
+    def test_negative_values(self):
+        """ Test that negative values are not accepted"""
+        form_data = {
+            "Name": "Negative Test",
+            "Rate": "-5.00",  
+            "ShipTime": "-2"
+        }
+        form = ShippingForm(data=form_data)
+        self.assertFalse(form.is_valid())  
