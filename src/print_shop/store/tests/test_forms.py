@@ -225,14 +225,14 @@ class TestInventoryChangeForm(TestCase):
         self.assertIn("QuantityWeightAvailable", form.errors)
 
     def test_negative_quantity(self):
-        """Test form allows negative values if not explicitly restricted."""
+        """Test form doesn't allow negative values in quantityweight."""
         form_data = {
             "RawMaterial": self.raw_material.id,
             "QuantityWeightAvailable": -100,
             "UnitCost": 0.10,
         }
         form = InventoryChangeForm(data=form_data)
-        self.assertTrue(form.is_valid())
+        self.assertFalse(form.is_valid())
 
 class TestMaterialsForm(TestCase):
     """Test suite for the MaterialsForm."""
