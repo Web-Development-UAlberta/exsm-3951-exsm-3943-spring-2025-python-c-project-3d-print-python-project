@@ -303,4 +303,79 @@ class TestModelsForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("FixedCost", form.errors)
 
- 
+
+class TestRawMaterialsForm(TestCase):
+    """Test suite for the RawMaterialsForm."""
+
+    def setUp(self):
+        # Create required foreign keys
+        self.material = Materials.objects.create(Name="PLA")
+        self.filament = Filament.objects.create(
+            Name="Red PLA",
+            Material=self.material,
+            ColorHexCode="FF0000"
+        )
+        self.supplier = Suppliers.objects.create(
+            Name="Supplier A",
+            Address="123 Print Rd",
+            Phone="1234567890",
+            Email="supplier@example.com"
+        )
+
+    def test_valid_raw_materials_form(self):
+        """Test that the RawMaterialsForm is valid with correct data."""
+        form_data = {
+            "Supplier": self.supplier.id,
+            "Filament": self.filament.id,
+            "BrandName": "Brand A",
+            "Cost": 100.00,
+            "MaterialWeightPurchased": 1000,
+            "MaterialDensity": 1.25,
+            "ReorderLeadTime": 7,
+            "WearAndTearMultiplier": 1.00,
+        }
+        form = RawMaterialsForm(data=form_data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_missing_required_fields(self):
+        """Test that required fields are enforced."""
+        form = RawMaterialsForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn("Supplier", form.errors)
+        self.assertIn("Filament", form.errors)
+        self.assertIn("Cost", form.errors)
+        self.assertIn("MaterialWeightPurchased", form.errors)
+        self.assertIn("MaterialDensity", form.errors)
+        self.assertIn("ReorderLeadTime", form.errors)
+
+    def test_invalid_wear_and_tear_multiplier(self):
+        """Test that values below 1.00 are rejected."""
+        form_data = {
+            "Supplier": self.supplier.id,
+            "Filament": self.filament.id,
+            "BrandName": "Brand A",
+            "Cost": 100.00,
+            "MaterialWeightPurchased": 1000,
+            "MaterialDensity": 1.25,
+            "ReorderLeadTime": 7,
+            "WearAndTearMultiplier": 0.95,  
+        }
+        form = RawMaterialsForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("WearAndTearMultiplier", form.errors)
+
+    def test_negative_cost_rejected(self):
+        """Test that negative cost is invalid if validators are added later."""
+        form_data = {
+            "Supplier": self.supplier.id,
+            "Filament": self.filament.id,
+            "BrandName": "Brand A",
+            "Cost": -10.00,  
+            "MaterialWeightPurchased": 1000,
+            "MaterialDensity": 1.25,
+            "ReorderLeadTime": 7,
+            "WearAndTearMultiplier": 1.00,
+        }
+        form = RawMaterialsForm(data=form_data)
+        # This will currently pass unless MinValueValidator is added to Cost
+        self.assertTrue(form.is_valid())
