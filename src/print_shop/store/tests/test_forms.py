@@ -9,6 +9,7 @@ from store.forms.shipping_form import ShippingForm
 from store.forms.suppliers_form import SuppliersForm
 from store.forms.inventory_form import InventoryChangeForm
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from store.models import (
     Materials,
     Filament,
@@ -174,7 +175,7 @@ class TestFulfillmentStatusForm(TestCase):
         form = FulfillmentStatusForm(data=form_data)
         self.assertFalse(form.is_valid())
 
-class InventoryChangeFormTest(TestCase):
+class TestInventoryChangeForm(TestCase):
     def setUp(self):
         self.material = Materials.objects.create(Name="PLA")
         self.filament = Filament.objects.create(
@@ -251,3 +252,55 @@ class TestMaterialsForm(TestCase):
         }
         form = MaterialsForm(data=form_data)
         self.assertFalse(form.is_valid())
+
+class TestModelsForm(TestCase):
+    """Test suite for the ModelsForm."""
+
+    def setUp(self):
+        self.valid_file = SimpleUploadedFile(
+            name="test_model.stl",
+            content=b"solid testmodel",
+            content_type="application/sla"
+        )
+
+    def test_models_form_valid(self):
+        """Test that the ModelsForm is valid with all required fields."""
+        form_data = {
+            "Name": "Test Model",
+            "Description": "This is a test 3D model.",
+            "FixedCost": "25.00",
+            "EstimatedPrintVolume": "150",
+            "BaseInfill": "0.25",
+        }
+        form_files = {
+            "FilePath": self.valid_file
+        }
+        form = ModelsForm(data=form_data, files=form_files)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_models_form_missing_required_fields(self):
+        """Test that the form is invalid when required fields are missing."""
+        form = ModelsForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn("Name", form.errors)
+        self.assertIn("FilePath", form.errors)
+        self.assertIn("FixedCost", form.errors)
+        self.assertIn("EstimatedPrintVolume", form.errors)
+        self.assertIn("BaseInfill", form.errors)
+
+    def test_models_form_invalid_decimal(self):
+        """Test that form catches invalid decimal input."""
+        form_data = {
+            "Name": "Bad Model",
+            "FixedCost": "abc",  
+            "EstimatedPrintVolume": "100",
+            "BaseInfill": "0.3",
+        }
+        form_files = {
+            "FilePath": self.valid_file
+        }
+        form = ModelsForm(data=form_data, files=form_files)
+        self.assertFalse(form.is_valid())
+        self.assertIn("FixedCost", form.errors)
+
+ 
