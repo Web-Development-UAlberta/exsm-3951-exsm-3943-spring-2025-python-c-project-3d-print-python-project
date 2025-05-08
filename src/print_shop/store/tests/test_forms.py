@@ -7,6 +7,7 @@ from store.forms.models_form import ModelsForm
 from store.forms.raw_materials_form import RawMaterialsForm
 from store.forms.shipping_form import ShippingForm
 from store.forms.suppliers_form import SuppliersForm
+from store.forms.inventory_form import InventoryChangeForm
 from django.contrib.auth.models import User
 from store.models import (
     Materials,
@@ -172,3 +173,62 @@ class TestFulfillmentStatusForm(TestCase):
 
         form = FulfillmentStatusForm(data=form_data)
         self.assertFalse(form.is_valid())
+
+class InventoryChangeFormTest(TestCase):
+    def setUp(self):
+        self.material = Materials.objects.create(Name="PLA")
+        self.filament = Filament.objects.create(
+            Name="Red PLA", Material=self.material, ColorHexCode="FF0000"
+        )
+        self.supplier = Suppliers.objects.create(
+            Name="Supplier A", Address="123 Supplier Rd", Phone="1234567890", Email="supplier@example.com"
+        )
+        self.raw_material = RawMaterials.objects.create(
+            Supplier=self.supplier,
+            Filament=self.filament,
+            BrandName="Brand A",
+            Cost=100.00,
+            MaterialWeightPurchased=1000,
+            MaterialDensity=1.25,
+            ReorderLeadTime=7,
+            WearAndTearMultiplier=1.00,
+        )
+
+    def test_valid_inventory_change_form(self):
+        """Test that InventoryChangeForm is valid with correct data."""
+        form_data = {
+            "RawMaterial": self.raw_material.id,
+            "QuantityWeightAvailable": 500,
+            "UnitCost": 0.10,
+        }
+        form = InventoryChangeForm(data=form_data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_missing_required_fields(self):
+        """Test form is invalid if required fields are missing."""
+        form = InventoryChangeForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn("RawMaterial", form.errors)
+        self.assertIn("QuantityWeightAvailable", form.errors)
+        self.assertIn("UnitCost", form.errors)
+
+    def test_invalid_quantity_type(self):
+        """Test form fails when quantity is a non-integer."""
+        form_data = {
+            "RawMaterial": self.raw_material.id,
+            "QuantityWeightAvailable": "five hundred",  
+            "UnitCost": 0.10,
+        }
+        form = InventoryChangeForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("QuantityWeightAvailable", form.errors)
+
+    def test_negative_quantity(self):
+        """Test form allows negative values if not explicitly restricted."""
+        form_data = {
+            "RawMaterial": self.raw_material.id,
+            "QuantityWeightAvailable": -100,
+            "UnitCost": 0.10,
+        }
+        form = InventoryChangeForm(data=form_data)
+        self.assertTrue(form.is_valid())
