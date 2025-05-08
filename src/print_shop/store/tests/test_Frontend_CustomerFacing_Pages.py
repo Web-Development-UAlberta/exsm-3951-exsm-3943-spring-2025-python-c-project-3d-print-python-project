@@ -153,3 +153,98 @@ class SignUpPageUITests(StaticLiveServerTestCase):
         login_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Sign in')]")
         self.assertIsNotNone(login_btn)
 
+class ProductCatalogUITest(StaticLiveServerTestCase):
+    """Test suite for the product catalog page UI of the print shop website."""
+    def setUp(self):
+        self.browser = webdriver.Chrome()
+
+    def tearDown(self):
+        self.browser.quit()
+
+    # Test that the product catalog page loads and displays products
+    def test_catalog_page_loads(self):
+        self.browser.get(self.live_server_url + "/catalog/")
+        
+        # Check if the page title is correct
+        self.assertIn("Product Catalog", self.browser.title)
+
+        # Check if the catalog header is present
+        header = self.browser.find_element(By.TAG_NAME, "h1")
+        self.assertEqual(header.text, "Product Catalog")
+
+        # Check if the catalog section is present
+        catalog_section = self.browser.find_element(By.ID, "catalog-section")
+        self.assertIsNotNone(catalog_section)
+
+     # Check if the catalog section contains products   
+    def test_catalog_page_loads_with_products(self):
+        self.browser.get(self.live_server_url + "/catalog/")
+        
+        products = self.browser.find_elements(By.CLASS_NAME, "product-card")
+        self.assertTrue(len(products) >= 1)
+
+        for product in products:
+            self.assertIn("Add to Cart", product.text)
+            self.assertIn("Size", product.text)
+            self.assertIn("Color", product.text)
+            self.assertIn("Material", product.text)
+
+class ProfileOrdersUITest(StaticLiveServerTestCase):
+    """Test suite for the profile orders page UI of the print shop website."""
+    def setUp(self):
+        self.browser = webdriver.Chrome()
+
+    def tearDown(self):
+        self.browser.quit()
+
+    # Test that the profile page loads and displays order history
+    def test_profile_order_history(self):
+        self.browser.get(self.live_server_url + "/profile/")
+        
+        self.assertIn("Welcome", self.browser.page_source)
+        self.assertIn("Order History", self.browser.page_source)
+
+        orders = self.browser.find_elements(By.CLASS_NAME, "order-card")
+        self.assertTrue(len(orders) >= 1)
+
+        statuses = [o.text for o in orders]
+        self.assertTrue(any("Processing" in s or "Shipping" in s or "Completed" in s for s in statuses))
+
+class CartCheckoutUITest(StaticLiveServerTestCase):
+    """Test suite for the cart checkout page UI of the print shop website."""
+    def setUp(self):
+        self.browser = webdriver.Chrome()
+
+    def tearDown(self):
+        self.browser.quit()
+
+    # Test that the cart page loads and displays items
+    def test_cart_checkout_page_elements(self):
+        self.browser.get(self.live_server_url + "/cart/")
+        
+        self.assertIn("Your Shopping Bag", self.browser.page_source)
+        self.assertIn("Order Summary", self.browser.page_source)
+        self.assertIn("Checkout", self.browser.page_source)
+
+        # Test if the quantity selector is visible
+        quantity_input = self.browser.find_element(By.CLASS_NAME, "quantity")
+        self.assertTrue(quantity_input.is_displayed())
+
+
+class OrderTrackingUITest(StaticLiveServerTestCase):
+    """Test suite for the order tracking page UI of the print shop website."""
+    def setUp(self):
+        self.browser = webdriver.Chrome()
+
+    def tearDown(self):
+        self.browser.quit()
+
+    # Test that the order tracking page loads and displays tracking information
+    def test_order_tracking_page_elements(self):
+        self.browser.get(self.live_server_url + "/track-order/")
+        
+        self.assertIn("Order History", self.browser.page_source)
+        self.assertIn("Order Summary", self.browser.page_source)
+        self.assertIn("Track", self.browser.page_source)
+
+        
