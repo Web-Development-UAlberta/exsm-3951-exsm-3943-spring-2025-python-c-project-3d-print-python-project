@@ -152,3 +152,4 @@ class SignUpPageUITests(StaticLiveServerTestCase):
 
         login_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Sign in')]")
         self.assertIsNotNone(login_btn)
+
