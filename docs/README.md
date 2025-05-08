@@ -26,10 +26,12 @@
 ## Start up the project
 
 1. Run server:
-`cd src/print_shop/python manage.py runserver`
+
+`python src/print_shop/manage.py runserver`
 
 2. Run tailwind:
-`cd src/print_shop/python manage.py tailwind start`
+`python src/print_shop/manage.py tailwind start`
+
 
 ## Front End Testing
 
