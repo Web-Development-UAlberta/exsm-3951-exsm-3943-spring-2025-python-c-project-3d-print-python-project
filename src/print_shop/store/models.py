@@ -64,7 +64,7 @@ class RawMaterials(models.Model):
     BrandName = models.CharField(max_length=100, null=True)
     Cost = models.DecimalField(max_digits=10, decimal_places=2)
     MaterialWeightPurchased = models.IntegerField()
-    MaterialDensity = models.DecimalField(max_digits=3, decimal_places=2)
+    MaterialDensity = models.DecimalField(max_digits=3, decimal_places=2, validators=[MinValueValidator(0.00)])
     ReorderLeadTime = models.IntegerField()
     WearAndTearMultiplier = models.DecimalField(
         max_digits=3,
@@ -90,7 +90,7 @@ class InventoryChange(models.Model):
     """Child table to store all inventory changes"""
 
     RawMaterial = models.ForeignKey(RawMaterials, on_delete=models.PROTECT)
-    QuantityWeightAvailable = models.IntegerField()
+    QuantityWeightAvailable = models.IntegerField(validators=[MinValueValidator(0)])
     InventoryChangeDate = models.DateTimeField(auto_now_add=True)
     UnitCost = models.DecimalField(max_digits=10, decimal_places=2)
 
@@ -153,9 +153,9 @@ class Models(models.Model):
     Description = models.TextField(null=True)
     FilePath = models.FileField(upload_to="models/")
     Thumbnail = models.BinaryField(null=True)
-    FixedCost = models.DecimalField(max_digits=10, decimal_places=2)
+    FixedCost = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.00)], default=3.00)
     EstimatedPrintVolume = models.IntegerField()
-    BaseInfill = models.DecimalField(max_digits=3, decimal_places=2)
+    BaseInfill = models.DecimalField(max_digits=3, decimal_places=2, validators=[MinValueValidator(0.00)], default=0.3)
     CreatedAt = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -193,7 +193,7 @@ class Shipping(models.Model):
 
     Name = models.CharField(max_length=255)
     Rate = models.DecimalField(max_digits=10, decimal_places=2)
-    ShipTime = models.IntegerField()
+    ShipTime = models.IntegerField(validators=[MinValueValidator(0)])
 
     def __str__(self):
         return f"{self.Name} - {self.Rate} - {self.ShipTime} days"
@@ -244,8 +244,8 @@ class OrderItems(models.Model):
         default=1.15,
         validators=[MinValueValidator(1.00)],
     )
-    ItemPrice = models.DecimalField(max_digits=10, decimal_places=2)
-    ItemQuantity = models.IntegerField()
+    ItemPrice = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    ItemQuantity = models.IntegerField(validators=[MinValueValidator(0)])
     IsCustom = models.BooleanField()
 
     def __str__(self):

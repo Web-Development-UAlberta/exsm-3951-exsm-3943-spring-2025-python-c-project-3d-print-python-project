@@ -9,7 +9,7 @@
 `source .venv/bin/activate`
 
 3. Install requirements into root of the repo:
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 
 4. Spin up a database in MySQL or MariaDB named `print_shop`
 
@@ -26,10 +26,12 @@
 ## Start up the project
 
 1. Run server:
-`python manage.py runserver`
+
+`python src/print_shop/manage.py runserver`
 
 2. Run tailwind:
-`python manage.py tailwind start`
+`python src/print_shop/manage.py tailwind start`
+
 
 ## Front End Testing
 
