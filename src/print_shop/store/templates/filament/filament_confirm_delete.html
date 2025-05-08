@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Delete Filament</h1>
+  <p>Are you sure you want to delete "{{ filament.Name }}"?</p>
+  <form method="POST">
+    {% csrf_token %}
+    <button type="submit">Delete</button>
+    <a href="{% url 'filament-list' %}">Cancel</a>
+  </form>
+{% endblock %}

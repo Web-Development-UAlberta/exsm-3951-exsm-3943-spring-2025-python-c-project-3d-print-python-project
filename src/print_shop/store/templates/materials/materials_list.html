@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Materials List</h1>
+  <a href="{% url 'add-material' %}">Add New Material</a>
+  <ul>
+    {% for material in materials %}
+      <li>
+        {{ material.Name }}
+        [<a href="{% url 'edit-material' material.id %}">Edit</a>]
+        [<a href="{% url 'delete-material' material.id %}">Delete</a>]
+      </li>
+    {% empty %}
+      <li>No materials found.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

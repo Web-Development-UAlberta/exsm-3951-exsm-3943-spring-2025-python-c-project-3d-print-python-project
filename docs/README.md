@@ -45,3 +45,4 @@
 - [Example of Extending User Model](https://www.crunchydata.com/blog/extending-djangos-user-model-with-onetoonefield)
 
 - [Tailwind in Django](https://django-tailwind.readthedocs.io/en/latest/installation.html)
+
