@@ -31,6 +31,11 @@
 2. Run tailwind:
 `python manage.py tailwind start`
 
+## Front End Testing
+
+1. Install Selenium
+`pip install selenium`
+
 
 ## Credits
 

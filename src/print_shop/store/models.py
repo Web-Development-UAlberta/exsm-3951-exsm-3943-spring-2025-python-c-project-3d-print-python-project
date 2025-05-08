@@ -277,7 +277,7 @@ class OrderItems(models.Model):
 
 
 @receiver(post_save, sender=OrderItems)
-def create_inventory_change(sender, instance, created, deleted, **kwargs):
+def create_inventory_change(sender, instance, created, **kwargs):
     """
     Create inventory change when order item is created
     """

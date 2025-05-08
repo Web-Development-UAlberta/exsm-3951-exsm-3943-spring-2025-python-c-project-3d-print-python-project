@@ -1,9 +1,22 @@
 from django.test import TestCase
-from store.models import Materials, Filament, Suppliers, RawMaterials, InventoryChange, Models, UserProfiles, Shipping, Orders, OrderItems, FulfillmentStatus
+from store.models import (
+    Materials,
+    Filament,
+    Suppliers,
+    RawMaterials,
+    InventoryChange,
+    Models,
+    UserProfiles,
+    Shipping,
+    Orders,
+    OrderItems,
+    FulfillmentStatus,
+)
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User
 import os
+
 
 class MaterialsModelTestCase(TestCase):
     """Test case for the Materials model."""
@@ -25,9 +38,7 @@ class FilamentModelTestCase(TestCase):
         """Set up a test filament."""
         self.material = Materials.objects.create(Name="PLA")
         self.filament = Filament.objects.create(
-            Name="PLA Filament",
-            Material=self.material,
-            ColorHexCode="FF0000"
+            Name="PLA Filament", Material=self.material, ColorHexCode="FF0000"
         )
 
     def test_filament_creation(self):
@@ -44,10 +55,8 @@ class FilamentModelTestCase(TestCase):
     def test_color_code_valid(self):
         """Test that the color hex code is valid."""
         filament = Filament.objects.create(
-            Name="Green Filament",
-            Material=self.material,
-            ColorHexCode="00FF00"
-        )   
+            Name="Green Filament", Material=self.material, ColorHexCode="00FF00"
+        )
         self.assertEqual(filament.ColorHexCode, "00FF00")
 
 
@@ -62,13 +71,16 @@ class SuppliersModelTestCase(TestCase):
             Phone="123-456-7890",
             Email="info@3dprintsupplies.com",
         )
-    
+
     def test_supplier_creation(self):
         """Test that the supplier is created correctly."""
         self.assertEqual(self.supplier.Name, "Supplier A")
         self.assertEqual(self.supplier.Address, "123 Supplier St.")
         self.assertEqual(self.supplier.Phone, "123-456-7890")
-        self.assertEqual(self.supplier.Email, "info@3dprintsupplies.com",)
+        self.assertEqual(
+            self.supplier.Email,
+            "info@3dprintsupplies.com",
+        )
         self.assertEqual(str(Suppliers.objects.count()), "1")
 
 
@@ -85,11 +97,9 @@ class RawMaterialsModelTestCase(TestCase):
             Email="info@3dprintsupplies.com",
         )
         self.filament = Filament.objects.create(
-            Name="PLA Filament",
-            Material=self.material,
-            ColorHexCode="FF0000"
+            Name="PLA Filament", Material=self.material, ColorHexCode="FF0000"
         )
-    
+
         self.raw_material = RawMaterials.objects.create(
             Supplier=self.supplier,
             Filament=self.filament,
@@ -113,7 +123,6 @@ class RawMaterialsModelTestCase(TestCase):
         self.assertEqual(self.raw_material.WearAndTearMultiplier, 1.00)
         self.assertEqual(str(RawMaterials.objects.count()), "1")
 
-
     def test_raw_material_relationship(self):
         """Test the relationship between RawMaterials and Suppliers."""
         self.assertEqual(self.raw_material.Supplier.Name, "Supplier A")
@@ -121,7 +130,7 @@ class RawMaterialsModelTestCase(TestCase):
         self.assertEqual(self.raw_material.Filament.Material.Name, "PLA")
         self.assertEqual(self.raw_material.Filament.ColorHexCode, "FF0000")
 
-   
+
 class InventoryChangeModelTestCase(TestCase):
     """Test case for the InventoryChange model."""
 
@@ -135,9 +144,7 @@ class InventoryChangeModelTestCase(TestCase):
             Email="info@3dprintsupplies.com",
         )
         self.filament = Filament.objects.create(
-            Name="PLA Filament",
-            Material=self.material,
-            ColorHexCode="FF0000"
+            Name="PLA Filament", Material=self.material, ColorHexCode="FF0000"
         )
         self.raw_material = RawMaterials.objects.create(
             Supplier=self.supplier,
@@ -160,24 +167,35 @@ class InventoryChangeModelTestCase(TestCase):
         self.assertEqual(self.inventory_change.RawMaterial, self.raw_material)
         self.assertEqual(self.inventory_change.QuantityWeightAvailable, 500)
         self.assertEqual(self.inventory_change.UnitCost, 20.00)
-        self.assertEqual(str(InventoryChange.objects.count()), "1")
+        self.assertEqual(InventoryChange.objects.count(), 2)
+        # test cases to confirm the latest inventory change is the one we just created
+        latest_inventory = InventoryChange.objects.latest("InventoryChangeDate")
+        self.assertEqual(latest_inventory.QuantityWeightAvailable, 500)
+        self.assertEqual(latest_inventory.UnitCost, 20.00)
 
     def test_inventory_change_relationship(self):
         """Test the relationship between InventoryChange and RawMaterials."""
         self.assertEqual(self.inventory_change.RawMaterial.Supplier.Name, "Supplier A")
-        self.assertEqual(self.inventory_change.RawMaterial.Filament.Name, "PLA Filament")
-        self.assertEqual(self.inventory_change.RawMaterial.Filament.Material.Name, "PLA")
-        self.assertEqual(self.inventory_change.RawMaterial.Filament.ColorHexCode, "FF0000")
+        self.assertEqual(
+            self.inventory_change.RawMaterial.Filament.Name, "PLA Filament"
+        )
+        self.assertEqual(
+            self.inventory_change.RawMaterial.Filament.Material.Name, "PLA"
+        )
+        self.assertEqual(
+            self.inventory_change.RawMaterial.Filament.ColorHexCode, "FF0000"
+        )
 
-       
 
 class ModelsModelTestCase(TestCase):
     """Test case for the Models model."""
 
     def setUp(self):
         """Set up a test model."""
-        file = SimpleUploadedFile("test_model.stl", b"file_content", content_type="application/sla")
-    
+        file = SimpleUploadedFile(
+            "test_model.stl", b"file_content", content_type="application/sla"
+        )
+
         self.model = Models.objects.create(
             Name="3D Model",
             FilePath=file,
@@ -194,7 +212,7 @@ class ModelsModelTestCase(TestCase):
     def test_model_creation(self):
         """Test that the model is created correctly."""
         self.assertEqual(self.model.Name, "3D Model")
-        self.assertEqual(self.model.FixedCost, 100.00)  
+        self.assertEqual(self.model.FixedCost, 100.00)
         self.assertEqual(self.model.EstimatedPrintVolume, 500)
         self.assertEqual(self.model.BaseInfill, 0.2)
         self.assertEqual(str(Models.objects.count()), "1")
@@ -216,9 +234,7 @@ class UserProfilesModelTestCase(TestCase):
         """Set up a test user profile."""
 
         self.user = User.objects.create_user(
-            username="johndoe",
-            email="test@example.com",
-            password="testpass123"
+            username="johndoe", email="test@example.com", password="testpass123"
         )
         # Create a user profile for the test user
         self.user_profile = self.user.user_profile
@@ -231,9 +247,10 @@ class UserProfilesModelTestCase(TestCase):
         """Test that the user profile is created correctly."""
         self.assertTrue(isinstance(self.user_profile, UserProfiles))
         self.assertEqual(self.user_profile.Address, "123 Main St.")
-        self.assertEqual(self.user_profile.Phone, "123-456-7890")  
+        self.assertEqual(self.user_profile.Phone, "123-456-7890")
         self.assertEqual(str(UserProfiles.objects.count()), "1")
-   
+
+
 class ShippingModelTestCase(TestCase):
     """Test case for the Shipping model."""
 
@@ -259,9 +276,7 @@ class OrdersModelTestCase(TestCase):
     def setUp(self):
         """Set up a test order."""
         self.user = User.objects.create_user(
-            username="johndoe",
-            email="johndoe@example.com",
-            password="testpass123"
+            username="johndoe", email="johndoe@example.com", password="testpass123"
         )
         self.shipping = Shipping.objects.create(
             Name="Standard Shipping",
@@ -290,13 +305,12 @@ class OrdersModelTestCase(TestCase):
         self.assertEqual(self.order.User.username, "johndoe")
         self.assertEqual(self.order.Shipping.Name, "Standard Shipping")
 
-
     def test_order_expedited_service(self):
         """Test that expedited service is handled correctly."""
         self.order.ExpeditedService = True
         self.order.save()
         self.assertTrue(self.order.ExpeditedService)
-    
+
 
 class OrderItemsModelTestCase(TestCase):
     """Test case for the OrderItems model."""
@@ -312,7 +326,7 @@ class OrderItemsModelTestCase(TestCase):
             Name="Standard Shipping",
             Rate=5.00,
             ShipTime=7,
-        )   
+        )
         self.order = Orders.objects.create(
             User=self.user,
             Shipping=self.shipping,
@@ -328,9 +342,7 @@ class OrderItemsModelTestCase(TestCase):
             Email="supplier@supplier.com",
         )
         self.filament = Filament.objects.create(
-            Name="PLA Filament",
-            Material=self.material,
-            ColorHexCode="FF0000"
+            Name="PLA Filament", Material=self.material, ColorHexCode="FF0000"
         )
         self.raw_material = RawMaterials.objects.create(
             Supplier=self.supplier,
@@ -349,7 +361,9 @@ class OrderItemsModelTestCase(TestCase):
         )
         self.model = Models.objects.create(
             Name="3D Model",
-            FilePath=SimpleUploadedFile("test_model.stl", b"file_content", content_type="application/sla"),
+            FilePath=SimpleUploadedFile(
+                "test_model.stl", b"file_content", content_type="application/sla"
+            ),
             Description=None,
             FixedCost=100.00,
             EstimatedPrintVolume=500,
@@ -361,17 +375,12 @@ class OrderItemsModelTestCase(TestCase):
             Order=self.order,
             Model=self.model,
             InfillMultiplier=1.5,
-            TotalWeight=100,
-            CostOfGoodsSold=30.00,
-            Markup=1.5,
-            ItemPrice=45.00,
             ItemQuantity=2,
             IsCustom=False,
         )
 
         if os.path.exists(self.model.FilePath.path):
             os.remove(self.model.FilePath.path)
-        self.order_item.save()
 
     def test_order_item_creation(self):
         """Test that the order item is created correctly."""
@@ -379,17 +388,36 @@ class OrderItemsModelTestCase(TestCase):
         self.assertEqual(self.order_item.Order, self.order)
         self.assertEqual(self.order_item.Model, self.model)
         self.assertEqual(self.order_item.InfillMultiplier, 1.5)
-        self.assertEqual(self.order_item.TotalWeight, 100)
-        self.assertEqual(self.order_item.CostOfGoodsSold, 30.00)
-        self.assertEqual(self.order_item.Markup, 1.5)
-        self.assertEqual(self.order_item.ItemPrice, 45.00)
+
+        # Use business logic to calculate expected values
+        expected_volume_cm3 = (
+            self.model.EstimatedPrintVolume
+            * self.model.BaseInfill
+            * self.order_item.InfillMultiplier
+        )
+        expected_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        expected_material_cost = (
+            expected_weight
+            * self.inventory_change.UnitCost
+            * self.raw_material.WearAndTearMultiplier
+        )
+        expected_cogs = self.model.FixedCost + expected_material_cost
+        expected_price = expected_cogs * self.order_item.Markup
+
+        # Test that calculated fields match expected values
+        self.assertEqual(self.order_item.TotalWeight, expected_weight)
+        self.assertEqual(float(self.order_item.CostOfGoodsSold), float(expected_cogs))
+        self.assertEqual(float(self.order_item.ItemPrice), float(expected_price))
+
         self.assertEqual(self.order_item.ItemQuantity, 2)
         self.assertFalse(self.order_item.IsCustom)
 
     def test_order_item_relationship(self):
         """Test the relationship between OrderItems and Orders."""
         self.assertEqual(self.order_item.Order.User.username, "johndoe")
-        self.assertEqual(self.order_item.InventoryChange.RawMaterial.Filament.Name, "PLA Filament")
+        self.assertEqual(
+            self.order_item.InventoryChange.RawMaterial.Filament.Name, "PLA Filament"
+        )
         self.assertEqual(self.order_item.Model.Name, "3D Model")
         self.assertEqual(self.order_item.InventoryChange.QuantityWeightAvailable, 500)
         self.assertEqual(self.order_item.InventoryChange.UnitCost, 20.00)
@@ -399,18 +427,57 @@ class OrderItemsModelTestCase(TestCase):
         self.order_item.IsCustom = True
         self.order_item.save()
         self.assertTrue(self.order_item.IsCustom)
-    
+
     def test_order_item_quantity(self):
         """Test that the ItemQuantity field is handled correctly."""
+        original_weight = self.order_item.TotalWeight
+        original_cogs = self.order_item.CostOfGoodsSold
+        original_price = self.order_item.ItemPrice
+
         self.order_item.ItemQuantity = 5
         self.order_item.save()
+
+        # Quantity change shouldn't affect calculated values
         self.assertEqual(self.order_item.ItemQuantity, 5)
+        self.assertEqual(self.order_item.TotalWeight, original_weight)
+        self.assertEqual(self.order_item.CostOfGoodsSold, original_cogs)
+        self.assertEqual(self.order_item.ItemPrice, original_price)
 
     def test_order_item_infill_multiplier(self):
-        """Test that the InfillMultiplier field is handled correctly."""
+        """Test that the InfillMultiplier field is handled correctly and recalculates dependent fields."""
+        original_weight = self.order_item.TotalWeight
+        original_cogs = self.order_item.CostOfGoodsSold
+        original_price = self.order_item.ItemPrice
+
+        # Change infill multiplier
         self.order_item.InfillMultiplier = 2.0
         self.order_item.save()
+
+        # Calculate new expected values
+        expected_volume_cm3 = (
+            self.model.EstimatedPrintVolume
+            * self.model.BaseInfill
+            * self.order_item.InfillMultiplier
+        )
+        expected_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        expected_material_cost = (
+            expected_weight
+            * self.inventory_change.UnitCost
+            * self.raw_material.WearAndTearMultiplier
+        )
+        expected_cogs = self.model.FixedCost + expected_material_cost
+        expected_price = expected_cogs * self.order_item.Markup
+
+        # Verify that changing infill multiplier affects calculated fields
         self.assertEqual(self.order_item.InfillMultiplier, 2.0)
+        self.assertEqual(self.order_item.TotalWeight, expected_weight)
+        self.assertEqual(float(self.order_item.CostOfGoodsSold), float(expected_cogs))
+        self.assertEqual(float(self.order_item.ItemPrice), float(expected_price))
+
+        # Verify that values have changed from original
+        self.assertNotEqual(self.order_item.TotalWeight, original_weight)
+        self.assertNotEqual(self.order_item.CostOfGoodsSold, original_cogs)
+        self.assertNotEqual(self.order_item.ItemPrice, original_price)
 
 
 class FulfillmentStatusModelTestCase(TestCase):
@@ -436,8 +503,7 @@ class FulfillmentStatusModelTestCase(TestCase):
             ExpeditedService=False,
         )
         self.fulfillment_status = FulfillmentStatus.objects.create(
-            Order=self.order,
-            OrderStatus=FulfillmentStatus.Status.PAID
+            Order=self.order, OrderStatus=FulfillmentStatus.Status.PAID
         )
 
         self.fulfillment_status.save()
@@ -445,12 +511,15 @@ class FulfillmentStatusModelTestCase(TestCase):
     def test_fulfillment_status_creation(self):
         """Test that the fulfillment status is created correctly."""
         self.assertEqual(self.fulfillment_status.Order, self.order)
-        self.assertEqual(self.fulfillment_status.OrderStatus, FulfillmentStatus.Status.PAID)
+        self.assertEqual(
+            self.fulfillment_status.OrderStatus, FulfillmentStatus.Status.PAID
+        )
         self.assertEqual(str(FulfillmentStatus.objects.count()), "1")
 
     def test_fulfillment_status_relationship(self):
         """Test the relationship between FulfillmentStatus and Orders."""
         self.assertEqual(self.fulfillment_status.Order.User.username, "johndoe")
-        self.assertEqual(self.fulfillment_status.Order.Shipping.Name, "Standard Shipping")
+        self.assertEqual(
+            self.fulfillment_status.Order.Shipping.Name, "Standard Shipping"
+        )
         self.assertEqual(self.fulfillment_status.Order.TotalPrice, 100.00)
-
