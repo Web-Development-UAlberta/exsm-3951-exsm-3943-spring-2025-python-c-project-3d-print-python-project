@@ -58,6 +58,7 @@ class RawMaterials(models.Model):
     and the unit cost to the cost per gram
     This will be used to track the inventory of raw materials
     and to calculate the cost of goods sold for each order item.
+    Inventory follows a First In First Out (FIFO) principle
     """
 
     Supplier = models.ForeignKey(Suppliers, on_delete=models.PROTECT)
@@ -81,22 +82,15 @@ class RawMaterials(models.Model):
     @property
     def current_inventory(self):
         """
-        Get available inventory following FIFO principle:
-        1. Only consider inventory with quantity > 0
-        2. Order by oldest purchase date first (FIFO)
-        3. Then by most recent inventory change date
+        Get available inventory following FIFO principle for this specific material.
+        Uses the InventoryChangeManager's available method but filters for this material.
         """
-        return self.inventorychange_set.filter(
-            QuantityWeightAvailable__gt=0
-        ).order_by(
-            "RawMaterial__PurchasedDate",
-            "-InventoryChangeDate"
-        ).first()
+        return InventoryChange.objects.available().filter(RawMaterial=self).first()
         
     def find_inventory_for_weight(self, required_weight, safety_margin=1.15):
         """
         Find inventory with enough material for the required weight (with safety margin).
-        If the first inventory record doesn't have enough, check the next one, and so on.
+        Uses the InventoryChangeManager's logic but filters for this specific material.
         
         Args:
             required_weight: The weight needed for the order
@@ -106,19 +100,38 @@ class RawMaterials(models.Model):
             InventoryChange object with enough material, or None if not found
         """
         weight_with_margin = required_weight * safety_margin
-        available_inventory = self.inventorychange_set.filter(
-            QuantityWeightAvailable__gt=0
-        ).order_by(
-            "RawMaterial__PurchasedDate",
-            "-InventoryChangeDate"
-        )
+        available_inventory = InventoryChange.objects.available().filter(RawMaterial=self)
         
-        # Check each inventory record until we find one with enough material
+        """
+        Check each inventory record until we find one with enough material
+        Or return None if no inventory record has enough material.
+        """
         for inventory in available_inventory:
             if inventory.QuantityWeightAvailable >= weight_with_margin:
                 return inventory
-                
-        # If no single inventory record has enough, return None
+        return None
+
+
+class InventoryChangeManager(models.Manager):
+    """Custom manager for InventoryChange to handle FIFO inventory queries"""
+    
+    def available(self):
+        """Get all available inventory following FIFO principles"""
+        return self.filter(
+            QuantityWeightAvailable__gt=0
+        ).order_by(
+            'RawMaterial__PurchasedDate',
+            '-InventoryChangeDate'
+        )
+    
+    def find_for_weight(self, required_weight, safety_margin=1.15):
+        """Find inventory with enough material for the required weight"""
+        weight_with_margin = required_weight * safety_margin
+        available_inventory = self.available()
+        
+        for inventory in available_inventory:
+            if inventory.QuantityWeightAvailable >= weight_with_margin:
+                return inventory
         return None
 
 
@@ -129,6 +142,7 @@ class InventoryChange(models.Model):
     QuantityWeightAvailable = models.IntegerField(validators=[MinValueValidator(0)])
     InventoryChangeDate = models.DateTimeField(auto_now_add=True)
     UnitCost = models.DecimalField(max_digits=10, decimal_places=2)
+    objects = InventoryChangeManager()
 
     def __str__(self):
         return f"{self.RawMaterial.Filament.Name} - {self.QuantityWeightAvailable}g"

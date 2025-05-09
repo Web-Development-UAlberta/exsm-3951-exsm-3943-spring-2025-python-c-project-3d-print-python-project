@@ -61,3 +61,6 @@
 - [Admin Custom Display](https://docs.djangoproject.com/en/5.2/ref/contrib/admin/#customizing-the-admin-interface)
 - [Display Fields](https://www.w3schools.com/django/django_admin_set_list_display.php)
 
+### Model Manager
+- [Django Docs on Model Manager](https://docs.djangoproject.com/en/5.2/topics/db/managers/)
+
