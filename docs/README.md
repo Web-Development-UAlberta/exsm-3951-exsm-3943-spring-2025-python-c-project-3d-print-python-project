@@ -17,26 +17,32 @@
 
 6. Update the `DATABASE_URL` variable with your username and password for MySQL/ MariaDB
 
-7. Install tailwind dependencies:
+7. Change directory into project root:
+`cd src/print_shop` 
+
+8. Install tailwind dependencies:
 `python manage.py tailwind install`
 
-8. Run migrations:
+9. Run migrations:
 `python manage.py migrate`
 
 ## Start up the project
 
 1. Run server:
 
-`python src/print_shop/manage.py runserver`
+`python manage.py runserver`
 
 2. Run tailwind:
-`python src/print_shop/manage.py tailwind start`
+`python manage.py tailwind start`
 
 
 ## Front End Testing
 
-1. Install Selenium
-`pip install selenium`
+1. Frontend testing requires Selenium. On Linux, you will need to install the following dependencies:
+`sudo apt-get install -y libasound2-dev`
+
+2. Then install requirements.txt:
+`pip install -r requirements.txt`
 
 
 ## Credits
