@@ -81,10 +81,45 @@ class RawMaterials(models.Model):
     @property
     def current_inventory(self):
         """
-        Get the most recent inventory level
-        So that we can check it more easily.
+        Get available inventory following FIFO principle:
+        1. Only consider inventory with quantity > 0
+        2. Order by oldest purchase date first (FIFO)
+        3. Then by most recent inventory change date
         """
-        return self.inventorychange_set.order_by("-InventoryChangeDate").first()
+        return self.inventorychange_set.filter(
+            QuantityWeightAvailable__gt=0
+        ).order_by(
+            "RawMaterial__PurchasedDate",
+            "-InventoryChangeDate"
+        ).first()
+        
+    def find_inventory_for_weight(self, required_weight, safety_margin=1.15):
+        """
+        Find inventory with enough material for the required weight (with safety margin).
+        If the first inventory record doesn't have enough, check the next one, and so on.
+        
+        Args:
+            required_weight: The weight needed for the order
+            safety_margin: Multiplier for safety margin (default: 1.15 for 15%)
+            
+        Returns:
+            InventoryChange object with enough material, or None if not found
+        """
+        weight_with_margin = required_weight * safety_margin
+        available_inventory = self.inventorychange_set.filter(
+            QuantityWeightAvailable__gt=0
+        ).order_by(
+            "RawMaterial__PurchasedDate",
+            "-InventoryChangeDate"
+        )
+        
+        # Check each inventory record until we find one with enough material
+        for inventory in available_inventory:
+            if inventory.QuantityWeightAvailable >= weight_with_margin:
+                return inventory
+                
+        # If no single inventory record has enough, return None
+        return None
 
 
 class InventoryChange(models.Model):
