@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from store.models import OrderItems
+from store.models import OrderItems, Orders, FulfillmentStatus
 from store.forms.order_forms import AdminItemForm
+from store.forms.customer_selection_form import CustomerSelectionForm
 
 
 def is_staff(user):
@@ -88,3 +89,48 @@ def delete_premade_item(request, pk):
     context = {"item": item}
 
     return render(request, "admin/premade_item_confirm_delete.html", context)
+
+
+
+@login_required
+@user_passes_test(is_staff)
+def generate_quote(request):
+    """
+    Generate a custom order quote for a customer
+    This allows store owners to create quotes for customers who request them in-store
+    """
+    if request.method == "POST":
+        form = AdminItemForm(request.POST)
+        customer_form = CustomerSelectionForm(request.POST)
+        
+        if form.is_valid() and customer_form.is_valid():
+            item = form.save(commit=False)
+            item.IsCustom = True
+            customer = customer_form.cleaned_data['customer']
+            order = Orders.objects.create(
+                User=customer,
+                Shipping=None,
+                TotalPrice=0,
+                ExpeditedService=False
+            )
+            FulfillmentStatus.objects.create(
+                Order=order,
+                OrderStatus=FulfillmentStatus.Status.DRAFT
+            )
+            item.Order = order
+            item.save()
+            messages.success(
+                request, f"Quote for '{item.Model.Name}' was generated successfully for {customer.username}"
+            )
+            return redirect("orders-list")
+    else:
+        form = AdminItemForm(initial={'IsCustom': True})
+        customer_form = CustomerSelectionForm()
+    
+    context = {
+        "form": form,
+        "customer_form": customer_form,
+        "title": "Generate Customer Quote"
+    }
+
+    return render(request, "admin/quote_form.html", context)
