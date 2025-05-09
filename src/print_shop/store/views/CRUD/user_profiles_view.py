@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from ...forms.user_profile_form import UserProfileForm, UserRegistrationForm
-from ...forms.user_profile_admin_form import UserProfileAdminForm, StaffUserCreationForm
-from ...models import UserProfiles
+from store.forms.user_profile_form import UserProfileForm, UserRegistrationForm
+from store.forms.user_profile_admin_form import UserProfileAdminForm, StaffUserCreationForm
+from store.models import UserProfiles
 
 
 def is_staff(user):

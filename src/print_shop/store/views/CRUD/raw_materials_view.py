@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from store.forms.raw_materials_form import RawMaterialsForm
-from ...models import RawMaterials
+from store.models import RawMaterials
 
 
 # List all raw materials

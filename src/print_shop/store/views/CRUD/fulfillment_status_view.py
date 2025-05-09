@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from store.forms.fulfillment_status_form import FulfillmentStatusForm
-from ...models import FulfillmentStatus
+from store.models import FulfillmentStatus
 
 
 # List all fulfillment statuses
