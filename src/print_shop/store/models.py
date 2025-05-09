@@ -6,7 +6,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django.core.validators import RegexValidator, MinValueValidator
+from django.core.validators import RegexValidator, MinValueValidator, FileExtensionValidator
+from django.core.exceptions import ValidationError
 
 
 class Materials(models.Model):
@@ -151,7 +152,10 @@ class Models(models.Model):
 
     Name = models.CharField(max_length=255)
     Description = models.TextField(null=True)
-    FilePath = models.FileField(upload_to="models/")
+    FilePath = models.FileField(
+        upload_to="models/",
+        validators=[FileExtensionValidator(allowed_extensions=['stl', 'obj', '3mf', 'amf'])]
+    )
     Thumbnail = models.BinaryField(null=True)
     FixedCost = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.00)], default=3.00)
     EstimatedPrintVolume = models.IntegerField()
@@ -180,7 +184,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     """
     Create or update the user profile when the user is created or updated.
     By adding UserProfile as a one-to-one field to the User model,
-    it keeps authentication seperate from the user profile but allows us to access it easily.
+    it keeps authentication separate from the user profile but allows us to access it easily.
     """
     if created:
         UserProfiles.objects.create(user=instance)
@@ -247,6 +251,16 @@ class OrderItems(models.Model):
     ItemPrice = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     ItemQuantity = models.IntegerField(validators=[MinValueValidator(0)])
     IsCustom = models.BooleanField()
+    
+    def clean(self):
+        """
+        Ensure item price is not below cost of goods sold
+        """
+        if self.ItemPrice < self.CostOfGoodsSold:
+            raise ValidationError({
+                'ItemPrice': 'Item price cannot be less than the cost of goods sold.'
+            })
+        super().clean()
 
     def __str__(self):
         return f"{self.Model.Name} - {self.ItemQuantity}"
@@ -255,9 +269,9 @@ class OrderItems(models.Model):
         """
         Override save to calculate costs before saving.
         Cost of goods sold is calculated as:
-        Totalweight = Volume * Base infill * Infill multiplier * Material density
-        Material cost = Total weight * cost per gram * wear and tear
-        Cost of goods sold = Fixed cost + material cost
+        TotalWeight = Volume * Base infill * Infill multiplier * Material density
+        MaterialCost = TotalWeight * cost per gram * wear and tear
+        CostOfGoodsSold = Fixed cost + material cost
         Item price = Cost of goods sold * markup
         """
         cost_per_gram = self.InventoryChange.UnitCost
