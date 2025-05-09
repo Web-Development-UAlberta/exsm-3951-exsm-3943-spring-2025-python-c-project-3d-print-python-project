@@ -6,7 +6,11 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django.core.validators import RegexValidator, MinValueValidator, FileExtensionValidator
+from django.core.validators import (
+    RegexValidator,
+    MinValueValidator,
+    FileExtensionValidator,
+)
 from django.core.exceptions import ValidationError
 
 
@@ -28,7 +32,6 @@ class Filament(models.Model):
     Name = models.CharField(max_length=255)
     Material = models.ForeignKey(Materials, on_delete=models.CASCADE)
     ColorHexCode = models.CharField(
-        # Regex Validator to ensure valid hex color code
         max_length=6,
         validators=[RegexValidator(r"^[0-9A-Fa-f]{6}$")],
     )
@@ -66,7 +69,9 @@ class RawMaterials(models.Model):
     BrandName = models.CharField(max_length=100, null=True)
     Cost = models.DecimalField(max_digits=10, decimal_places=2)
     MaterialWeightPurchased = models.IntegerField()
-    MaterialDensity = models.DecimalField(max_digits=3, decimal_places=2, validators=[MinValueValidator(0.00)])
+    MaterialDensity = models.DecimalField(
+        max_digits=3, decimal_places=2, validators=[MinValueValidator(0.00)]
+    )
     ReorderLeadTime = models.IntegerField()
     WearAndTearMultiplier = models.DecimalField(
         max_digits=3,
@@ -86,49 +91,45 @@ class RawMaterials(models.Model):
         Uses the InventoryChangeManager's available method but filters for this material.
         """
         return InventoryChange.objects.available().filter(RawMaterial=self).first()
-        
+
     def find_inventory_for_weight(self, required_weight, safety_margin=1.15):
         """
         Find inventory with enough material for the required weight (with safety margin).
         Uses the InventoryChangeManager's logic but filters for this specific material.
-        
-        Args:
-            required_weight: The weight needed for the order
-            safety_margin: Multiplier for safety margin (default: 1.15 for 15%)
-            
-        Returns:
-            InventoryChange object with enough material, or None if not found
         """
-        weight_with_margin = required_weight * safety_margin
-        available_inventory = InventoryChange.objects.available().filter(RawMaterial=self)
-        
-        """
-        Check each inventory record until we find one with enough material
-        Or return None if no inventory record has enough material.
-        """
-        for inventory in available_inventory:
-            if inventory.QuantityWeightAvailable >= weight_with_margin:
-                return inventory
-        return None
+        return InventoryChange.objects.find_for_weight(
+            required_weight=required_weight,
+            safety_margin=safety_margin,
+            raw_material=self,
+        )
 
 
 class InventoryChangeManager(models.Manager):
     """Custom manager for InventoryChange to handle FIFO inventory queries"""
-    
+
     def available(self):
         """Get all available inventory following FIFO principles"""
-        return self.filter(
-            QuantityWeightAvailable__gt=0
-        ).order_by(
-            'RawMaterial__PurchasedDate',
-            '-InventoryChangeDate'
+        return self.filter(QuantityWeightAvailable__gt=0).order_by(
+            "RawMaterial__PurchasedDate", "-InventoryChangeDate"
         )
-    
-    def find_for_weight(self, required_weight, safety_margin=1.15):
-        """Find inventory with enough material for the required weight"""
+
+    def find_for_weight(self, required_weight, safety_margin=1.15, raw_material=None):
+        """Find inventory with enough material for the required weight
+
+        Args:
+            required_weight: The weight needed for the order
+            safety_margin: Multiplier for safety margin (default: 1.15 for 15%)
+            raw_material: Optional RawMaterials instance to filter by specific material
+
+        Returns:
+            InventoryChange object with enough material, or None if not found
+        """
         weight_with_margin = required_weight * safety_margin
         available_inventory = self.available()
-        
+
+        if raw_material:
+            available_inventory = available_inventory.filter(RawMaterial=raw_material)
+
         for inventory in available_inventory:
             if inventory.QuantityWeightAvailable >= weight_with_margin:
                 return inventory
@@ -203,12 +204,24 @@ class Models(models.Model):
     Description = models.TextField(null=True)
     FilePath = models.FileField(
         upload_to="models/",
-        validators=[FileExtensionValidator(allowed_extensions=['stl', 'obj', '3mf', 'amf'])]
+        validators=[
+            FileExtensionValidator(allowed_extensions=["stl", "obj", "3mf", "amf"])
+        ],
     )
     Thumbnail = models.BinaryField(null=True)
-    FixedCost = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.00)], default=3.00)
+    FixedCost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0.00)],
+        default=3.00,
+    )
     EstimatedPrintVolume = models.IntegerField()
-    BaseInfill = models.DecimalField(max_digits=3, decimal_places=2, validators=[MinValueValidator(0.00)], default=0.3)
+    BaseInfill = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        validators=[MinValueValidator(0.00)],
+        default=0.3,
+    )
     CreatedAt = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -297,18 +310,20 @@ class OrderItems(models.Model):
         default=1.15,
         validators=[MinValueValidator(1.00)],
     )
-    ItemPrice = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    ItemPrice = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     ItemQuantity = models.IntegerField(validators=[MinValueValidator(0)])
     IsCustom = models.BooleanField()
-    
+
     def clean(self):
         """
         Ensure item price is not below cost of goods sold
         """
         if self.ItemPrice < self.CostOfGoodsSold:
-            raise ValidationError({
-                'ItemPrice': 'Item price cannot be less than the cost of goods sold.'
-            })
+            raise ValidationError(
+                {"ItemPrice": "Item price cannot be less than the cost of goods sold."}
+            )
         super().clean()
 
     def __str__(self):
