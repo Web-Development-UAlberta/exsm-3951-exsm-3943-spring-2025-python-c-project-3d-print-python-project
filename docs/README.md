@@ -64,3 +64,6 @@
 ### Model Manager
 - [Django Docs on Model Manager](https://docs.djangoproject.com/en/5.2/topics/db/managers/)
 
+### Forms Logic Resources
+- [Django ModelForms Create and Update with kwargs](https://stackoverflow.com/questions/21119494/django-modelforms-init-kwargs-create-and-update)
+
