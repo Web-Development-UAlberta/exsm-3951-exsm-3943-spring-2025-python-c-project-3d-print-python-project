@@ -1,6 +1,4 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import User
 from .models import (
     UserProfiles,
     Materials,
@@ -16,18 +14,13 @@ from .models import (
 )
 
 
-class UserProfileInline(admin.StackedInline):
-    model = UserProfiles
-    can_delete = False
-    verbose_name_plural = "Profile"
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'Address', 'Phone')
+    search_fields = ('user__username', 'user__email', 'Address', 'Phone')
+    list_filter = ('user__is_staff', 'user__is_active')
 
 
-class UserAdmin(BaseUserAdmin):
-    inlines = (UserProfileInline,)
-
-
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+admin.site.register(UserProfiles, UserProfileAdmin)
 admin.site.register(Materials)
 admin.site.register(Filament)
 admin.site.register(Suppliers)

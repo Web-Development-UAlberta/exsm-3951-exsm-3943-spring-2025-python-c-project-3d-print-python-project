@@ -1,4 +1,5 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from .views.CRUD import models_view
 from .views.CRUD import suppliers_view
 from .views.CRUD import materials_view
@@ -7,6 +8,7 @@ from .views.CRUD import raw_materials_view
 from .views.CRUD import shipping_view
 from .views.CRUD import fulfillment_status_view
 from .views.CRUD import inventory_change_view
+from .views.CRUD import user_profiles_view
 
 urlpatterns = [
     path("", models_view.models_list, name="models-list"),
@@ -108,8 +110,25 @@ urlpatterns = [
         name="delete-shipping",
     ),
     # Fulfillment Status URLs disabled until Orders forms/templates are created
-    # path("fulfillment-status/", fulfillment_status_view.fulfillment_status_list, name="fulfillment-status-list"),
-    # path("fulfillment-status/add/", fulfillment_status_view.add_fulfillment_status, name="add-fulfillment-status"),
-    # path("fulfillment-status/edit/<int:pk>/", fulfillment_status_view.edit_fulfillment_status, name="edit-fulfillment-status"),
-    # path("fulfillment-status/delete/<int:pk>/", fulfillment_status_view.delete_fulfillment_status, name="delete-fulfillment-status"),
+    path("fulfillment-status/", fulfillment_status_view.fulfillment_status_list, name="fulfillment-status-list"),
+    path("fulfillment-status/add/", fulfillment_status_view.add_fulfillment_status, name="add-fulfillment-status"),
+    path("fulfillment-status/edit/<int:pk>/", fulfillment_status_view.edit_fulfillment_status, name="edit-fulfillment-status"),
+    path("fulfillment-status/delete/<int:pk>/", fulfillment_status_view.delete_fulfillment_status, name="delete-fulfillment-status"),
+    
+    # Authentication URLs
+    path("login/", auth_views.LoginView.as_view(template_name="auth/login.html"), name="login"),
+    path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
+    path("register/", user_profiles_view.register, name="register"),
+    
+    # User Profile URLs - Customer views
+    path("profile/", user_profiles_view.view_profile, name="view-profile"),
+    path("profile/edit/", user_profiles_view.edit_profile, name="edit-profile"),
+    
+    # User Profile URLs - Admin views
+    path("user-profiles/", user_profiles_view.user_profile_list, name="user-profile-list"),
+    path("user-profiles/<int:pk>/", user_profiles_view.user_profile_detail, name="user-profile-detail"),
+    path("user-profiles/add/", user_profiles_view.add_user_profile, name="add-user-profile"),
+    path("user-profiles/add-staff/", user_profiles_view.add_staff_user, name="add-staff-user"),
+    path("user-profiles/edit/<int:pk>/", user_profiles_view.edit_user_profile, name="edit-user-profile"),
+    path("user-profiles/delete/<int:pk>/", user_profiles_view.delete_user_profile, name="delete-user-profile"),
 ]

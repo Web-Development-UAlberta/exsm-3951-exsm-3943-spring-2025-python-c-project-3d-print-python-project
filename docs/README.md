@@ -47,10 +47,17 @@
 
 ## Credits
 
+### Environment Variables
 - [Environment Variables](https://alicecampkin.medium.com/how-to-set-up-environment-variables-in-django-f3c4db78c55f)
 
+### Extend User Model OneToOneField
 - [Extend User Model OneToOneField](https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#extending-the-existing-user-model)
 - [Example of Extending User Model](https://www.crunchydata.com/blog/extending-djangos-user-model-with-onetoonefield)
 
+### Tailwind in Django
 - [Tailwind in Django](https://django-tailwind.readthedocs.io/en/latest/installation.html)
+
+### Admin Custom Display
+- [Admin Custom Display](https://docs.djangoproject.com/en/5.2/ref/contrib/admin/#customizing-the-admin-interface)
+- [Display Fields](https://www.w3schools.com/django/django_admin_set_list_display.php)
 
