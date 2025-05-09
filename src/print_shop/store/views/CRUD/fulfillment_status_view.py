@@ -8,7 +8,9 @@ from store.models import FulfillmentStatus
 def fulfillment_status_list(request):
     fulfillment_statuses = FulfillmentStatus.objects.all()
     return render(
-        request, "orders/fulfillment_status_list.html", {"fulfillment_statuses": fulfillment_statuses}
+        request,
+        "orders/fulfillment_status_list.html",
+        {"fulfillment_statuses": fulfillment_statuses},
     )
 
 
@@ -19,7 +21,8 @@ def add_fulfillment_status(request):
         if form.is_valid():
             fulfillment_status = form.save()
             messages.success(
-                request, f"Fulfillment status {fulfillment_status.OrderStatus} was created successfully"
+                request,
+                f"Fulfillment status {fulfillment_status.OrderStatus} was created successfully",
             )
             return redirect("fulfillment-status-list")
     else:
@@ -35,7 +38,8 @@ def edit_fulfillment_status(request, pk):
         if form.is_valid():
             fulfillment_status = form.save()
             messages.success(
-                request, f"Fulfillment status {fulfillment_status.OrderStatus} was updated successfully"
+                request,
+                f"Fulfillment status {fulfillment_status.OrderStatus} was updated successfully",
             )
             return redirect("fulfillment-status-list")
     else:
@@ -52,5 +56,7 @@ def delete_fulfillment_status(request, pk):
         messages.success(request, f"Fulfillment status {name} was deleted successfully")
         return redirect("fulfillment-status-list")
     return render(
-        request, "orders/fulfillment_status_confirm_delete.html", {"fulfillment_status": fulfillment_status}
+        request,
+        "orders/fulfillment_status_confirm_delete.html",
+        {"fulfillment_status": fulfillment_status},
     )

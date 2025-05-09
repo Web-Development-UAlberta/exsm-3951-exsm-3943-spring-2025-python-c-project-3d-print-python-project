@@ -2,7 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from store.forms.user_profile_form import UserProfileForm, UserRegistrationForm
-from store.forms.user_profile_admin_form import UserProfileAdminForm, StaffUserCreationForm
+from store.forms.user_profile_admin_form import (
+    UserProfileAdminForm,
+    StaffUserCreationForm,
+)
 from store.models import UserProfiles
 
 
@@ -15,7 +18,9 @@ def is_staff(user):
 def view_profile(request):
     """View own profile for logged in user"""
     user_profile = get_object_or_404(UserProfiles, user=request.user)
-    return render(request, "user/user_profile_detail.html", {"user_profile": user_profile})
+    return render(
+        request, "user/user_profile_detail.html", {"user_profile": user_profile}
+    )
 
 
 @login_required
@@ -39,7 +44,9 @@ def register(request):
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, f"Account created for {user.username}. You can now log in.")
+            messages.success(
+                request, f"Account created for {user.username}. You can now log in."
+            )
             return redirect("login")
     else:
         form = UserRegistrationForm()
@@ -47,6 +54,8 @@ def register(request):
 
 
 """Admin views for store owners/staff"""
+
+
 @user_passes_test(is_staff)
 def user_profile_list(request):
     """List all user profiles (admin view)"""
@@ -61,7 +70,9 @@ def user_profile_detail(request, pk):
     """View details of a user profile (admin view)"""
     user_profile = get_object_or_404(UserProfiles, pk=pk)
     return render(
-        request, "user/user_profile_detail.html", {"user_profile": user_profile, "is_admin_view": True}
+        request,
+        "user/user_profile_detail.html",
+        {"user_profile": user_profile, "is_admin_view": True},
     )
 
 
@@ -73,12 +84,15 @@ def add_user_profile(request):
         if form.is_valid():
             user_profile = form.save()
             messages.success(
-                request, f"User profile for {user_profile.user.username} was created successfully"
+                request,
+                f"User profile for {user_profile.user.username} was created successfully",
             )
             return redirect("user-profile-list")
     else:
         form = UserProfileAdminForm()
-    return render(request, "user/user_profile_form.html", {"form": form, "is_admin_view": True})
+    return render(
+        request, "user/user_profile_form.html", {"form": form, "is_admin_view": True}
+    )
 
 
 @user_passes_test(is_staff)
@@ -106,12 +120,15 @@ def edit_user_profile(request, pk):
         if form.is_valid():
             user_profile = form.save()
             messages.success(
-                request, f"User profile for {user_profile.user.username} was updated successfully"
+                request,
+                f"User profile for {user_profile.user.username} was updated successfully",
             )
             return redirect("user-profile-list")
     else:
         form = UserProfileAdminForm(instance=user_profile)
-    return render(request, "user/user_profile_form.html", {"form": form, "is_admin_view": True})
+    return render(
+        request, "user/user_profile_form.html", {"form": form, "is_admin_view": True}
+    )
 
 
 @user_passes_test(is_staff)
@@ -127,4 +144,3 @@ def delete_user_profile(request, pk):
     return render(
         request, "user/user_profile_confirm_delete.html", {"user_profile": user_profile}
     )
-
