@@ -314,24 +314,32 @@ class OrderItems(models.Model):
     def __str__(self):
         return f"{self.Model.Name} - {self.ItemQuantity}"
 
-    def save(self, *args, **kwargs):
+    def calculate_required_weight(self):
         """
-        Override save to calculate costs before saving.
-        Cost of goods sold is calculated as:
-        TotalWeight = Volume * Base infill * Infill multiplier * Material density
-        MaterialCost = TotalWeight * cost per gram * wear and tear
-        CostOfGoodsSold = Fixed cost + material cost
-        Item price = Cost of goods sold * markup
+        Calculate the required weight for the order item based on model, infill, and quantity.
+        This is used for inventory validation before saving.
+        Returns the total weight required for this order item in grams
         """
-        cost_per_gram = self.InventoryChange.UnitCost
         density = self.InventoryChange.RawMaterial.MaterialDensity
-        wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
         volume_cm3 = (
             self.Model.EstimatedPrintVolume
             * self.Model.BaseInfill
             * self.InfillMultiplier
         )
-        self.TotalWeight = int(volume_cm3 * density)
+        return int(volume_cm3 * density) * self.ItemQuantity
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to calculate costs before saving.
+        Cost of goods sold is calculated as:
+        TotalWeight = Volume * Base infill * Infill multiplier * Material density * Quantity
+        MaterialCost = TotalWeight * cost per gram * wear and tear
+        CostOfGoodsSold = Fixed cost + material cost
+        Item price = Cost of goods sold * markup
+        """
+        self.TotalWeight = self.calculate_required_weight()
+        cost_per_gram = self.InventoryChange.UnitCost
+        wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
         material_cost = self.TotalWeight * cost_per_gram * wear_tear
         self.CostOfGoodsSold = self.Model.FixedCost + material_cost
         self.ItemPrice = self.CostOfGoodsSold * self.Markup
@@ -383,7 +391,6 @@ class FulfillmentStatus(models.Model):
         REFUNDED = "Refunded", "Refunded"
 
     Order = models.ForeignKey(Orders, on_delete=models.CASCADE)
-    # OrderStatus = Status.choices
     OrderStatus = models.CharField(
         max_length=20, choices=Status.choices, default=Status.DRAFT
     )
