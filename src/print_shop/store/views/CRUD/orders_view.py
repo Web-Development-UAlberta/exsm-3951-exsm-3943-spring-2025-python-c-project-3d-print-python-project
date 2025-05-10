@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .forms import OrdersForm
-from ...models import Orders
+from store.forms.order_forms import OrdersForm
+from store.models import Orders
 
 
 # List all orders
@@ -49,6 +49,4 @@ def delete_order(request, pk):
         order.delete()
         messages.success(request, f"Order {name} was deleted successfully")
         return redirect("orders-list")
-    return render(
-        request, "orders/orders_confirm_delete.html", {"order": order}
-    )
+    return render(request, "orders/orders_confirm_delete.html", {"order": order})

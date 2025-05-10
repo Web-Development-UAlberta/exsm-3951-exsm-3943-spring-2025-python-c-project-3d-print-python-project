@@ -6,7 +6,12 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django.core.validators import RegexValidator, MinValueValidator
+from django.core.validators import (
+    RegexValidator,
+    MinValueValidator,
+    FileExtensionValidator,
+)
+from django.core.exceptions import ValidationError
 
 
 class Materials(models.Model):
@@ -27,7 +32,6 @@ class Filament(models.Model):
     Name = models.CharField(max_length=255)
     Material = models.ForeignKey(Materials, on_delete=models.CASCADE)
     ColorHexCode = models.CharField(
-        # Regex Validator to ensure valid hex color code
         max_length=6,
         validators=[RegexValidator(r"^[0-9A-Fa-f]{6}$")],
     )
@@ -57,6 +61,7 @@ class RawMaterials(models.Model):
     and the unit cost to the cost per gram
     This will be used to track the inventory of raw materials
     and to calculate the cost of goods sold for each order item.
+    Inventory follows a First In First Out (FIFO) principle
     """
 
     Supplier = models.ForeignKey(Suppliers, on_delete=models.PROTECT)
@@ -64,7 +69,9 @@ class RawMaterials(models.Model):
     BrandName = models.CharField(max_length=100, null=True)
     Cost = models.DecimalField(max_digits=10, decimal_places=2)
     MaterialWeightPurchased = models.IntegerField()
-    MaterialDensity = models.DecimalField(max_digits=3, decimal_places=2, validators=[MinValueValidator(0.00)])
+    MaterialDensity = models.DecimalField(
+        max_digits=3, decimal_places=2, validators=[MinValueValidator(0.00)]
+    )
     ReorderLeadTime = models.IntegerField()
     WearAndTearMultiplier = models.DecimalField(
         max_digits=3,
@@ -80,10 +87,53 @@ class RawMaterials(models.Model):
     @property
     def current_inventory(self):
         """
-        Get the most recent inventory level
-        So that we can check it more easily.
+        Get available inventory following FIFO principle for this specific material.
+        Uses the InventoryChangeManager's available method but filters for this material.
         """
-        return self.inventorychange_set.order_by("-InventoryChangeDate").first()
+        return InventoryChange.objects.available().filter(RawMaterial=self).first()
+
+    def find_inventory_for_weight(self, required_weight, safety_margin=1.15):
+        """
+        Find inventory with enough material for the required weight (with safety margin).
+        Uses the InventoryChangeManager's logic but filters for this specific material.
+        """
+        return InventoryChange.objects.find_for_weight(
+            required_weight=required_weight,
+            safety_margin=safety_margin,
+            raw_material=self,
+        )
+
+
+class InventoryChangeManager(models.Manager):
+    """Custom manager for InventoryChange to handle FIFO inventory queries"""
+
+    def available(self):
+        """Get all available inventory following FIFO principles"""
+        return self.filter(QuantityWeightAvailable__gt=0).order_by(
+            "RawMaterial__PurchasedDate", "-InventoryChangeDate"
+        )
+
+    def find_for_weight(self, required_weight, safety_margin=1.15, raw_material=None):
+        """Find inventory with enough material for the required weight
+
+        Args:
+            required_weight: The weight needed for the order
+            safety_margin: Multiplier for safety margin (default: 1.15 for 15%)
+            raw_material: Optional RawMaterials instance to filter by specific material
+
+        Returns:
+            InventoryChange object with enough material, or None if not found
+        """
+        weight_with_margin = required_weight * safety_margin
+        available_inventory = self.available()
+
+        if raw_material:
+            available_inventory = available_inventory.filter(RawMaterial=raw_material)
+
+        for inventory in available_inventory:
+            if inventory.QuantityWeightAvailable >= weight_with_margin:
+                return inventory
+        return None
 
 
 class InventoryChange(models.Model):
@@ -93,6 +143,7 @@ class InventoryChange(models.Model):
     QuantityWeightAvailable = models.IntegerField(validators=[MinValueValidator(0)])
     InventoryChangeDate = models.DateTimeField(auto_now_add=True)
     UnitCost = models.DecimalField(max_digits=10, decimal_places=2)
+    objects = InventoryChangeManager()
 
     def __str__(self):
         return f"{self.RawMaterial.Filament.Name} - {self.QuantityWeightAvailable}g"
@@ -151,11 +202,26 @@ class Models(models.Model):
 
     Name = models.CharField(max_length=255)
     Description = models.TextField(null=True)
-    FilePath = models.FileField(upload_to="models/")
+    FilePath = models.FileField(
+        upload_to="models/",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["stl", "obj", "3mf", "amf"])
+        ],
+    )
     Thumbnail = models.BinaryField(null=True)
-    FixedCost = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.00)], default=3.00)
+    FixedCost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0.00)],
+        default=3.00,
+    )
     EstimatedPrintVolume = models.IntegerField()
-    BaseInfill = models.DecimalField(max_digits=3, decimal_places=2, validators=[MinValueValidator(0.00)], default=0.3)
+    BaseInfill = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        validators=[MinValueValidator(0.00)],
+        default=0.3,
+    )
     CreatedAt = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -180,7 +246,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     """
     Create or update the user profile when the user is created or updated.
     By adding UserProfile as a one-to-one field to the User model,
-    it keeps authentication seperate from the user profile but allows us to access it easily.
+    it keeps authentication separate from the user profile but allows us to access it easily.
     """
     if created:
         UserProfiles.objects.create(user=instance)
@@ -244,31 +310,51 @@ class OrderItems(models.Model):
         default=1.15,
         validators=[MinValueValidator(1.00)],
     )
-    ItemPrice = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    ItemPrice = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     ItemQuantity = models.IntegerField(validators=[MinValueValidator(0)])
     IsCustom = models.BooleanField()
+
+    def clean(self):
+        """
+        Ensure item price is not below cost of goods sold
+        """
+        if self.ItemPrice < self.CostOfGoodsSold:
+            raise ValidationError(
+                {"ItemPrice": "Item price cannot be less than the cost of goods sold."}
+            )
+        super().clean()
 
     def __str__(self):
         return f"{self.Model.Name} - {self.ItemQuantity}"
 
-    def save(self, *args, **kwargs):
+    def calculate_required_weight(self):
         """
-        Override save to calculate costs before saving.
-        Cost of goods sold is calculated as:
-        Totalweight = Volume * Base infill * Infill multiplier * Material density
-        Material cost = Total weight * cost per gram * wear and tear
-        Cost of goods sold = Fixed cost + material cost
-        Item price = Cost of goods sold * markup
+        Calculate the required weight for the order item based on model, infill, and quantity.
+        This is used for inventory validation before saving.
+        Returns the total weight required for this order item in grams
         """
-        cost_per_gram = self.InventoryChange.UnitCost
         density = self.InventoryChange.RawMaterial.MaterialDensity
-        wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
         volume_cm3 = (
             self.Model.EstimatedPrintVolume
             * self.Model.BaseInfill
             * self.InfillMultiplier
         )
-        self.TotalWeight = int(volume_cm3 * density)
+        return int(volume_cm3 * density) * self.ItemQuantity
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to calculate costs before saving.
+        Cost of goods sold is calculated as:
+        TotalWeight = Volume * Base infill * Infill multiplier * Material density * Quantity
+        MaterialCost = TotalWeight * cost per gram * wear and tear
+        CostOfGoodsSold = Fixed cost + material cost
+        Item price = Cost of goods sold * markup
+        """
+        self.TotalWeight = self.calculate_required_weight()
+        cost_per_gram = self.InventoryChange.UnitCost
+        wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
         material_cost = self.TotalWeight * cost_per_gram * wear_tear
         self.CostOfGoodsSold = self.Model.FixedCost + material_cost
         self.ItemPrice = self.CostOfGoodsSold * self.Markup
@@ -320,7 +406,6 @@ class FulfillmentStatus(models.Model):
         REFUNDED = "Refunded", "Refunded"
 
     Order = models.ForeignKey(Orders, on_delete=models.CASCADE)
-    # OrderStatus = Status.choices
     OrderStatus = models.CharField(
         max_length=20, choices=Status.choices, default=Status.DRAFT
     )

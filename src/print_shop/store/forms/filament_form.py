@@ -1,5 +1,6 @@
 from django import forms
-from ..models import Filament
+from store.models import Filament
+
 
 class FilamentForm(forms.ModelForm):
     class Meta:

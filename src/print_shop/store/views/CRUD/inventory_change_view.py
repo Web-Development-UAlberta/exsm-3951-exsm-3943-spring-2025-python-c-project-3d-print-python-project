@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from store.forms.inventory_form import InventoryChangeForm
-from ...models import InventoryChange, RawMaterials
+from store.models import InventoryChange, RawMaterials
 
 
 # List all inventory changes
@@ -18,14 +18,18 @@ def current_inventory_levels(request):
     """
     Display the current inventory levels for all raw materials.
     If inventory levels are low, mark them for reorder.
+    Uses the RawMaterials.current_inventory property from the model manager.
     """
     raw_materials_with_inventory = [
         {
             "raw_material": raw_material,
             "inventory_change": raw_material.current_inventory,
-            "needs_reorder": raw_material.current_inventory.needs_reorder,
+            "needs_reorder": raw_material.current_inventory.needs_reorder
+            if raw_material.current_inventory
+            else False,
         }
         for raw_material in RawMaterials.objects.all()
+        if raw_material.current_inventory
     ]
     return render(
         request,
@@ -36,7 +40,7 @@ def current_inventory_levels(request):
     )
 
 
-# Show details of a specific invenotry change
+# Show details of a specific inventory change
 def inventory_change_detail(request, pk):
     inventory_change = get_object_or_404(InventoryChange, pk=pk)
     return render(

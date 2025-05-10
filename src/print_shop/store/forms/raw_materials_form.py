@@ -1,5 +1,6 @@
 from django import forms
-from ..models import RawMaterials
+from store.models import RawMaterials
+
 
 class RawMaterialsForm(forms.ModelForm):
     class Meta:

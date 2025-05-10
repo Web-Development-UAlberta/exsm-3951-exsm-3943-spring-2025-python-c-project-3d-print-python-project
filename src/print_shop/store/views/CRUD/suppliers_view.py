@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from store.forms.suppliers_form import SuppliersForm
-from ...models import Suppliers
+from store.models import Suppliers
 
 
 # List all suppliers

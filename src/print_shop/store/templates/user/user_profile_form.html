@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if is_admin_view %}
+        {% if form.instance.pk %}Edit{% else %}Add{% endif %} User Profile
+    {% else %}
+        Edit Your Profile
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <section>
+        <h1>
+            {% if is_admin_view %}
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} User Profile
+            {% else %}
+                Edit Your Profile
+            {% endif %}
+        </h1>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <fieldset>
+                <legend>User Information</legend>
+                {% for field in form %}
+                    <div>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small>{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div>
+                                {% for error in field.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </fieldset>
+            
+            <div>
+                <button type="submit">Save</button>
+                {% if is_admin_view %}
+                    <a href="{% url 'user-profile-list' %}">Cancel</a>
+                {% else %}
+                    <a href="{% url 'view-profile' %}">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+{% endblock %}

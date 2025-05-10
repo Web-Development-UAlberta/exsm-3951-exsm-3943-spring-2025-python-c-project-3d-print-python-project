@@ -1,5 +1,6 @@
 from django import forms
-from ..models import Materials
+from store.models import Materials
+
 
 class MaterialsForm(forms.ModelForm):
     class Meta:
