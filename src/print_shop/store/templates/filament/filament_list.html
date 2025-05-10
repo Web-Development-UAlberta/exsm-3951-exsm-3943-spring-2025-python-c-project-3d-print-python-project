@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Filament List</h1>
+  <a href="{% url 'add-filament' %}">Add New Filament</a>
+  <ul>
+    {% for filament in filaments %}
+      <li>
+        {{ filament.Name }} ({{ filament.Material.Name }}) - #{{ filament.ColorHexCode }}
+        [<a href="{% url 'edit-filament' filament.id %}">Edit</a>]
+        [<a href="{% url 'delete-filament' filament.id %}">Delete</a>]
+      </li>
+    {% empty %}
+      <li>No filaments found.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

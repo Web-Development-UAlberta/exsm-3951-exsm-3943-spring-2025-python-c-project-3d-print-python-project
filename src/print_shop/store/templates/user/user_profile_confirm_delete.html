@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User Profile{% endblock %}
+
+{% block content %}
+    <section>
+        <h1>Delete User Profile</h1>
+        
+        <p>Are you sure you want to delete the user profile for <strong>{{ user_profile.user.username }}</strong>?</p>
+        <p>This will delete the user account and all associated data. This action cannot be undone.</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit">Yes, Delete</button>
+            <a href="{% url 'user-profile-list' %}">Cancel</a>
+        </form>
+    </section>
+{% endblock %}

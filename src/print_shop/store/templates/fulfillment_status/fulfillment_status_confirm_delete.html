@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Delete Fulfillment Status</h1>
+  <p>Are you sure you want to delete "{{ fulfillment_status }}"?</p>
+  <form method="POST">
+    {% csrf_token %}
+    <button type="submit">Confirm</button>
+    <a href="{% url 'fulfillment-status-list' %}">Cancel</a>
+  </form>
+{% endblock %}
