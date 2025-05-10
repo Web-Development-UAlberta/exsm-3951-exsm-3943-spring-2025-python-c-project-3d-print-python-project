@@ -115,7 +115,7 @@ class SignUpPageUITests(StaticLiveServerTestCase):
 
     def test_signup_page_ui_elements(self):
         # Update with your signup URL name
-        self.driver.get(self.live_server_url + reverse('signup'))  
+        self.driver.get(self.live_server_url + reverse('register'))  
 
         # Check page title
         heading = self.driver.find_element(By.TAG_NAME, 'h1')
