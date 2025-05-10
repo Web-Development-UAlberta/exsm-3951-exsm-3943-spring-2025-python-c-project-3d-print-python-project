@@ -15,6 +15,7 @@ from store.forms.order_forms import OrdersForm, OrderItemsForm, AdminItemForm, C
 from store.forms.checkout_form import CheckoutForm
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.auth import get_user_model
 from store.models import (
     Materials,
     Filament,
@@ -577,7 +578,7 @@ class TestCustomerSelectionForm(TestCase):
             "This field is required."
         )
 
-class TestOrderItemsForm(TestCase):
+class TestOrderForm(TestCase):
     """Test suite for the OrderItemsForm."""
     def setUp(self):
         self.user = User.objects.create(username="tester")
@@ -652,82 +653,3 @@ class TestOrderItemsForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("InventoryChange", form.errors)
         
-
-
-# class TestUserProfilesAdminForm(TestCase):
-#     """Test suite for the UserProfileAdminForm."""
-
-#     def setUp(self):
-#         # Clear relevant data
-#         User.objects.all().delete()
-#         UserProfiles.objects.all().delete()
-    
-#     def test_user_profile_admin_form_creation(self):
-#         """Test creating a user and profile using UserProfileAdminForm"""
-#         form_data = {
-#             'username': 'adminuser1',
-#             'first_name': 'Alice1',
-#             'last_name': 'Admin1',
-#             'email': 'admin1@example.com',
-#             'is_staff': True,
-#             'is_active': True,
-#             'Address': '456 Admin Lane1',
-#             'Phone': '9999999998',
-#         }
-#         form = UserProfileAdminForm(data=form_data)
-#         self.assertTrue(form.is_valid())
-#         profile = form.save()
-
-#         self.assertEqual(profile.user.username, 'adminuser1')
-#         self.assertEqual(profile.Address, '456 Admin Lane1')
-#         self.assertTrue(profile.user.is_staff)
-#         self.assertTrue(profile.user.is_active)
-
-    # def test_user_profile_admin_form_update(self):
-    #     """Test updating an existing profile using UserProfileAdminForm"""
-    #     user = User.objects.create_user(username='john', email='john@example.com')
-    #     profile = UserProfiles.objects.get_or_create(user=user, Address='Old Address', Phone='123456')
-
-
-    #     form_data = {
-    #         'username': 'john',  # should be read-only
-    #         'first_name': 'John',
-    #         'last_name': 'Doe',
-    #         'email': 'john.doe@example.com',
-    #         'is_staff': True,
-    #         'is_active': False,
-    #         'Address': 'New Address',
-    #         'Phone': '9876543210',
-    #     }
-    #     form = UserProfileAdminForm(data=form_data, instance=profile)
-    #     self.assertTrue(form.is_valid())
-    #     updated_profile = form.save()
-
-    #     self.assertEqual(updated_profile.Address, 'New Address')
-    #     self.assertEqual(updated_profile.Phone, '9876543210')
-    #     self.assertEqual(updated_profile.user.email, 'john.doe@example.com')
-    #     self.assertTrue(updated_profile.user.is_staff)
-    #     self.assertFalse(updated_profile.user.is_active)
-
-    # def test_staff_user_creation_form(self):
-    #     """Test staff user creation using StaffUserCreationForm"""
-    #     form_data = {
-    #         'username': 'staffuser',
-    #         'email': 'staff@example.com',
-    #         'first_name': 'Staffy',
-    #         'last_name': 'User',
-    #         'password1': 'StrongPass123',
-    #         'password2': 'StrongPass123',
-    #         'address': '123 Staff Ave',
-    #         'phone': '1234567890',
-    #         'is_staff': True,
-    #     }
-    #     form = StaffUserCreationForm(data=form_data)
-    #     self.assertTrue(form.is_valid())
-    #     user = form.save()
-
-    #     self.assertEqual(user.username, 'staffuser')
-    #     self.assertTrue(user.is_staff)
-    #     profile = UserProfiles.objects.get(user=user)
-    #     self.assertEqual(profile.Address, '123 Staff Ave')
-    #     self.assertEqual(profile.Phone, '1234567890')
