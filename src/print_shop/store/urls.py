@@ -1,14 +1,19 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from .views.CRUD import models_view
-from .views.CRUD import suppliers_view
-from .views.CRUD import materials_view
-from .views.CRUD import filament_view
-from .views.CRUD import raw_materials_view
-from .views.CRUD import shipping_view
-from .views.CRUD import fulfillment_status_view
-from .views.CRUD import inventory_change_view
-from .views.CRUD import user_profiles_view
+from store.views.CRUD import models_view
+from store.views.CRUD import suppliers_view
+from store.views.CRUD import materials_view
+from store.views.CRUD import filament_view
+from store.views.CRUD import raw_materials_view
+from store.views.CRUD import shipping_view
+from store.views.CRUD import fulfillment_status_view
+from store.views.CRUD import inventory_change_view
+from store.views.CRUD import user_profiles_view
+from store.views.CRUD import orders_view
+from store.views.CRUD import order_items_view
+from store.views import gallery_view
+from store.views import product_admin_view
+from store.views import cart_checkout_view
 
 urlpatterns = [
     path("", models_view.models_list, name="models-list"),
@@ -110,25 +115,138 @@ urlpatterns = [
         name="delete-shipping",
     ),
     # Fulfillment Status URLs disabled until Orders forms/templates are created
-    path("fulfillment-status/", fulfillment_status_view.fulfillment_status_list, name="fulfillment-status-list"),
-    path("fulfillment-status/add/", fulfillment_status_view.add_fulfillment_status, name="add-fulfillment-status"),
-    path("fulfillment-status/edit/<int:pk>/", fulfillment_status_view.edit_fulfillment_status, name="edit-fulfillment-status"),
-    path("fulfillment-status/delete/<int:pk>/", fulfillment_status_view.delete_fulfillment_status, name="delete-fulfillment-status"),
-    
+    path(
+        "fulfillment-status/",
+        fulfillment_status_view.fulfillment_status_list,
+        name="fulfillment-status-list",
+    ),
+    path(
+        "fulfillment-status/add/",
+        fulfillment_status_view.add_fulfillment_status,
+        name="add-fulfillment-status",
+    ),
+    path(
+        "fulfillment-status/edit/<int:pk>/",
+        fulfillment_status_view.edit_fulfillment_status,
+        name="edit-fulfillment-status",
+    ),
+    path(
+        "fulfillment-status/delete/<int:pk>/",
+        fulfillment_status_view.delete_fulfillment_status,
+        name="delete-fulfillment-status",
+    ),
     # Authentication URLs
-    path("login/", auth_views.LoginView.as_view(template_name="auth/login.html"), name="login"),
+    path(
+        "login/",
+        auth_views.LoginView.as_view(template_name="auth/login.html"),
+        name="login",
+    ),
     path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
     path("register/", user_profiles_view.register, name="register"),
-    
     # User Profile URLs - Customer views
     path("profile/", user_profiles_view.view_profile, name="view-profile"),
     path("profile/edit/", user_profiles_view.edit_profile, name="edit-profile"),
-    
     # User Profile URLs - Admin views
-    path("user-profiles/", user_profiles_view.user_profile_list, name="user-profile-list"),
-    path("user-profiles/<int:pk>/", user_profiles_view.user_profile_detail, name="user-profile-detail"),
-    path("user-profiles/add/", user_profiles_view.add_user_profile, name="add-user-profile"),
-    path("user-profiles/add-staff/", user_profiles_view.add_staff_user, name="add-staff-user"),
-    path("user-profiles/edit/<int:pk>/", user_profiles_view.edit_user_profile, name="edit-user-profile"),
-    path("user-profiles/delete/<int:pk>/", user_profiles_view.delete_user_profile, name="delete-user-profile"),
+    path(
+        "user-profiles/", user_profiles_view.user_profile_list, name="user-profile-list"
+    ),
+    path(
+        "user-profiles/<int:pk>/",
+        user_profiles_view.user_profile_detail,
+        name="user-profile-detail",
+    ),
+    path(
+        "user-profiles/add/",
+        user_profiles_view.add_user_profile,
+        name="add-user-profile",
+    ),
+    path(
+        "user-profiles/add-staff/",
+        user_profiles_view.add_staff_user,
+        name="add-staff-user",
+    ),
+    path(
+        "user-profiles/edit/<int:pk>/",
+        user_profiles_view.edit_user_profile,
+        name="edit-user-profile",
+    ),
+    path(
+        "user-profiles/delete/<int:pk>/",
+        user_profiles_view.delete_user_profile,
+        name="delete-user-profile",
+    ),
+    # Order URLs
+    path("orders/", orders_view.orders_list, name="orders-list"),
+    path("orders/add/", orders_view.add_order, name="add-order"),
+    path("orders/edit/<int:pk>/", orders_view.edit_order, name="edit-order"),
+    path("orders/delete/<int:pk>/", orders_view.delete_order, name="delete-order"),
+    # Order Items URLs
+    path("order-items/", order_items_view.order_items_list, name="order-items-list"),
+    path("order-items/add/", order_items_view.add_order_item, name="add-order-item"),
+    path(
+        "order-items/edit/<int:pk>/",
+        order_items_view.edit_order_item,
+        name="edit-order-item",
+    ),
+    path(
+        "order-items/delete/<int:pk>/",
+        order_items_view.delete_order_item,
+        name="delete-order-item",
+    ),
+    # Gallery URLs
+    path("gallery/custom/", gallery_view.custom_gallery, name="custom-gallery"),
+    path(
+        "gallery/model/<int:model_id>/", gallery_view.model_detail, name="model-detail"
+    ),
+    path("gallery/premade/", gallery_view.premade_gallery, name="premade-gallery"),
+    path(
+        "gallery/premade/<int:item_id>/",
+        gallery_view.premade_item_detail,
+        name="premade-item-detail",
+    ),
+    # Cart and Checkout URLs
+    path("cart/", cart_checkout_view.cart_view, name="cart"),
+    path(
+        "cart/remove/<int:item_id>/",
+        cart_checkout_view.remove_from_cart,
+        name="remove-from-cart",
+    ),
+    path("checkout/", cart_checkout_view.checkout, name="checkout"),
+    path(
+        "checkout/confirm/",
+        cart_checkout_view.checkout_confirm,
+        name="checkout-confirm",
+    ),
+    path(
+        "orders/success/<int:order_id>/",
+        cart_checkout_view.order_success,
+        name="order-success",
+    ),
+    # Product Admin URLs (for store staff to manage premade items)
+    path(
+        "product-admin/premade/",
+        product_admin_view.premade_items_list,
+        name="product-admin-premade-items",
+    ),
+    path(
+        "product-admin/premade/add/",
+        product_admin_view.add_premade_item,
+        name="product-admin-add-premade",
+    ),
+    path(
+        "product-admin/premade/edit/<int:pk>/",
+        product_admin_view.edit_premade_item,
+        name="product-admin-edit-premade",
+    ),
+    path(
+        "product-admin/premade/delete/<int:pk>/",
+        product_admin_view.delete_premade_item,
+        name="product-admin-delete-premade",
+    ),
+    # Quote Generation URL
+    path(
+        "product-admin/quote/generate/",
+        product_admin_view.generate_quote,
+        name="product-admin-generate-quote",
+    ),
 ]

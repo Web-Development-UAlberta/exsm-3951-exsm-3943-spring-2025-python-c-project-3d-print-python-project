@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from store.forms.inventory_form import InventoryChangeForm
-from ...models import InventoryChange, RawMaterials
+from store.models import InventoryChange, RawMaterials
 
 
 # List all inventory changes

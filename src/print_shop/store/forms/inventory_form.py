@@ -1,5 +1,5 @@
 from django import forms
-from ..models import InventoryChange
+from store.models import InventoryChange
 
 
 class InventoryChangeForm(forms.ModelForm):

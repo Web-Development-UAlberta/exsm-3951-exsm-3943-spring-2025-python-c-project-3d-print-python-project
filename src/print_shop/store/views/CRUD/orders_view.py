@@ -49,6 +49,4 @@ def delete_order(request, pk):
         order.delete()
         messages.success(request, f"Order {name} was deleted successfully")
         return redirect("orders-list")
-    return render(
-        request, "orders/orders_confirm_delete.html", {"order": order}
-    )
+    return render(request, "orders/orders_confirm_delete.html", {"order": order})

@@ -16,16 +16,15 @@ def get_cart_items(request):
     Get cart items for the current user
     """
     draft_orders = Orders.objects.filter(
-        User=request.user,
-        fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT
+        User=request.user, fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT
     )
-    
+
     if not draft_orders.exists():
         return OrderItems.objects.none()
-    
-    return OrderItems.objects.filter(
-        Order__in=draft_orders
-    ).select_related("Model", "InventoryChange__RawMaterial__Filament__Material")
+
+    return OrderItems.objects.filter(Order__in=draft_orders).select_related(
+        "Model", "InventoryChange__RawMaterial__Filament__Material"
+    )
 
 
 def get_draft_order(request):
@@ -33,8 +32,7 @@ def get_draft_order(request):
     Get the user's draft order
     """
     return Orders.objects.filter(
-        User=request.user,
-        fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT
+        User=request.user, fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT
     ).first()
 
 
@@ -49,11 +47,11 @@ def calculate_shipping(shipping, subtotal, expedited=False):
         estimated_ship_date = timezone.now() + timezone.timedelta(days=2)
     else:
         estimated_ship_date = timezone.now() + timezone.timedelta(days=5)
-    
+
     return {
-        'shipping_cost': shipping_cost,
-        'total': total,
-        'estimated_ship_date': estimated_ship_date
+        "shipping_cost": shipping_cost,
+        "total": total,
+        "estimated_ship_date": estimated_ship_date,
     }
 
 
@@ -63,13 +61,10 @@ def cart_view(request):
     View for displaying the user's cart
     """
     cart_items = get_cart_items(request)
-    
+
     subtotal = sum(item.ItemPrice for item in cart_items)
 
-    context = {
-        "cart_items": cart_items,
-        "subtotal": subtotal
-    }
+    context = {"cart_items": cart_items, "subtotal": subtotal}
 
     return render(request, "cart/cart.html", context)
 
@@ -80,9 +75,9 @@ def remove_from_cart(request, item_id):
     Remove an item from the cart
     """
     item = get_object_or_404(OrderItems, pk=item_id, Order__isnull=True)
-    if 'customer' not in request.session:
-        request.session['customer'] = request.user.id
-    
+    if "customer" not in request.session:
+        request.session["customer"] = request.user.id
+
     if request.method == "POST":
         item_name = item.Model.Name
         item.delete()
@@ -142,9 +137,9 @@ def checkout_confirm(request):
     shipping = get_object_or_404(Shipping, pk=shipping_id)
     subtotal = sum(item.ItemPrice for item in cart_items)
     shipping_details = calculate_shipping(shipping, subtotal, expedited)
-    shipping_cost = shipping_details['shipping_cost']
-    total = shipping_details['total']
-    estimated_ship_date = shipping_details['estimated_ship_date']
+    shipping_cost = shipping_details["shipping_cost"]
+    total = shipping_details["total"]
+    estimated_ship_date = shipping_details["estimated_ship_date"]
 
     if request.method == "POST":
         draft_order.Shipping = shipping
@@ -153,8 +148,7 @@ def checkout_confirm(request):
         draft_order.EstimatedShipDate = estimated_ship_date
         draft_order.save()
         FulfillmentStatus.objects.create(
-            Order=draft_order, 
-            OrderStatus=FulfillmentStatus.Status.PENDING_PAYMENT
+            Order=draft_order, OrderStatus=FulfillmentStatus.Status.PENDING_PAYMENT
         )
         if "checkout_shipping_id" in request.session:
             del request.session["checkout_shipping_id"]
@@ -184,15 +178,17 @@ def order_success(request, order_id):
     order = get_object_or_404(Orders, pk=order_id, User=request.user)
     order_items = order.orderitems_set.all().select_related("Model")
     fulfillment_status = order.fulfillmentstatus_set.latest("StatusChangeDate")
-    
-    payment_pending = fulfillment_status.OrderStatus == FulfillmentStatus.Status.PENDING_PAYMENT
-    
+
+    payment_pending = (
+        fulfillment_status.OrderStatus == FulfillmentStatus.Status.PENDING_PAYMENT
+    )
+
     context = {
-        "order": order, 
-        "order_items": order_items, 
+        "order": order,
+        "order_items": order_items,
         "status": fulfillment_status,
         "payment_pending": payment_pending,
-        "total": order.TotalPrice
+        "total": order.TotalPrice,
     }
 
     return render(request, "cart/order_success.html", context)
