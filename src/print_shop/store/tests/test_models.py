@@ -395,7 +395,9 @@ class OrderItemsModelTestCase(TestCase):
             * self.model.BaseInfill
             * self.order_item.InfillMultiplier
         )
-        expected_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        # Calculate weight for a single item, then multiply by quantity
+        single_item_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        expected_weight = single_item_weight * self.order_item.ItemQuantity
         expected_material_cost = (
             expected_weight
             * self.inventory_change.UnitCost
@@ -433,15 +435,39 @@ class OrderItemsModelTestCase(TestCase):
         original_weight = self.order_item.TotalWeight
         original_cogs = self.order_item.CostOfGoodsSold
         original_price = self.order_item.ItemPrice
-
-        self.order_item.ItemQuantity = 5
+        original_quantity = self.order_item.ItemQuantity
+        
+        # Calculate expected new weight based on new quantity
+        new_quantity = 5
+        self.order_item.ItemQuantity = new_quantity
         self.order_item.save()
-
-        # Quantity change shouldn't affect calculated values
-        self.assertEqual(self.order_item.ItemQuantity, 5)
-        self.assertEqual(self.order_item.TotalWeight, original_weight)
-        self.assertEqual(self.order_item.CostOfGoodsSold, original_cogs)
-        self.assertEqual(self.order_item.ItemPrice, original_price)
+        
+        # Calculate expected values after quantity change
+        expected_volume_cm3 = (
+            self.model.EstimatedPrintVolume
+            * self.model.BaseInfill
+            * self.order_item.InfillMultiplier
+        )
+        single_item_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        expected_weight = single_item_weight * new_quantity
+        expected_material_cost = (
+            expected_weight
+            * self.inventory_change.UnitCost
+            * self.raw_material.WearAndTearMultiplier
+        )
+        expected_cogs = self.model.FixedCost + expected_material_cost
+        expected_price = expected_cogs * self.order_item.Markup
+        
+        # Quantity change should affect calculated values
+        self.assertEqual(self.order_item.ItemQuantity, new_quantity)
+        self.assertEqual(self.order_item.TotalWeight, expected_weight)
+        self.assertEqual(float(self.order_item.CostOfGoodsSold), float(expected_cogs))
+        self.assertEqual(float(self.order_item.ItemPrice), float(expected_price))
+        
+        # Verify that values have changed from original
+        self.assertNotEqual(self.order_item.TotalWeight, original_weight)
+        self.assertNotEqual(self.order_item.CostOfGoodsSold, original_cogs)
+        self.assertNotEqual(self.order_item.ItemPrice, original_price)
 
     def test_order_item_infill_multiplier(self):
         """Test that the InfillMultiplier field is handled correctly and recalculates dependent fields."""
@@ -459,7 +485,8 @@ class OrderItemsModelTestCase(TestCase):
             * self.model.BaseInfill
             * self.order_item.InfillMultiplier
         )
-        expected_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        single_item_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        expected_weight = single_item_weight * self.order_item.ItemQuantity
         expected_material_cost = (
             expected_weight
             * self.inventory_change.UnitCost
