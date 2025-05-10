@@ -91,7 +91,6 @@ def delete_premade_item(request, pk):
     return render(request, "admin/premade_item_confirm_delete.html", context)
 
 
-
 @login_required
 @user_passes_test(is_staff)
 def generate_quote(request):
@@ -102,35 +101,32 @@ def generate_quote(request):
     if request.method == "POST":
         form = AdminItemForm(request.POST)
         customer_form = CustomerSelectionForm(request.POST)
-        
+
         if form.is_valid() and customer_form.is_valid():
             item = form.save(commit=False)
             item.IsCustom = True
-            customer = customer_form.cleaned_data['customer']
+            customer = customer_form.cleaned_data["customer"]
             order = Orders.objects.create(
-                User=customer,
-                Shipping=None,
-                TotalPrice=0,
-                ExpeditedService=False
+                User=customer, Shipping=None, TotalPrice=0, ExpeditedService=False
             )
             FulfillmentStatus.objects.create(
-                Order=order,
-                OrderStatus=FulfillmentStatus.Status.DRAFT
+                Order=order, OrderStatus=FulfillmentStatus.Status.DRAFT
             )
             item.Order = order
             item.save()
             messages.success(
-                request, f"Quote for '{item.Model.Name}' was generated successfully for {customer.username}"
+                request,
+                f"Quote for '{item.Model.Name}' was generated successfully for {customer.username}",
             )
             return redirect("orders-list")
     else:
-        form = AdminItemForm(initial={'IsCustom': True})
+        form = AdminItemForm(initial={"IsCustom": True})
         customer_form = CustomerSelectionForm()
-    
+
     context = {
         "form": form,
         "customer_form": customer_form,
-        "title": "Generate Customer Quote"
+        "title": "Generate Customer Quote",
     }
 
     return render(request, "admin/quote_form.html", context)
