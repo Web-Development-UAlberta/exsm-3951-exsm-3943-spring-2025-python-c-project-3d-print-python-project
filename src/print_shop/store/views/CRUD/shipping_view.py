@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from store.forms.shipping_form import ShippingForm
-from ...models import Shipping
+from store.models import Shipping
 
 
 # List all shipping methods
