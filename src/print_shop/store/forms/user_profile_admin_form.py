@@ -4,6 +4,7 @@ from django.contrib.auth.forms import UserCreationForm
 from ..models import UserProfiles
 
 
+
 class UserProfileAdminForm(forms.ModelForm):
     """Form for store owners/staff to manage user profiles"""
 

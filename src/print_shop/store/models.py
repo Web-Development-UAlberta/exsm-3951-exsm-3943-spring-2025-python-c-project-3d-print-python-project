@@ -320,12 +320,14 @@ class OrderItems(models.Model):
         """
         Ensure item price is not below cost of goods sold
         """
-        if self.ItemPrice < self.CostOfGoodsSold:
-            raise ValidationError(
-                {"ItemPrice": "Item price cannot be less than the cost of goods sold."}
-            )
+        if self.ItemPrice is not None and self.CostOfGoodsSold is not None:
+            if self.ItemPrice < self.CostOfGoodsSold:
+                raise ValidationError(
+                    {"ItemPrice": "Item price cannot be less than the cost of goods sold."}
+                )
         super().clean()
-
+       
+        
     def __str__(self):
         return f"{self.Model.Name} - {self.ItemQuantity}"
 
