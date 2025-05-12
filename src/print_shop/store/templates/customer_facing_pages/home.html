@@ -5,6 +5,11 @@
 
 {% block content %}
 <style>
+        html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
     .container.mx-auto.px-4.py-8 {
         padding: 0 !important;
         max-width: none !important;
@@ -13,7 +18,7 @@
     }
     
     #hero-section {
-        height: calc(100vh - 120px);
+        height: calc(100vh - 100px); 
         width: 100%;
         position: relative;
         display: flex;
