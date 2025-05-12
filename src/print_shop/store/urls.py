@@ -14,10 +14,12 @@ from store.views.CRUD import order_items_view
 from store.views import gallery_view
 from store.views import product_admin_view
 from store.views import cart_checkout_view
+from store.views import home_page_view
 
 urlpatterns = [
-    path("", models_view.models_list, name="models-list"),
-    # 3D Models URLs
+    # Home Page URL
+    path("", home_page_view.home_page_view, name="home"),
+     # 3D Models URLs
     path("models/", models_view.models_list, name="models-list"),
     path("models/add/", models_view.add_model, name="add-model"),
     path("models/edit/<int:pk>/", models_view.edit_model, name="edit-model"),
