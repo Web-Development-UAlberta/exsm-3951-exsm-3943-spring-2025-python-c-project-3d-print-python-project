@@ -1,0 +1,129 @@
+[
+  {
+    "model": "store.orders",
+    "pk": 1,
+    "fields": {
+      "User": 1,
+      "Shipping": 1,
+      "TotalPrice": "45.99",
+      "CreatedAt": "2025-05-13T00:00:00Z",
+      "EstimatedShipDate": "2025-05-15T00:00:00Z",
+      "ExpeditedService": false
+    }
+  },
+  {
+    "model": "store.orders",
+    "pk": 2,
+    "fields": {
+      "User": 2,
+      "Shipping": 2,
+      "TotalPrice": "78.50",
+      "CreatedAt": "2025-05-13T00:00:00Z",
+      "EstimatedShipDate": "2025-05-16T00:00:00Z",
+      "ExpeditedService": true
+    }
+  },
+  {
+    "model": "store.orders",
+    "pk": 3,
+    "fields": {
+      "User": 3,
+      "Shipping": 3,
+      "TotalPrice": "120.75",
+      "CreatedAt": "2025-05-13T00:00:00Z",
+      "EstimatedShipDate": "2025-05-18T00:00:00Z",
+      "ExpeditedService": false
+    }
+  },
+  {
+    "model": "store.orderitems",
+    "pk": 1,
+    "fields": {
+      "InventoryChange": 1,
+      "Order": 1,
+      "Model": 1,
+      "InfillMultiplier": "1.00",
+      "TotalWeight": 15,
+      "CostOfGoodsSold": "4.50",
+      "Markup": "1.15",
+      "ItemPrice": "5.18",
+      "ItemQuantity": 2,
+      "IsCustom": false
+    }
+  },
+  {
+    "model": "store.orderitems",
+    "pk": 2,
+    "fields": {
+      "InventoryChange": 2,
+      "Order": 1,
+      "Model": 2,
+      "InfillMultiplier": "1.20",
+      "TotalWeight": 18,
+      "CostOfGoodsSold": "5.40",
+      "Markup": "1.15",
+      "ItemPrice": "6.21",
+      "ItemQuantity": 1,
+      "IsCustom": false
+    }
+  },
+  {
+    "model": "store.orderitems",
+    "pk": 3,
+    "fields": {
+      "InventoryChange": 3,
+      "Order": 2,
+      "Model": 3,
+      "InfillMultiplier": "1.50",
+      "TotalWeight": 33,
+      "CostOfGoodsSold": "9.24",
+      "Markup": "1.20",
+      "ItemPrice": "11.09",
+      "ItemQuantity": 3,
+      "IsCustom": true
+    }
+  },
+  {
+    "model": "store.orderitems",
+    "pk": 4,
+    "fields": {
+      "InventoryChange": 4,
+      "Order": 3,
+      "Model": 4,
+      "InfillMultiplier": "1.10",
+      "TotalWeight": 20,
+      "CostOfGoodsSold": "6.00",
+      "Markup": "1.15",
+      "ItemPrice": "6.90",
+      "ItemQuantity": 5,
+      "IsCustom": false
+    }
+  },
+  {
+    "model": "store.fulfillmentstatus",
+    "pk": 1,
+    "fields": {
+      "Order": 1,
+      "OrderStatus": "Paid",
+      "StatusChangeDate": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.fulfillmentstatus",
+    "pk": 2,
+    "fields": {
+      "Order": 2,
+      "OrderStatus": "Printing",
+      "StatusChangeDate": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.fulfillmentstatus",
+    "pk": 3,
+    "fields": {
+      "Order": 3,
+      "OrderStatus": "Pending",
+      "StatusChangeDate": "2025-05-13T00:00:00Z"
+    }
+  }
+]

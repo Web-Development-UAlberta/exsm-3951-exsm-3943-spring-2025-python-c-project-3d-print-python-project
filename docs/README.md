@@ -52,7 +52,8 @@
 5. Put models in `src/print_shop/store/models`
 6. Put thumbnails in `src/print_shop/store/thumbnails`
 7. **Flush** your database if you have existing dummy data `python manage.py flush`
-8. Run `python manage.py seed_fixtures`
+8. Run `python manage.py initial_seed`
+9. Run `python manage.py order_seed`
 
 ## Credits
 
@@ -75,6 +76,10 @@
 
 ### Forms Logic Resources
 - [Django ModelForms Create and Update with kwargs](https://stackoverflow.com/questions/21119494/django-modelforms-init-kwargs-create-and-update)
+
+### Management Commands and Fixtures
+- [Django Management Commands](https://docs.djangoproject.com/en/5.2/howto/custom-management-commands/)
+- [Django Fixtures](https://docs.djangoproject.com/en/5.2/topics/db/fixtures/#fixtures-explanation)
 
 ### Media Files
 - [Benchy](https://github.com/CreativeTools/3DBenchy/)
