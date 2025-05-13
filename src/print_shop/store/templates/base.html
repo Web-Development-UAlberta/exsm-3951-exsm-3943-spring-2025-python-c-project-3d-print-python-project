@@ -14,15 +14,30 @@
         main {
             flex: 1;
         }
+         @keyframes spin {
+            0% {
+                transform: rotateY(0deg);
+            }
+            100% {
+                transform: rotateY(360deg);
+            }
+        }
+
+        
+        .logo-spin {
+            animation: spin 5s linear infinite; 
+            transform-style: preserve-3d;
+        }
     </style>
+    {% load static %}
 </head>
 <body class="flex flex-col min-h-screen">
     <!-- Sticky Header -->
     <header class="sticky top-0 bg-black text-white shadow-md z-50">
         <div class="container mx-auto px-4 py-5 flex items-center justify-center relative">
             <!-- Logo and Nav -->
-            <div class="absolute left-0 top-1/2 transform -translate-y-1/2">
-                <img src="/api/placeholder/150/50" alt="Logo" class="h-10" />
+            <div class="absolute left-[-140px] top-1/2 transform -translate-y-1/2">
+                 <img src="{% static 'images/logo-2-unsplash.png' %}" alt="Logo" class="h-20 logo-spin" />
             </div>
             
             <nav class="flex space-x-6 text-md">
@@ -43,7 +58,7 @@
             </nav>
 
             <!-- Search Bar -->
-            <div class="absolute right-0 top-1/2 transform -translate-y-1/2"> 
+            <div class="absolute right-[-100px] top-1/2 transform -translate-y-1/2"> 
                 <div class="relative">
                     <input type="text" placeholder="Search..." class="bg-gray-800 text-white px-4 py-1 rounded-full focus:outline-none">
                     <button class="absolute right-2 top-1/2 transform -translate-y-1/2">
@@ -66,7 +81,7 @@
     </main>
 
     <!-- Sticky Footer -->
-    <footer class="sticky bottom-0 bg-black text-white py-5 shadow-inner z-40">
+    <footer class="sticky bottom-0 bg-black text-white py-2 shadow-inner z-40">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center">
                 <!-- Newsletter -->
