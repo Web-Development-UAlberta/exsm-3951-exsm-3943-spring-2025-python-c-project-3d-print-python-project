@@ -5,8 +5,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 import time
 
-class OrderManagementFrontendTestCase(StaticLiveServerTestCase):
 
+class OrderManagementFrontendTestCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -36,7 +36,7 @@ class OrderManagementFrontendTestCase(StaticLiveServerTestCase):
         self.browser.get(self.live_server_url + reverse("order_management"))
         # Make sure the page loads with the order details
         self.assertIn("PLA", self.browser.page_source)
-        self.assertIn("50.00", self.browser.page_source) 
+        self.assertIn("50.00", self.browser.page_source)
 
     ## Filter by Status
     def test_filter_by_status(self):
@@ -85,12 +85,12 @@ class OrderManagementFrontendTestCase(StaticLiveServerTestCase):
 
     ## Actions: View Order Details
     def test_order_view_exists(self):
-        self.browser.get(self.live_server_url + reverse("order_detail", args=[1])) 
+        self.browser.get(self.live_server_url + reverse("order_detail", args=[1]))
         self.assertIn("Order Details", self.browser.page_source)
 
     ## Actions: Edit Order
     def test_order_edit_exists(self):
-        self.browser.get(self.live_server_url + reverse("order_edit", args=[1])) 
+        self.browser.get(self.live_server_url + reverse("order_edit", args=[1]))
         self.assertIn("Edit Order", self.browser.page_source)
 
     ## Actions: Delete Order

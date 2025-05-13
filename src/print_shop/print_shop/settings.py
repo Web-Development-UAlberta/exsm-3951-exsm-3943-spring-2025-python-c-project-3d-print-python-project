@@ -139,7 +139,6 @@ LOGOUT_REDIRECT_URL = "/login/"
 LOGIN_URL = "/login/"
 
 # Media files (uploads for FileField and ImageField)
-import os
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"

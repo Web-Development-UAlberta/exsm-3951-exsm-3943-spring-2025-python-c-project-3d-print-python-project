@@ -196,14 +196,14 @@ class ModelsModelTestCase(TestCase):
         stl_file = SimpleUploadedFile(
             "test_model.stl", b"file_content", content_type="application/sla"
         )
-        
+
         # Create a test image file for thumbnail
         image_file = SimpleUploadedFile(
-            "test_thumbnail.png", 
-            b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x00\x00\x02\x00\x01H\xaf\xa4q\x00\x00\x00\x00IEND\xaeB`\x82', 
-            content_type="image/png"
+            "test_thumbnail.png",
+            b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x00\x00\x02\x00\x01H\xaf\xa4q\x00\x00\x00\x00IEND\xaeB`\x82",
+            content_type="image/png",
         )
-        
+
         # Create a model with a thumbnail
         self.model_with_thumbnail = Models.objects.create(
             Name="3D Model With Thumbnail",
@@ -214,12 +214,12 @@ class ModelsModelTestCase(TestCase):
             BaseInfill=0.2,
             Thumbnail=image_file,
         )
-        
+
         # Create a model without a thumbnail
         stl_file2 = SimpleUploadedFile(
             "test_model2.stl", b"file_content", content_type="application/sla"
         )
-        
+
         self.model_without_thumbnail = Models.objects.create(
             Name="3D Model Without Thumbnail",
             FilePath=stl_file2,
@@ -256,14 +256,16 @@ class ModelsModelTestCase(TestCase):
         """Test that nullable fields are handled correctly."""
         self.assertIsNone(self.model_without_thumbnail.Description)
         self.assertIsNone(self.model_without_thumbnail.Thumbnail.name)
-        
+
     def test_thumbnail_field(self):
         """Test that the thumbnail field works correctly."""
         # Test that the thumbnail was saved
         self.assertIsNotNone(self.model_with_thumbnail.Thumbnail)
         self.assertIn("test_thumbnail", self.model_with_thumbnail.Thumbnail.name)
-        self.assertTrue(self.model_with_thumbnail.Thumbnail.name.startswith("thumbnails/"))
-        
+        self.assertTrue(
+            self.model_with_thumbnail.Thumbnail.name.startswith("thumbnails/")
+        )
+
     def tearDown(self):
         """Clean up after tests."""
         for file_path in self.files_to_clean:

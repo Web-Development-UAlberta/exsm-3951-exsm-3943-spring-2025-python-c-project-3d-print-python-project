@@ -19,7 +19,7 @@ from store.views import home_page_view
 urlpatterns = [
     # Home Page URL
     path("", home_page_view.home_page_view, name="home"),
-     # 3D Models URLs
+    # 3D Models URLs
     path("models/", models_view.models_list, name="models-list"),
     path("models/add/", models_view.add_model, name="add-model"),
     path("models/edit/<int:pk>/", models_view.edit_model, name="edit-model"),

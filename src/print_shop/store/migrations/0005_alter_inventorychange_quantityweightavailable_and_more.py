@@ -5,45 +5,68 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('store', '0004_alter_filament_colorhexcode_and_more'),
+        ("store", "0004_alter_filament_colorhexcode_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='inventorychange',
-            name='QuantityWeightAvailable',
-            field=models.IntegerField(validators=[django.core.validators.MinValueValidator(0)]),
+            model_name="inventorychange",
+            name="QuantityWeightAvailable",
+            field=models.IntegerField(
+                validators=[django.core.validators.MinValueValidator(0)]
+            ),
         ),
         migrations.AlterField(
-            model_name='models',
-            name='BaseInfill',
-            field=models.DecimalField(decimal_places=2, default=0.3, max_digits=3, validators=[django.core.validators.MinValueValidator(0.0)]),
+            model_name="models",
+            name="BaseInfill",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=0.3,
+                max_digits=3,
+                validators=[django.core.validators.MinValueValidator(0.0)],
+            ),
         ),
         migrations.AlterField(
-            model_name='models',
-            name='FixedCost',
-            field=models.DecimalField(decimal_places=2, default=3.0, max_digits=10, validators=[django.core.validators.MinValueValidator(0.0)]),
+            model_name="models",
+            name="FixedCost",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=3.0,
+                max_digits=10,
+                validators=[django.core.validators.MinValueValidator(0.0)],
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitems',
-            name='ItemPrice',
-            field=models.DecimalField(decimal_places=2, max_digits=10, validators=[django.core.validators.MinValueValidator(0)]),
+            model_name="orderitems",
+            name="ItemPrice",
+            field=models.DecimalField(
+                decimal_places=2,
+                max_digits=10,
+                validators=[django.core.validators.MinValueValidator(0)],
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitems',
-            name='ItemQuantity',
-            field=models.IntegerField(validators=[django.core.validators.MinValueValidator(0)]),
+            model_name="orderitems",
+            name="ItemQuantity",
+            field=models.IntegerField(
+                validators=[django.core.validators.MinValueValidator(0)]
+            ),
         ),
         migrations.AlterField(
-            model_name='rawmaterials',
-            name='MaterialDensity',
-            field=models.DecimalField(decimal_places=2, max_digits=3, validators=[django.core.validators.MinValueValidator(0.0)]),
+            model_name="rawmaterials",
+            name="MaterialDensity",
+            field=models.DecimalField(
+                decimal_places=2,
+                max_digits=3,
+                validators=[django.core.validators.MinValueValidator(0.0)],
+            ),
         ),
         migrations.AlterField(
-            model_name='shipping',
-            name='ShipTime',
-            field=models.IntegerField(validators=[django.core.validators.MinValueValidator(0)]),
+            model_name="shipping",
+            name="ShipTime",
+            field=models.IntegerField(
+                validators=[django.core.validators.MinValueValidator(0)]
+            ),
         ),
     ]
