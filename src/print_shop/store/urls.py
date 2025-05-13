@@ -148,6 +148,7 @@ urlpatterns = [
     # User Profile URLs - Customer views
     path("profile/", user_profiles_view.view_profile, name="view-profile"),
     path("profile/edit/", user_profiles_view.edit_profile, name="edit-profile"),
+    path("profile/change-password/", user_profiles_view.change_password, name="change-password"),
     # User Profile URLs - Admin views
     path(
         "user-profiles/", user_profiles_view.user_profile_list, name="user-profile-list"

@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 from store.forms.user_profile_form import UserProfileForm, UserRegistrationForm
 from store.forms.user_profile_admin_form import (
     UserProfileAdminForm,
@@ -144,3 +146,20 @@ def delete_user_profile(request, pk):
     return render(
         request, "user/user_profile_confirm_delete.html", {"user_profile": user_profile}
     )
+
+
+@login_required
+def change_password(request):
+    """Change user password"""
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important to keep user logged in
+            messages.success(request, "Your password was successfully updated!")
+            return redirect("view-profile")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, "user/change_password.html", {"form": form})
