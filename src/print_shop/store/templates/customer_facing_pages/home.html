@@ -5,7 +5,7 @@
 
 {% block content %}
 <style>
-        html, body {
+    html, body {
         height: 100%;
         margin: 0;
         overflow: hidden;
@@ -16,31 +16,30 @@
         margin: 0 !important;
         width: 100% !important;
     }
-    
-    #hero-section {
-        height: calc(100vh - 100px); 
-        width: 100%;
-        position: relative;
-        display: flex;
-        align-items: center;
+
+    .fade-in {
+        animation: fadeIn 1.2s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
-<div id="hero-section">
-    <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center">
-        <div class="absolute inset-0 bg-pink/40"></div>
-    </div>
-    <div class="relative z-10 container mx-auto px-8">
-        <div class="max-w-2xl">
-            <h1 class="text-4xl font-bold -ml-32 mb-8 text-white">Welcome to the 3D Print Store.</h1>
-            
-            <p class="text-lg text-white max-w-2xl -ml-32 mb-12">
-                Browse our extensive collection of 3D models, easily customize them to fit your needs, and stay up to date on your order's progress. At our 3D Print Store, we combine innovation with convenience, delivering high-quality prints tailored just for you.
-            </p>
-            
-            <a href="{% url 'models-list' %}" class="bg-black hover:bg-blue-500 text-white px-6 py-3 -ml-32 rounded shadow inline-block">
-                Start Exploring
-            </a>
-        </div>
+<div id="hero-section" class="relative h-[calc(100vh-100px)] flex items-center justify-start pl-16 overflow-hidden">
+    <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-500/30 mix-blend-multiply"></div>
+
+    <div class="relative z-10 w-full max-w-md p-8 rounded-2xl bg-gradient-to-br from-white/10 via-white/5 to-white/0 backdrop-blur-xl text-white fade-in shadow-[0_8px_30px_rgba(0,0,0,0.3)] border border-white/20 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)] transition-transform duration-500">
+        <h1 class="text-4xl font-extrabold mb-6">Welcome to the 3D Print Store</h1>
+
+        <p class="text-base mb-6 leading-relaxed">
+            Browse our extensive collection of 3D models, easily customize them to fit your needs, and stay up to date on your order's progress. At our 3D Print Store, we combine innovation with convenience, delivering high-quality prints tailored just for you.
+        </p>
+
+        <a href="{% url 'models-list' %}" class="bg-black hover:bg-blue-500 hover:shadow-lg text-white px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">
+            Start Exploring
+        </a>
     </div>
 </div>
 {% endblock %}
