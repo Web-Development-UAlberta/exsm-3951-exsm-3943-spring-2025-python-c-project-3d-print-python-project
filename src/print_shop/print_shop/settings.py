@@ -134,7 +134,12 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Authentication routes
-LOGIN_REDIRECT_URL = '/profile/'
-LOGOUT_REDIRECT_URL = '/login/'
-LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = "/profile/"
+LOGOUT_REDIRECT_URL = "/login/"
+LOGIN_URL = "/login/"
 
+# Media files (uploads for FileField and ImageField)
+import os
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = "/media/"
