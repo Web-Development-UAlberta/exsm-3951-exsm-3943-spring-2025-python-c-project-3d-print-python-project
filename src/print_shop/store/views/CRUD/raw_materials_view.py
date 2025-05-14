@@ -1,10 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from store.forms.raw_materials_form import RawMaterialsForm
 from store.models import RawMaterials
 
+# Check if user is an admin (staff or superuser)
+def is_admin(user):
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
 
-# List all raw materials
+# List all raw materials - accessible to all authenticated users
+@login_required
 def raw_materials_list(request):
     raw_materials = RawMaterials.objects.all()
     return render(
@@ -15,6 +20,8 @@ def raw_materials_list(request):
 
 
 # Create a new raw material
+@login_required
+@user_passes_test(is_admin)
 def add_raw_material(request):
     if request.method == "POST":
         form = RawMaterialsForm(request.POST)
@@ -30,7 +37,9 @@ def add_raw_material(request):
     return render(request, "raw_materials/raw_material_form.html", {"form": form})
 
 
-# Edit an existing raw material
+# Edit an existing raw material - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def edit_raw_material(request, pk):
     raw_material = get_object_or_404(RawMaterials, pk=pk)
     if request.method == "POST":
@@ -53,7 +62,9 @@ def edit_raw_material(request, pk):
     )
 
 
-# Delete a raw material
+# Delete a raw material - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def delete_raw_material(request, pk):
     raw_material = get_object_or_404(RawMaterials, pk=pk)
     if request.method == "POST":

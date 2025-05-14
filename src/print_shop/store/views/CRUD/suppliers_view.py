@@ -8,8 +8,9 @@ from store.models import Suppliers
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff)
 
-# List all suppliers - accessible to all authenticated users
+# List all suppliers - accessible to admin users
 @login_required
+@user_passes_test(is_admin)
 def supplier_list(request):
     suppliers = Suppliers.objects.all()
     return render(request, "suppliers/supplier_list.html", {"suppliers": suppliers})

@@ -1,16 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from store.forms.models_form import ModelsForm
 from store.models import Models
 
 
-# List all models
+# Check if the user is admin (Staff or Superuser)
+def is_admin(user):
+    return user.is_authenticated and (user.is_superuser or user.is_staff)
+
+# List all models - accessible to all authenticated users
+@login_required
 def models_list(request):
     models = Models.objects.all()
     return render(request, "models/models_list.html", {"models": models})
 
 
-# Create a new model
+# Create a new model - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def add_model(request):
     if request.method == "POST":
         form = ModelsForm(request.POST, request.FILES)
@@ -23,7 +31,9 @@ def add_model(request):
     return render(request, "models/model_form.html", {"form": form})
 
 
-# Edit an existing model
+# Edit an existing model - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def edit_model(request, pk):
     model = get_object_or_404(Models, pk=pk)
     if request.method == "POST":
@@ -37,7 +47,9 @@ def edit_model(request, pk):
     return render(request, "models/model_form.html", {"form": form})
 
 
-# Delete a model
+# Delete a model - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def delete_model(request, pk):
     model = get_object_or_404(Models, pk=pk)
     if request.method == "POST":
