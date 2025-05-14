@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section>
+  <h1>Checkout</h1>
+  
+  <div class="order-summary">
+    <h2>Order Summary</h2>
+    {% if cart_items %}
+      <ul>
+        {% for item in cart_items %}
+          <li>
+            <strong>{{ item.Model.Name }}</strong> - 
+            {% if item.InventoryChange %}
+              {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} - 
+              {{ item.InventoryChange.RawMaterial.Filament.Name }}
+            {% endif %}
+            <span>Quantity: {{ item.ItemQuantity }}</span>
+            <span>Price: ${{ item.ItemPrice }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+      <p><strong>Subtotal:</strong> ${{ subtotal }}</p>
+    {% else %}
+      <p>Your cart is empty.</p>
+    {% endif %}
+  </div>
+  
+  <div class="shipping-form">
+    <h2>Shipping Information</h2>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        {{ form.shipping_method.label_tag }}
+        {{ form.shipping_method }}
+        {% if form.shipping_method.errors %}
+          <div class="error">{{ form.shipping_method.errors }}</div>
+        {% endif %}
+      </div>
+      
+      <div class="form-group">
+        {{ form.expedited.label_tag }}
+        {{ form.expedited }}
+        <small>{{ form.expedited.help_text }}</small>
+      </div>
+      
+      <div class="delivery-address">
+        <h3>Delivery Address</h3>
+        <p>{{ request.user.user_profile.Address }}</p>
+      </div>
+      
+      <div class="form-actions">
+        <a href="{% url 'cart' %}" class="btn btn-secondary">Back to Cart</a>
+        <button type="submit" class="btn btn-primary">Continue to Confirmation</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

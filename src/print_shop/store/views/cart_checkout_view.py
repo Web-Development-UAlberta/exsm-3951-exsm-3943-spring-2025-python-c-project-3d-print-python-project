@@ -74,7 +74,7 @@ def remove_from_cart(request, item_id):
     """
     Remove an item from the cart
     """
-    item = get_object_or_404(OrderItems, pk=item_id, Order__isnull=True)
+    item = get_object_or_404(OrderItems, pk=item_id, Order__User=request.user)
     if "customer" not in request.session:
         request.session["customer"] = request.user.id
 
@@ -83,6 +83,48 @@ def remove_from_cart(request, item_id):
         item.delete()
         messages.success(request, f"{item_name} has been removed from your cart.")
 
+    return redirect("cart")
+
+
+@login_required
+def update_cart_item(request, item_id):
+    """
+    Update the quantity of an item in the cart
+    Checks if there's sufficient inventory for the new quantity
+    """
+    item = get_object_or_404(OrderItems, pk=item_id, Order__User=request.user)
+    
+    if request.method == "POST":
+        try:
+            new_quantity = int(request.POST.get("quantity", 1))
+            
+            if new_quantity <= 0:
+                item_name = item.Model.Name
+                item.delete()
+                messages.success(request, f"{item_name} has been removed from your cart.")
+                item_name = item.Model.Name
+                item.delete()
+                messages.success(request, f"{item_name} has been removed from your cart.")
+                return redirect("cart")
+            
+            original_quantity = item.ItemQuantity
+            
+            item.ItemQuantity = new_quantity
+            total_weight = item.calculate_required_weight()
+            
+            raw_material = item.InventoryChange.RawMaterial
+            sufficient_inventory = raw_material.find_inventory_for_weight(total_weight)
+            
+            if sufficient_inventory:
+                item.save()
+                messages.success(request, f"Quantity updated to {new_quantity}.")
+            else:
+                item.ItemQuantity = original_quantity
+                item.save()
+                messages.error(request, f"Not enough inventory available for the requested quantity.")
+        except ValueError:
+            messages.error(request, "Please enter a valid quantity.")
+    
     return redirect("cart")
 
 

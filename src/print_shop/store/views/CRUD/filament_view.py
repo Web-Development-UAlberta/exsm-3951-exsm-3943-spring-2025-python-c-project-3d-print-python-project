@@ -1,16 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from store.forms.filament_form import FilamentForm
 from store.models import Filament
 
 
-# List all filaments
+# Check if the user is admin (Staff or Superuser)
+def is_admin(user):
+    return user.is_authenticated and (user.is_superuser or user.is_staff)
+
+# List all filaments - accessible to all authenticated users
+@login_required
 def filament_list(request):
     filaments = Filament.objects.all()
     return render(request, "filament/filament_list.html", {"filaments": filaments})
 
 
-# Create a new filament
+# Create a new filament - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def add_filament(request):
     if request.method == "POST":
         form = FilamentForm(request.POST)
@@ -25,7 +33,9 @@ def add_filament(request):
     return render(request, "filament/filament_form.html", {"form": form})
 
 
-# Edit an existing filament
+# Edit an existing filament - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def edit_filament(request, pk):
     filament = get_object_or_404(Filament, pk=pk)
     if request.method == "POST":
@@ -41,7 +51,9 @@ def edit_filament(request, pk):
     return render(request, "filament/filament_form.html", {"form": form})
 
 
-# Delete a filament
+# Delete a filament - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def delete_filament(request, pk):
     filament = get_object_or_404(Filament, pk=pk)
     if request.method == "POST":

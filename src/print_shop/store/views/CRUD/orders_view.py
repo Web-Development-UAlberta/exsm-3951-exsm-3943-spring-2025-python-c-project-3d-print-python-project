@@ -1,16 +1,30 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from store.forms.order_forms import OrdersForm
 from store.models import Orders
 
 
-# List all orders
+# Check if the user is admin (Staff or Superuser)
+def is_admin(user):
+    return user.is_authenticated and (user.is_superuser or user.is_staff)
+
+# Owner or admin check
+def is_owner_or_admin(user, order):
+    return user.is_authenticated and (user == order.User or is_admin(user))
+
+# List all orders - accessible to all authenticated users
+@login_required
 def orders_list(request):
-    orders = Orders.objects.all()
+    if is_admin(request.user):
+        orders = Orders.objects.all()
+    else:
+        orders = Orders.objects.filter(User=request.user)
     return render(request, "orders/orders_list.html", {"orders": orders})
 
 
-# Create a new order
+# Create a new order - only accessible to all authenticated users
+@login_required
 def add_order(request):
     if request.method == "POST":
         form = OrdersForm(request.POST)
@@ -25,9 +39,14 @@ def add_order(request):
     return render(request, "orders/orders_form.html", {"form": form})
 
 
-# Edit an existing order
+# Edit an existing order - only accessible to admin users
+@login_required
 def edit_order(request, pk):
     order = get_object_or_404(Orders, pk=pk)
+    if not is_owner_or_admin(request.user, order):
+        messages.error(request, "You do not have permission to edit this order.")
+        return redirect("orders-list")
+    
     if request.method == "POST":
         form = OrdersForm(request.POST, instance=order)
         if form.is_valid():
@@ -41,9 +60,14 @@ def edit_order(request, pk):
     return render(request, "orders/orders_form.html", {"form": form})
 
 
-# Delete an order
+# Delete an order - only accessible to admin users
+@login_required
 def delete_order(request, pk):
     order = get_object_or_404(Orders, pk=pk)
+    if not is_owner_or_admin(request.user, order):
+        messages.error(request, "You do not have permission to delete this order.")
+        return redirect("orders-list")
+    
     if request.method == "POST":
         name = order.User.username
         order.delete()

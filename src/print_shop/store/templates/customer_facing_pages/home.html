@@ -37,9 +37,14 @@
             Browse our extensive collection of 3D models, easily customize them to fit your needs, and stay up to date on your order's progress. At our 3D Print Store, we combine innovation with convenience, delivering high-quality prints tailored just for you.
         </p>
 
-        <a href="{% url 'models-list' %}" class="bg-black hover:bg-blue-500 hover:shadow-lg text-white px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">
-            Start Exploring
-        </a>
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'premade-gallery' %}" class="bg-black hover:bg-blue-500 hover:shadow-lg text-white px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">
+                Browse Premade Items
+            </a>
+            <a href="{% url 'custom-gallery' %}" class="bg-white hover:bg-gray-100 text-black border border-black px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">
+                Custom 3D Printing
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}

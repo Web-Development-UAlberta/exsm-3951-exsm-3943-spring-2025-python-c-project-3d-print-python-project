@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section>
+  <h1>Order Tracking</h1>
+
+  {% if latest_order %}
+  <h2>Order Summary</h2>
+  <div class="order-summary">
+    <h3>Order #{{ latest_order.id }}</h3>
+    <p>Date: {{ latest_order.CreatedAt }}</p>
+
+    <h3>Delivery Address</h3>
+    <p>{{ latest_order.User.user_profile.Address }}</p>
+
+    <h3>Items</h3>
+    <ul>
+      {% for item in latest_order.orderitems_set.all %}
+      <li>
+        {{ item.Model.Name }} - Quantity: {{ item.ItemQuantity }}
+        {% if item.InventoryChange %}
+          - Material: {{ item.InventoryChange.RawMaterial.Filament.Material.Name }}
+        {% endif %}
+        - Price: ${{ item.ItemPrice }}
+      </li>
+      {% endfor %}
+    </ul>
+
+    <p>Order subtotal: ${{ latest_order.TotalPrice }}</p>
+    {% if latest_order.Shipping %}
+    <p>Shipping: ${{ latest_order.Shipping.Rate }} ({{ latest_order.Shipping.Name }})</p>
+    {% endif %}
+    <p><strong>Total: ${{ latest_order.TotalPrice }}</strong></p>
+
+    <h3>Status</h3>
+    {% if latest_order.fulfillmentstatus_set.first %}
+    <p>{{ latest_order.fulfillmentstatus_set.first.get_OrderStatus_display }}</p>
+    {% else %}
+    <p>Processing</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <h2>Order History</h2>
+  {% if orders %}
+  <table>
+    <thead>
+      <tr>
+        <th>Order Number</th>
+        <th>Order Date</th>
+        <th>Status</th>
+        <th>Total Price</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>{{ order.id }}</td>
+        <td>{{ order.CreatedAt }}</td>
+        <td>
+          {% if order.fulfillmentstatus_set.first %}
+            {{ order.fulfillmentstatus_set.first.get_OrderStatus_display }}
+          {% else %}
+            Processing
+          {% endif %}
+        </td>
+        <td>${{ order.TotalPrice }}</td>
+        <td>
+          <a href="{% url 'order_details' order.id %}">View Details</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>You have no orders yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
