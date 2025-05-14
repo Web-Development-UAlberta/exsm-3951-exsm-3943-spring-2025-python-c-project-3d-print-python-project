@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>3D Printing Dashboard</title>
+  <style>
+    body { font-family: sans-serif; background: #f0f0f0; }
+    .container { display: flex; }
+    .sidebar { width: 220px; background: #fff; padding: 1em; font-weight: bold; }
+    .content { flex: 1; padding: 1em; display: grid; gap: 1em; grid-template-columns: repeat(2, 1fr); }
+    .card { background: #ccc; padding: 1em; border-radius: 10px; }
+    canvas { background: #fff; padding: 1em; border-radius: 10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <div>3D Printing</div>
+    <hr>
+    <div>Dashboard</div>
+    <div>Order Management</div>
+    <div>Inventory Management</div>
+    <div>User Management</div>
+    <div>CSV Upload</div>
+  </div>
+
+  <div class="content">
+    <div class="card">Total Orders<br><h2>{{ total_orders }}</h2></div>
+    <div class="card">Active Orders<br><h2>{{ active_orders }}</h2></div>
+    <div class="card">Pending Uploads<br><h2>{{ pending_uploads }}</h2></div>
+    <div class="card">Inventory Warnings<br><h2>{{ inventory_warnings }}</h2></div>
+    
+  </div>
+</div>
+
+
+</body>
+</html>

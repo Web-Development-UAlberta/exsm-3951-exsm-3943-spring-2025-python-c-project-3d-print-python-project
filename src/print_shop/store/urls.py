@@ -15,6 +15,7 @@ from store.views import gallery_view
 from store.views import product_admin_view
 from store.views import cart_checkout_view
 from store.views import home_page_view
+from store.views import admin_dashboard_view
 
 urlpatterns = [
     # Home Page URL
@@ -251,4 +252,5 @@ urlpatterns = [
         product_admin_view.generate_quote,
         name="product-admin-generate-quote",
     ),
+    path("admin-dashboard/", admin_dashboard_view.admin_dashboard, name="admin_dashboard"),
 ]
