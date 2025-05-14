@@ -15,6 +15,7 @@ from store.views import gallery_view
 from store.views import product_admin_view
 from store.views import cart_checkout_view
 from store.views import home_page_view
+from store.views import order_tracking_view
 
 urlpatterns = [
     # Home Page URL
@@ -116,7 +117,7 @@ urlpatterns = [
         shipping_view.delete_shipping,
         name="delete-shipping",
     ),
-    # Fulfillment Status URLs disabled until Orders forms/templates are created
+    # Fulfillment Status URLs
     path(
         "fulfillment-status/",
         fulfillment_status_view.fulfillment_status_list,
@@ -230,6 +231,9 @@ urlpatterns = [
         cart_checkout_view.order_success,
         name="order-success",
     ),
+    # Order Tracking URLs
+    path("orders/tracking/", order_tracking_view.order_tracking, name="order_tracking"),
+    path("orders/details/<int:order_id>/", order_tracking_view.order_details, name="order_details"),
     # Product Admin URLs (for store staff to manage premade items)
     path(
         "product-admin/premade/",
