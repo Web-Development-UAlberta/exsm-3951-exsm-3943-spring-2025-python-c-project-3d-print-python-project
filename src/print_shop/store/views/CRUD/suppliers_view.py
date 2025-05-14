@@ -1,16 +1,23 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from store.forms.suppliers_form import SuppliersForm
 from store.models import Suppliers
 
+# Check if the user is admin (Staff or Superuser)
+def is_admin(user):
+    return user.is_authenticated and (user.is_superuser or user.is_staff)
 
-# List all suppliers
+# List all suppliers - accessible to all authenticated users
+@login_required
 def supplier_list(request):
     suppliers = Suppliers.objects.all()
     return render(request, "suppliers/supplier_list.html", {"suppliers": suppliers})
 
 
-# Create a new supplier
+# Create a new supplier - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def add_supplier(request):
     if request.method == "POST":
         form = SuppliersForm(request.POST)
@@ -25,7 +32,9 @@ def add_supplier(request):
     return render(request, "suppliers/supplier_form.html", {"form": form})
 
 
-# Edit an existing supplier
+# Edit an existing supplier - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def edit_supplier(request, pk):
     supplier = get_object_or_404(Suppliers, pk=pk)
     if request.method == "POST":
@@ -41,7 +50,9 @@ def edit_supplier(request, pk):
     return render(request, "suppliers/supplier_form.html", {"form": form})
 
 
-# Delete a supplier
+# Delete a supplier - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def delete_supplier(request, pk):
     supplier = get_object_or_404(Suppliers, pk=pk)
     if request.method == "POST":
