@@ -1,16 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from store.forms.materials_form import MaterialsForm
 from store.models import Materials
 
 
-# List all materials
+# Check if the user is admin (Staff or Superuser)
+def is_admin(user):
+    return user.is_authenticated and (user.is_superuser or user.is_staff)
+
+# List all materials - accessible to all authenticated users
+@login_required
 def materials_list(request):
     materials = Materials.objects.all()
     return render(request, "materials/materials_list.html", {"materials": materials})
 
 
-# Create a new material
+# Create a new material - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def add_material(request):
     if request.method == "POST":
         form = MaterialsForm(request.POST)
@@ -25,7 +33,9 @@ def add_material(request):
     return render(request, "materials/material_form.html", {"form": form})
 
 
-# Edit an existing material
+# Edit an existing material - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def edit_material(request, pk):
     material = get_object_or_404(Materials, pk=pk)
     if request.method == "POST":
@@ -41,7 +51,9 @@ def edit_material(request, pk):
     return render(request, "materials/material_form.html", {"form": form})
 
 
-# Delete a material
+# Delete a material - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def delete_material(request, pk):
     material = get_object_or_404(Materials, pk=pk)
     if request.method == "POST":

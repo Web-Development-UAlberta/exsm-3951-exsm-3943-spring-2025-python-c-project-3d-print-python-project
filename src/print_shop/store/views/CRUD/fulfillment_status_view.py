@@ -1,11 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from store.forms.fulfillment_status_form import FulfillmentStatusForm
 from store.models import FulfillmentStatus
 
 
-# List all fulfillment statuses
+# Check if the user is admin (Staff or Superuser)
+def is_admin(user):
+    return user.is_authenticated and (user.is_superuser or user.is_staff)
+
+# List all fulfillment statuses - accessible to all authenticated users
+@login_required
 def fulfillment_status_list(request):
+    # Check if the user is admin
+    if is_admin(request.user):
+        # If the user is admin, show all fulfillment statuses
+        fulfillment_statuses = FulfillmentStatus.objects.all()
+    else:
+        # If the user is not admin, show only their own fulfillment statuses
+        fulfillment_statuses = FulfillmentStatus.objects.filter(order__user=request.user)
     fulfillment_statuses = FulfillmentStatus.objects.all()
     return render(
         request,
@@ -14,7 +27,9 @@ def fulfillment_status_list(request):
     )
 
 
-# Create a new fulfillment status
+# Create a new fulfillment status - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def add_fulfillment_status(request):
     if request.method == "POST":
         form = FulfillmentStatusForm(request.POST)
@@ -30,7 +45,9 @@ def add_fulfillment_status(request):
     return render(request, "orders/fulfillment_status_form.html", {"form": form})
 
 
-# Edit an existing fulfillment status
+# Edit an existing fulfillment status - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def edit_fulfillment_status(request, pk):
     fulfillment_status = get_object_or_404(FulfillmentStatus, pk=pk)
     if request.method == "POST":
@@ -47,7 +64,9 @@ def edit_fulfillment_status(request, pk):
     return render(request, "orders/fulfillment_status_form.html", {"form": form})
 
 
-# Delete an fulfillment status
+# Delete an fulfillment status - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def delete_fulfillment_status(request, pk):
     fulfillment_status = get_object_or_404(FulfillmentStatus, pk=pk)
     if request.method == "POST":

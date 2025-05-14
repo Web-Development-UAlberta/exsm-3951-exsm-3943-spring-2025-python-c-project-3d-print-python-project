@@ -1,10 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from store.forms.inventory_form import InventoryChangeForm
 from store.models import InventoryChange, RawMaterials
 
 
-# List all inventory changes
+# Check if the user is admin (Staff or Superuser)
+def is_admin(user):
+    return user.is_authenticated and (user.is_superuser or user.is_staff)
+
+# List all inventory changes - accessible to all authenticated users
+@login_required
 def inventory_change_list(request):
     inventory_changes = InventoryChange.objects.all()
     return render(
@@ -13,7 +19,9 @@ def inventory_change_list(request):
         {"inventory_changes": inventory_changes},
     )
 
-
+# Show details of a specific raw material's inventory
+@login_required
+@user_passes_test(is_admin)
 def current_inventory_levels(request):
     """
     Display the current inventory levels for all raw materials.
@@ -40,7 +48,8 @@ def current_inventory_levels(request):
     )
 
 
-# Show details of a specific inventory change
+# Show details of a specific inventory change - accessible to all users
+@login_required
 def inventory_change_detail(request, pk):
     inventory_change = get_object_or_404(InventoryChange, pk=pk)
     return render(
@@ -50,7 +59,9 @@ def inventory_change_detail(request, pk):
     )
 
 
-# Create a new inventory change
+# Create a new inventory change - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def add_inventory_change(request):
     if request.method == "POST":
         form = InventoryChangeForm(request.POST)
@@ -63,7 +74,9 @@ def add_inventory_change(request):
     return render(request, "inventory/inventory_change_form.html", {"form": form})
 
 
-# Edit an existing inventory change
+# Edit an existing inventory change - only accessible to admin users
+@login_required
+@user_passes_test(is_admin)
 def edit_inventory_change(request, pk):
     inventory_change = get_object_or_404(InventoryChange, pk=pk)
     if request.method == "POST":
@@ -77,7 +90,9 @@ def edit_inventory_change(request, pk):
     return render(request, "inventory/inventory_change_form.html", {"form": form})
 
 
-# Delete an inventory change
+# Delete an inventory change - only accessible to admin users
+@login_required 
+@user_passes_test(is_admin)
 def delete_inventory_change(request, pk):
     inventory_change = get_object_or_404(InventoryChange, pk=pk)
     if request.method == "POST":
