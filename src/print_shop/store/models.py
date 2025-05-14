@@ -12,6 +12,7 @@ from django.core.validators import (
     FileExtensionValidator,
 )
 from django.core.exceptions import ValidationError
+from decimal import Decimal
 
 
 class Materials(models.Model):
@@ -76,8 +77,8 @@ class RawMaterials(models.Model):
     WearAndTearMultiplier = models.DecimalField(
         max_digits=3,
         decimal_places=2,
-        default=1.00,
-        validators=[MinValueValidator(1.00)],
+        default=Decimal("1.00"),
+        validators=[MinValueValidator(Decimal("1.00"))],
     )
     PurchasedDate = models.DateTimeField(auto_now_add=True)
 
@@ -113,7 +114,7 @@ class InventoryChangeManager(models.Manager):
             "RawMaterial__PurchasedDate", "-InventoryChangeDate"
         )
 
-    def find_for_weight(self, required_weight, safety_margin=1.15, raw_material=None):
+    def find_for_weight(self, required_weight, safety_margin=Decimal("1.15"), raw_material=None):
         """Find inventory with enough material for the required weight
 
         Args:
@@ -124,7 +125,7 @@ class InventoryChangeManager(models.Manager):
         Returns:
             InventoryChange object with enough material, or None if not found
         """
-        weight_with_margin = required_weight * safety_margin
+        weight_with_margin = Decimal(str(required_weight)) * Decimal(str(safety_margin))
         available_inventory = self.available()
 
         if raw_material:
@@ -154,7 +155,7 @@ class InventoryChange(models.Model):
         Check if current inventory level is below reorder threshold
         Threshold set to 20% of original amount
         """
-        threshold = self.RawMaterial.MaterialWeightPurchased * 0.2
+        threshold = Decimal(str(self.RawMaterial.MaterialWeightPurchased)) * Decimal("0.2")
         return self.QuantityWeightAvailable < threshold
 
 
@@ -170,7 +171,7 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
         InventoryChange.objects.create(
             RawMaterial=instance,
             QuantityWeightAvailable=instance.MaterialWeightPurchased,
-            UnitCost=instance.Cost / instance.MaterialWeightPurchased,
+            UnitCost=instance.Cost / Decimal(str(instance.MaterialWeightPurchased)),
         )
     else:
         initial_inventory = (
@@ -190,7 +191,7 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
                     instance.MaterialWeightPurchased
                 )
                 initial_inventory.UnitCost = (
-                    instance.Cost / instance.MaterialWeightPurchased
+                    instance.Cost / Decimal(str(instance.MaterialWeightPurchased))
                 )
                 initial_inventory.save(
                     update_fields=["QuantityWeightAvailable", "UnitCost"]
@@ -212,15 +213,15 @@ class Models(models.Model):
     FixedCost = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(0.00)],
-        default=3.00,
+        validators=[MinValueValidator(Decimal("0.00"))],
+        default=Decimal("3.00"),
     )
     EstimatedPrintVolume = models.IntegerField()
     BaseInfill = models.DecimalField(
         max_digits=3,
         decimal_places=2,
-        validators=[MinValueValidator(0.00)],
-        default=0.3,
+        validators=[MinValueValidator(Decimal("0.00"))],
+        default=Decimal("0.3"),
     )
     CreatedAt = models.DateTimeField(auto_now_add=True)
 
@@ -288,7 +289,7 @@ class Orders(models.Model):
             shipping_cost = self.Shipping.Rate
             self.TotalPrice = items_total + shipping_cost
             if self.ExpeditedService:
-                self.TotalPrice *= 1.5
+                self.TotalPrice *= Decimal("1.5")
 
         super().save(*args, **kwargs)
 
@@ -299,7 +300,7 @@ class OrderItems(models.Model):
     InventoryChange = models.ForeignKey(InventoryChange, on_delete=models.PROTECT)
     Order = models.ForeignKey(Orders, on_delete=models.SET_NULL, null=True, blank=True)
     Model = models.ForeignKey(Models, on_delete=models.PROTECT)
-    InfillMultiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.00)
+    InfillMultiplier = models.DecimalField(max_digits=3, decimal_places=2, default=Decimal("1.00"))
     TotalWeight = models.IntegerField()
     CostOfGoodsSold = models.DecimalField(
         max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
@@ -307,8 +308,8 @@ class OrderItems(models.Model):
     Markup = models.DecimalField(
         max_digits=3,
         decimal_places=2,
-        default=1.15,
-        validators=[MinValueValidator(1.00)],
+        default=Decimal("1.15"),
+        validators=[MinValueValidator(Decimal("1.00"))],
     )
     ItemPrice = models.DecimalField(
         max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
