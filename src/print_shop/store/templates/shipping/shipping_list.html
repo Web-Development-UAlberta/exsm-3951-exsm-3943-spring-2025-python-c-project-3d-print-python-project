@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Shipping</h1>
+  <a href="{% url 'add-shipping' %}">Add Shipping Method</a>
+  <ul>
+    {% for item in shipping %}
+      <li>
+        {{ item.Name }} — {{ item.Rate }} — {{ item.ShipTime }} days —
+        <a href="{% url 'edit-shipping' item.pk %}">Edit</a> |
+        <a href="{% url 'delete-shipping' item.pk %}">Delete</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

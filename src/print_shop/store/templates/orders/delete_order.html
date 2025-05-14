@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section>
+    <h1>Delete Order</h1>
+    
+    <p>Are you sure you want to delete order for {{ order.User.username }}?</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Yes, Delete</button>
+    </form>
+    
+    <a href="{% url 'orders-list' %}">Cancel</a>
+</section>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section>
+  <h1>Order Confirmation</h1>
+  
+  <div class="order-summary">
+    <h2>Order Summary</h2>
+    {% if cart_items %}
+      <ul>
+        {% for item in cart_items %}
+          <li>
+            <strong>{{ item.Model.Name }}</strong> - 
+            {% if item.InventoryChange %}
+              {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} - 
+              {{ item.InventoryChange.RawMaterial.Filament.Name }}
+            {% endif %}
+            <span>Quantity: {{ item.ItemQuantity }}</span>
+            <span>Price: ${{ item.ItemPrice }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+      <p><strong>Subtotal:</strong> ${{ subtotal }}</p>
+    {% else %}
+      <p>Your cart is empty.</p>
+    {% endif %}
+  </div>
+  
+  <div class="shipping-details">
+    <h2>Shipping Details</h2>
+    <p><strong>Shipping Method:</strong> {{ shipping.Name }}</p>
+    <p><strong>Shipping Cost:</strong> ${{ shipping_cost }}</p>
+    {% if expedited %}
+      <p><strong>Expedited Shipping:</strong> Yes (1.5x faster delivery)</p>
+    {% endif %}
+    <p><strong>Estimated Ship Date:</strong> {{ estimated_ship_date|date:"F j, Y" }}</p>
+  </div>
+  
+  <div class="delivery-address">
+    <h2>Delivery Address</h2>
+    <p>{{ request.user.user_profile.Address }}</p>
+  </div>
+  
+  <div class="order-total">
+    <h2>Order Total</h2>
+    <p><strong>Total:</strong> ${{ total }}</p>
+  </div>
+  
+  <div class="payment-notice">
+    <p>By placing your order, you agree to our terms and conditions. Payment will be collected upon shipment.</p>
+  </div>
+  
+  <div class="form-actions">
+    <form method="POST">
+      {% csrf_token %}
+      <a href="{% url 'checkout' %}" class="btn btn-secondary">Back to Shipping</a>
+      <button type="submit" class="btn btn-primary">Place Order</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

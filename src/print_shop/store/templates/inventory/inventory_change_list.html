@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Inventory Records</h1>
+  <a href="{% url 'add-inventory-change' %}">Manually Add Inventory Record</a>
+  <ul>
+    {% for inventory in inventory_changes %}
+      <li>
+        <strong>{{ inventory.InventoryChangeDate }}</strong>:
+        {{ inventory.QuantityWeightAvailable }}g of {{ inventory.raw_material.Filament.Name }} - {{ inventory.raw_material.Filament.ColorHexCode }}
+        <a href="{% url 'edit-inventory-change' inventory.pk %}">Edit</a>
+        <a href="{% url 'delete-inventory-change' inventory.pk %}">Delete</a>
+      </li>
+    {% empty %}
+      <li>No inventory records found.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

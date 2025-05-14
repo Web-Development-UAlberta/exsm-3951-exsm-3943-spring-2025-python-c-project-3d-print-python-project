@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profiles{% endblock %}
+
+{% block content %}
+    <section>
+        <h1>User Profiles</h1>
+        
+        <div>
+            <a href="{% url 'add-user-profile' %}">Add New User</a>
+            <a href="{% url 'add-staff-user' %}">Add New Staff</a>
+        </div>
+        
+        {% if user_profiles %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Staff</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in user_profiles %}
+                        <tr>
+                            <td>{{ profile.user.username }}</td>
+                            <td>{{ profile.user.get_full_name }}</td>
+                            <td>{{ profile.user.email }}</td>
+                            <td>{{ profile.Phone }}</td>
+                            <td>{{ profile.user.is_staff|yesno:"Yes,No" }}</td>
+                            <td>
+                                <a href="{% url 'user-profile-detail' profile.id %}">View</a>
+                                <a href="{% url 'edit-user-profile' profile.id %}">Edit</a>
+                                <a href="{% url 'delete-user-profile' profile.id %}">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No user profiles found.</p>
+        {% endif %}
+    </section>
+{% endblock %}
