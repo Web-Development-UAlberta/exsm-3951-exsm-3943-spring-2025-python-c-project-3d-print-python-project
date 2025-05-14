@@ -1,14 +1,14 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
-from selenium import webdriver # type: ignore
-from selenium.webdriver.chrome.options import Options # type: ignore
-from selenium.webdriver.common.by import By # type: ignore
+from selenium import webdriver  # type: ignore
+from selenium.webdriver.chrome.options import Options  # type: ignore
+from selenium.webdriver.common.by import By  # type: ignore
 from django.contrib.auth.models import User
 from store.models import UserProfiles
 import time
 
-class UserManagementFrontendTestCase(StaticLiveServerTestCase):
 
+class UserManagementFrontendTestCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -23,10 +23,14 @@ class UserManagementFrontendTestCase(StaticLiveServerTestCase):
 
     def setUp(self):
         # Create an admin user
-        self.admin_user = User.objects.create_user(username="admin", email="admin@example.com", password="admin123")
-        
+        self.admin_user = User.objects.create_user(
+            username="admin", email="admin@example.com", password="admin123"
+        )
+
         # Create a profile for the admin user
-        self.profile = UserProfiles.objects.create(user=self.admin_user, Address="123 Admin St", Phone="1234567890")
+        self.profile = UserProfiles.objects.create(
+            user=self.admin_user, Address="123 Admin St", Phone="1234567890"
+        )
 
         # Login to the admin account
         self.browser.get(self.live_server_url + "/admin/login/")
@@ -81,12 +85,14 @@ class UserManagementFrontendTestCase(StaticLiveServerTestCase):
 
     ## Test Edit / Disable Actions
     def test_user_edit_view_exists(self):
-        self.browser.get(self.live_server_url + reverse("user_edit", args=[self.admin_user.id]))
+        self.browser.get(
+            self.live_server_url + reverse("user_edit", args=[self.admin_user.id])
+        )
         self.assertIn("Edit User", self.browser.page_source)
 
     def test_user_disable_view_redirects(self):
         self.browser.get(self.live_server_url + reverse("user_management"))
-        disable_button = self.browser.find_element(By.LINK_TEXT, "Disable") 
+        disable_button = self.browser.find_element(By.LINK_TEXT, "Disable")
         disable_button.click()
         time.sleep(1)
         self.assertNotIn("admin", self.browser.page_source)

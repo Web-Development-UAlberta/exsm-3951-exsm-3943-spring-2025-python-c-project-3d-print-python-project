@@ -1,13 +1,13 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
-from selenium import webdriver # type: ignore
-from selenium.webdriver.chrome.options import Options # type: ignore
-from selenium.webdriver.common.by import By # type: ignore
-from selenium.webdriver.common.keys import Keys # type: ignore
+from selenium import webdriver  # type: ignore
+from selenium.webdriver.chrome.options import Options  # type: ignore
+from selenium.webdriver.common.by import By  # type: ignore
+from selenium.webdriver.common.keys import Keys  # type: ignore
 import time
 
-class CsvUploadFrontendTestCase(StaticLiveServerTestCase):
 
+class CsvUploadFrontendTestCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -42,11 +42,11 @@ class CsvUploadFrontendTestCase(StaticLiveServerTestCase):
         self.browser.get(self.live_server_url + reverse("csv_upload"))
         upload_type = self.browser.find_element(By.NAME, "upload_type")
         upload_type.send_keys("users")
-        
+
         file_input = self.browser.find_element(By.NAME, "file")
         # Upload a CSV file
         file_input.send_keys("/path/to/your/testfile/users.csv")
-        
+
         submit_button = self.browser.find_element(By.NAME, "submit")
         submit_button.click()
 
@@ -59,11 +59,11 @@ class CsvUploadFrontendTestCase(StaticLiveServerTestCase):
         self.browser.get(self.live_server_url + reverse("csv_upload"))
         upload_type = self.browser.find_element(By.NAME, "upload_type")
         upload_type.send_keys("users")
-        
+
         file_input = self.browser.find_element(By.NAME, "file")
         # Upload an invalid CSV file
         file_input.send_keys("/path/to/your/testfile/invalid.csv")
-        
+
         submit_button = self.browser.find_element(By.NAME, "submit")
         submit_button.click()
 
@@ -77,17 +77,20 @@ class CsvUploadFrontendTestCase(StaticLiveServerTestCase):
         # Wait for the file to download
         time.sleep(2)
         # Check if the file was downloaded by verifying its Content-Type
-        self.assertEqual(self.browser.current_url.split('?')[0], reverse("csv_sample", args=["users"]))
+        self.assertEqual(
+            self.browser.current_url.split("?")[0],
+            reverse("csv_sample", args=["users"]),
+        )
 
     ## Block Upload Without Validation Flag
     def test_upload_blocked_without_validation_flag(self):
         self.browser.get(self.live_server_url + reverse("csv_upload"))
         upload_type = self.browser.find_element(By.NAME, "upload_type")
         upload_type.send_keys("users")
-        
+
         file_input = self.browser.find_element(By.NAME, "file")
         file_input.send_keys("/path/to/your/testfile/users.csv")
-        
+
         submit_button = self.browser.find_element(By.NAME, "submit")
         submit_button.click()
 

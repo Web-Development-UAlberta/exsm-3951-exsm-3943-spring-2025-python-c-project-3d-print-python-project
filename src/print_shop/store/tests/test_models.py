@@ -192,13 +192,37 @@ class ModelsModelTestCase(TestCase):
 
     def setUp(self):
         """Set up a test model."""
-        file = SimpleUploadedFile(
+        # Create a test STL file
+        stl_file = SimpleUploadedFile(
             "test_model.stl", b"file_content", content_type="application/sla"
         )
 
-        self.model = Models.objects.create(
-            Name="3D Model",
-            FilePath=file,
+        # Create a test image file for thumbnail
+        image_file = SimpleUploadedFile(
+            "test_thumbnail.png",
+            b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x00\x00\x02\x00\x01H\xaf\xa4q\x00\x00\x00\x00IEND\xaeB`\x82",
+            content_type="image/png",
+        )
+
+        # Create a model with a thumbnail
+        self.model_with_thumbnail = Models.objects.create(
+            Name="3D Model With Thumbnail",
+            FilePath=stl_file,
+            Description="A test model with thumbnail",
+            FixedCost=100.00,
+            EstimatedPrintVolume=500,
+            BaseInfill=0.2,
+            Thumbnail=image_file,
+        )
+
+        # Create a model without a thumbnail
+        stl_file2 = SimpleUploadedFile(
+            "test_model2.stl", b"file_content", content_type="application/sla"
+        )
+
+        self.model_without_thumbnail = Models.objects.create(
+            Name="3D Model Without Thumbnail",
+            FilePath=stl_file2,
             Description=None,
             FixedCost=100.00,
             EstimatedPrintVolume=500,
@@ -206,25 +230,47 @@ class ModelsModelTestCase(TestCase):
             Thumbnail=None,
         )
 
-        if os.path.exists(self.model.FilePath.path):
-            os.remove(self.model.FilePath.path)
+        # Clean up files after test
+        self.files_to_clean = []
+        if os.path.exists(self.model_with_thumbnail.FilePath.path):
+            self.files_to_clean.append(self.model_with_thumbnail.FilePath.path)
+        if os.path.exists(self.model_with_thumbnail.Thumbnail.path):
+            self.files_to_clean.append(self.model_with_thumbnail.Thumbnail.path)
+        if os.path.exists(self.model_without_thumbnail.FilePath.path):
+            self.files_to_clean.append(self.model_without_thumbnail.FilePath.path)
 
     def test_model_creation(self):
         """Test that the model is created correctly."""
-        self.assertEqual(self.model.Name, "3D Model")
-        self.assertEqual(self.model.FixedCost, 100.00)
-        self.assertEqual(self.model.EstimatedPrintVolume, 500)
-        self.assertEqual(self.model.BaseInfill, 0.2)
-        self.assertEqual(str(Models.objects.count()), "1")
+        self.assertEqual(self.model_with_thumbnail.Name, "3D Model With Thumbnail")
+        self.assertEqual(self.model_with_thumbnail.FixedCost, 100.00)
+        self.assertEqual(self.model_with_thumbnail.EstimatedPrintVolume, 500)
+        self.assertEqual(self.model_with_thumbnail.BaseInfill, 0.2)
+        self.assertEqual(Models.objects.count(), 2)
 
     def test_model_file_upload(self):
         """Test that the model file is uploaded correctly."""
-        self.assertIn("test_model", self.model.FilePath.name)
+        self.assertIn("test_model", self.model_with_thumbnail.FilePath.name)
+        self.assertIn("test_model2", self.model_without_thumbnail.FilePath.name)
 
     def test_nullable_fields(self):
         """Test that nullable fields are handled correctly."""
-        self.assertIsNone(self.model.Description)
-        self.assertIsNone(self.model.Thumbnail)
+        self.assertIsNone(self.model_without_thumbnail.Description)
+        self.assertIsNone(self.model_without_thumbnail.Thumbnail.name)
+
+    def test_thumbnail_field(self):
+        """Test that the thumbnail field works correctly."""
+        # Test that the thumbnail was saved
+        self.assertIsNotNone(self.model_with_thumbnail.Thumbnail)
+        self.assertIn("test_thumbnail", self.model_with_thumbnail.Thumbnail.name)
+        self.assertTrue(
+            self.model_with_thumbnail.Thumbnail.name.startswith("thumbnails/")
+        )
+
+    def tearDown(self):
+        """Clean up after tests."""
+        for file_path in self.files_to_clean:
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
 
 class UserProfilesModelTestCase(TestCase):
@@ -395,7 +441,11 @@ class OrderItemsModelTestCase(TestCase):
             * self.model.BaseInfill
             * self.order_item.InfillMultiplier
         )
-        expected_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        # Calculate weight for a single item, then multiply by quantity
+        single_item_weight = int(
+            expected_volume_cm3 * self.raw_material.MaterialDensity
+        )
+        expected_weight = single_item_weight * self.order_item.ItemQuantity
         expected_material_cost = (
             expected_weight
             * self.inventory_change.UnitCost
@@ -433,15 +483,41 @@ class OrderItemsModelTestCase(TestCase):
         original_weight = self.order_item.TotalWeight
         original_cogs = self.order_item.CostOfGoodsSold
         original_price = self.order_item.ItemPrice
+        original_quantity = self.order_item.ItemQuantity
 
-        self.order_item.ItemQuantity = 5
+        # Calculate expected new weight based on new quantity
+        new_quantity = 5
+        self.order_item.ItemQuantity = new_quantity
         self.order_item.save()
 
-        # Quantity change shouldn't affect calculated values
-        self.assertEqual(self.order_item.ItemQuantity, 5)
-        self.assertEqual(self.order_item.TotalWeight, original_weight)
-        self.assertEqual(self.order_item.CostOfGoodsSold, original_cogs)
-        self.assertEqual(self.order_item.ItemPrice, original_price)
+        # Calculate expected values after quantity change
+        expected_volume_cm3 = (
+            self.model.EstimatedPrintVolume
+            * self.model.BaseInfill
+            * self.order_item.InfillMultiplier
+        )
+        single_item_weight = int(
+            expected_volume_cm3 * self.raw_material.MaterialDensity
+        )
+        expected_weight = single_item_weight * new_quantity
+        expected_material_cost = (
+            expected_weight
+            * self.inventory_change.UnitCost
+            * self.raw_material.WearAndTearMultiplier
+        )
+        expected_cogs = self.model.FixedCost + expected_material_cost
+        expected_price = expected_cogs * self.order_item.Markup
+
+        # Quantity change should affect calculated values
+        self.assertEqual(self.order_item.ItemQuantity, new_quantity)
+        self.assertEqual(self.order_item.TotalWeight, expected_weight)
+        self.assertEqual(float(self.order_item.CostOfGoodsSold), float(expected_cogs))
+        self.assertEqual(float(self.order_item.ItemPrice), float(expected_price))
+
+        # Verify that values have changed from original
+        self.assertNotEqual(self.order_item.TotalWeight, original_weight)
+        self.assertNotEqual(self.order_item.CostOfGoodsSold, original_cogs)
+        self.assertNotEqual(self.order_item.ItemPrice, original_price)
 
     def test_order_item_infill_multiplier(self):
         """Test that the InfillMultiplier field is handled correctly and recalculates dependent fields."""
@@ -459,7 +535,10 @@ class OrderItemsModelTestCase(TestCase):
             * self.model.BaseInfill
             * self.order_item.InfillMultiplier
         )
-        expected_weight = int(expected_volume_cm3 * self.raw_material.MaterialDensity)
+        single_item_weight = int(
+            expected_volume_cm3 * self.raw_material.MaterialDensity
+        )
+        expected_weight = single_item_weight * self.order_item.ItemQuantity
         expected_material_cost = (
             expected_weight
             * self.inventory_change.UnitCost

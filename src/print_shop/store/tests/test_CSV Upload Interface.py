@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User
 
+
 class CsvUploadTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="admin", password="admin123")
@@ -15,17 +16,21 @@ class CsvUploadTestCase(TestCase):
         response = self.client.get(reverse("csv_upload"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Choose File")
-    
-    
+
     ## File Upload with Valid CSV
     def test_valid_user_csv_upload(self):
         csv_content = "username,email,password \n user1,user1@example.com,password123"
-        file = SimpleUploadedFile("users.csv", csv_content.encode("utf-8"), content_type="text/csv")
+        file = SimpleUploadedFile(
+            "users.csv", csv_content.encode("utf-8"), content_type="text/csv"
+        )
 
-        response = self.client.post(reverse("csv_upload"), {
-            "upload_type": "users",
-            "file": file,
-        })
+        response = self.client.post(
+            reverse("csv_upload"),
+            {
+                "upload_type": "users",
+                "file": file,
+            },
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(User.objects.filter(username="user1").exists())
@@ -33,12 +38,17 @@ class CsvUploadTestCase(TestCase):
     ## Invalid CSV Upload Fails Validation
     def test_invalid_csv_upload(self):
         invalid_csv = "wrong_column\nvalue"
-        file = SimpleUploadedFile("bad.csv", invalid_csv.encode("utf-8"), content_type="text/csv")
+        file = SimpleUploadedFile(
+            "bad.csv", invalid_csv.encode("utf-8"), content_type="text/csv"
+        )
 
-        response = self.client.post(reverse("csv_upload"), {
-            "upload_type": "users",
-            "file": file,
-        })
+        response = self.client.post(
+            reverse("csv_upload"),
+            {
+                "upload_type": "users",
+                "file": file,
+            },
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertContains(response, "Invalid CSV")
@@ -51,11 +61,18 @@ class CsvUploadTestCase(TestCase):
 
     def test_upload_blocked_without_validation_flag(self):
         csv_content = "username,email,password \n user2,user2@example.com,password123"
-        file = SimpleUploadedFile("users.csv", csv_content.encode("utf-8"), content_type="text/csv")
+        file = SimpleUploadedFile(
+            "users.csv", csv_content.encode("utf-8"), content_type="text/csv"
+        )
 
-        response = self.client.post(reverse("csv_upload"), {
-            "upload_type": "users",
-            "file": file,
-        })
+        response = self.client.post(
+            reverse("csv_upload"),
+            {
+                "upload_type": "users",
+                "file": file,
+            },
+        )
 
-        self.assertContains(response, "Please validate before uploading", status_code=400)
+        self.assertContains(
+            response, "Please validate before uploading", status_code=400
+        )

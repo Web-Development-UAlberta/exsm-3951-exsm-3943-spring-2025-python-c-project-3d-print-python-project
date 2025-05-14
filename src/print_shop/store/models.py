@@ -208,7 +208,7 @@ class Models(models.Model):
             FileExtensionValidator(allowed_extensions=["stl", "obj", "3mf", "amf"])
         ],
     )
-    Thumbnail = models.BinaryField(null=True)
+    Thumbnail = models.ImageField(upload_to="thumbnails/", null=True)
     FixedCost = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -323,11 +323,12 @@ class OrderItems(models.Model):
         if self.ItemPrice is not None and self.CostOfGoodsSold is not None:
             if self.ItemPrice < self.CostOfGoodsSold:
                 raise ValidationError(
-                    {"ItemPrice": "Item price cannot be less than the cost of goods sold."}
+                    {
+                        "ItemPrice": "Item price cannot be less than the cost of goods sold."
+                    }
                 )
         super().clean()
-       
-        
+
     def __str__(self):
         return f"{self.Model.Name} - {self.ItemQuantity}"
 

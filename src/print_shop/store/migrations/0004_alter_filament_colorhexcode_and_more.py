@@ -7,71 +7,106 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('store', '0003_fulfillmentstatus_orderstatus'),
+        ("store", "0003_fulfillmentstatus_orderstatus"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='filament',
-            name='ColorHexCode',
-            field=models.CharField(max_length=6, validators=[django.core.validators.RegexValidator('^[0-9A-Fa-f]{6}$')]),
+            model_name="filament",
+            name="ColorHexCode",
+            field=models.CharField(
+                max_length=6,
+                validators=[django.core.validators.RegexValidator("^[0-9A-Fa-f]{6}$")],
+            ),
         ),
         migrations.AlterField(
-            model_name='inventorychange',
-            name='RawMaterial',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='store.rawmaterials'),
+            model_name="inventorychange",
+            name="RawMaterial",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="store.rawmaterials"
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitems',
-            name='CostOfGoodsSold',
-            field=models.DecimalField(decimal_places=2, max_digits=10, validators=[django.core.validators.MinValueValidator(0)]),
+            model_name="orderitems",
+            name="CostOfGoodsSold",
+            field=models.DecimalField(
+                decimal_places=2,
+                max_digits=10,
+                validators=[django.core.validators.MinValueValidator(0)],
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitems',
-            name='InventoryChange',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='store.inventorychange'),
+            model_name="orderitems",
+            name="InventoryChange",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="store.inventorychange"
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitems',
-            name='Markup',
-            field=models.DecimalField(decimal_places=2, default=1.15, max_digits=3, validators=[django.core.validators.MinValueValidator(1.0)]),
+            model_name="orderitems",
+            name="Markup",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=1.15,
+                max_digits=3,
+                validators=[django.core.validators.MinValueValidator(1.0)],
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitems',
-            name='Model',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='store.models'),
+            model_name="orderitems",
+            name="Model",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="store.models"
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitems',
-            name='Order',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='store.orders'),
+            model_name="orderitems",
+            name="Order",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="store.orders",
+            ),
         ),
         migrations.AlterField(
-            model_name='orders',
-            name='Shipping',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='store.shipping'),
+            model_name="orders",
+            name="Shipping",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="store.shipping"
+            ),
         ),
         migrations.AlterField(
-            model_name='orders',
-            name='User',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL),
+            model_name="orders",
+            name="User",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterField(
-            model_name='rawmaterials',
-            name='Filament',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='store.filament'),
+            model_name="rawmaterials",
+            name="Filament",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="store.filament"
+            ),
         ),
         migrations.AlterField(
-            model_name='rawmaterials',
-            name='Supplier',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='store.suppliers'),
+            model_name="rawmaterials",
+            name="Supplier",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="store.suppliers"
+            ),
         ),
         migrations.AlterField(
-            model_name='rawmaterials',
-            name='WearAndTearMultiplier',
-            field=models.DecimalField(decimal_places=2, default=1.0, max_digits=3, validators=[django.core.validators.MinValueValidator(1.0)]),
+            model_name="rawmaterials",
+            name="WearAndTearMultiplier",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=1.0,
+                max_digits=3,
+                validators=[django.core.validators.MinValueValidator(1.0)],
+            ),
         ),
     ]

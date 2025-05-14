@@ -4,9 +4,10 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
-from store.models import UserProfiles, Order, Inventory,  Material
+from store.models import UserProfiles, Order, Inventory, Material
 
 ### ------------------- DASHBOARD -------------------
+
 
 def dashboard(request):
     total_orders = Order.objects.count()
@@ -21,8 +22,8 @@ def dashboard(request):
     return render(request, "dashboard.html", context)
 
 
-
 ### ------------------- USER MANAGEMENT -------------------
+
 
 def user_management_view(request):
     search = request.GET.get("search", "")
@@ -30,7 +31,9 @@ def user_management_view(request):
 
     users = User.objects.all()
     if search:
-        users = users.filter(username__icontains=search) | users.filter(email__icontains=search)
+        users = users.filter(username__icontains=search) | users.filter(
+            email__icontains=search
+        )
     if status:
         is_active = status.lower() == "active"
         users = users.filter(is_active=is_active)
@@ -67,7 +70,9 @@ def user_invite_view(request):
         username = request.POST.get("username")
         email = request.POST.get("email")
         password = request.POST.get("password")
-        user = User.objects.create_user(username=username, email=email, password=password)
+        user = User.objects.create_user(
+            username=username, email=email, password=password
+        )
         UserProfiles.objects.create(user=user)
         messages.success(request, "User invited.")
         return redirect("user_management")
@@ -75,6 +80,7 @@ def user_invite_view(request):
 
 
 ### ------------------- ORDER MANAGEMENT -------------------
+
 
 def order_management_view(request):
     search = request.GET.get("search", "")
@@ -85,7 +91,9 @@ def order_management_view(request):
     orders = Order.objects.all()
 
     if search:
-        orders = orders.filter(model_name__icontains=search) | orders.filter(id__icontains=search)
+        orders = orders.filter(model_name__icontains=search) | orders.filter(
+            id__icontains=search
+        )
     if status:
         orders = orders.filter(status__iexact=status)
     if material:
@@ -120,6 +128,7 @@ def order_delete_view(request, order_id):
 
 
 ### ------------------- INVENTORY MANAGEMENT -------------------
+
 
 def inventory_management_view(request):
     search = request.GET.get("search", "")
@@ -158,6 +167,7 @@ def inventory_delete_view(request, inventory_id):
 
 ### ------------------- CSV UPLOAD -------------------
 
+
 @require_http_methods(["GET", "POST"])
 def csv_upload_view(request):
     if request.method == "POST":
@@ -184,7 +194,7 @@ def csv_upload_view(request):
                     User.objects.create_user(
                         username=row["username"],
                         email=row["email"],
-                        password=row.get("password", "defaultpassword")
+                        password=row.get("password", "defaultpassword"),
                     )
                 messages.success(request, "Users uploaded successfully.")
             else:

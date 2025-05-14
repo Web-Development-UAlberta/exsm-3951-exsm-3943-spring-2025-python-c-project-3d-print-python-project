@@ -14,38 +14,51 @@
         main {
             flex: 1;
         }
+         @keyframes spin {
+            0% {
+                transform: rotateY(0deg);
+            }
+            100% {
+                transform: rotateY(360deg);
+            }
+        }
+
+        
+        .logo-spin {
+            animation: spin 5s linear infinite; 
+            transform-style: preserve-3d;
+        }
     </style>
+    {% load static %}
 </head>
 <body class="flex flex-col min-h-screen">
     <!-- Sticky Header -->
     <header class="sticky top-0 bg-black text-white shadow-md z-50">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="container mx-auto px-4 py-5 flex items-center justify-center relative">
             <!-- Logo and Nav -->
-            <div class="flex items-center">
-                <div class="mr-8">
-                    <img src="/api/placeholder/150/50" alt="Logo" class="h-10" />
-                </div>
-                <nav class="flex space-x-6">
-                    <a href="{% url 'models-list' %}" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Home</a>
-                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Catalog</a>
-                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Customization</a>
-                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Cart</a>
-                    <a href="#" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Orders</a>
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'view-profile' %}" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Profile</a>
-                        <a href="{% url 'logout' %}" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Logout</a>
-                        {% if user.is_staff %}
-                            <a href="{% url 'user-profile-list' %}" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Manage Users</a>
-                        {% endif %}
-                    {% else %}
-                        <a href="{% url 'login' %}" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Login</a>
-                        <a href="{% url 'register' %}" class="px-3 py-2 rounded hover:bg-gray-700 transition duration-300">Register</a>
-                    {% endif %}
-                </nav>
+            <div class="absolute left-[-140px] top-1/2 transform -translate-y-1/2">
+                 <img src="{% static 'images/logo-2-unsplash.png' %}" alt="Logo" class="h-20 logo-spin" />
             </div>
+            
+            <nav class="flex space-x-6 text-md">
+                <a href="{% url 'home' %}" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Home</a>
+                <a href="#" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Catalog</a>
+                <a href="#" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Cart</a>
+                <a href="#" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Orders</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'view-profile' %}" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Profile</a>
+                    <a href="{% url 'logout' %}" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Logout</a>
+                    {% if user.is_staff %}
+                        <a href="{% url 'user-profile-list' %}" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Manage Users</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Login</a>
+                    <a href="{% url 'register' %}" class="px-3 py-2 rounded hover:bg-blue-500 transition duration-300">Register</a>
+                {% endif %}
+            </nav>
 
             <!-- Search Bar -->
-            <div class="flex items-center">
+            <div class="absolute right-[-100px] top-1/2 transform -translate-y-1/2"> 
                 <div class="relative">
                     <input type="text" placeholder="Search..." class="bg-gray-800 text-white px-4 py-1 rounded-full focus:outline-none">
                     <button class="absolute right-2 top-1/2 transform -translate-y-1/2">
@@ -68,7 +81,7 @@
     </main>
 
     <!-- Sticky Footer -->
-    <footer class="sticky bottom-0 bg-black text-white py-6 shadow-inner z-40">
+    <footer class="sticky bottom-0 bg-black text-white py-2 shadow-inner z-40">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center">
                 <!-- Newsletter -->
@@ -80,7 +93,7 @@
                 <!--Email Form -->
                 <div class="flex">
                     <input type="email" placeholder="Your email address" class="px-4 py-2 rounded-l bg-gray-800 text-white focus:outline-none">
-                    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-r text-white transition duration-300">Subscribe</button>
+                    <button class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-r text-white transition duration-300">Subscribe</button>
                 </div>
             </div>
 

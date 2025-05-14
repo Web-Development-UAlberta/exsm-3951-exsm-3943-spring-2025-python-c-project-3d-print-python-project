@@ -7,6 +7,7 @@ from selenium.webdriver.chrome.options import Options
 
 import time
 
+
 class HomePageUITest(StaticLiveServerTestCase):
     """Test suite for the homepage UI of the print shop website."""
 
@@ -15,7 +16,7 @@ class HomePageUITest(StaticLiveServerTestCase):
         super().setUpClass()
         options = Options()
         # Run in background
-        options.add_argument('--headless')  
+        options.add_argument("--headless")
         cls.driver = webdriver.Chrome(options=options)
 
     @classmethod
@@ -24,22 +25,28 @@ class HomePageUITest(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def test_homepage_layout(self):
-        self.driver.get(self.live_server_url + '/')
+        self.driver.get(self.live_server_url + "/")
         # Let the page load
-        time.sleep(1)  
+        time.sleep(1)
 
         # Check nav bar items
-        nav_items = ['Catalog', 'Customization', 'Cart', 'Orders', 'Profile']
+        nav_items = ["Catalog", "Customization", "Cart", "Orders", "Profile"]
         for item in nav_items:
-            button = self.driver.find_element(By.XPATH, f"//button[contains(text(), '{item}')]")
+            button = self.driver.find_element(
+                By.XPATH, f"//button[contains(text(), '{item}')]"
+            )
             self.assertIsNotNone(button)
 
         # Check Shop button
-        shop_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Shop')]")
+        shop_button = self.driver.find_element(
+            By.XPATH, "//button[contains(text(), 'Shop')]"
+        )
         self.assertIsNotNone(shop_button)
 
         # Check hero text
-        hero_heading = self.driver.find_element(By.XPATH, "//h1[contains(text(), 'Lorem ipsum')]")
+        hero_heading = self.driver.find_element(
+            By.XPATH, "//h1[contains(text(), 'Lorem ipsum')]"
+        )
         self.assertIsNotNone(hero_heading)
 
 
@@ -51,7 +58,7 @@ class LoginPageUITests(StaticLiveServerTestCase):
         super().setUpClass()
         options = Options()
         # Run browser in headless mode
-        options.add_argument('--headless')  
+        options.add_argument("--headless")
         cls.driver = webdriver.Chrome(options=options)
 
     @classmethod
@@ -61,41 +68,56 @@ class LoginPageUITests(StaticLiveServerTestCase):
 
     def test_login_page_ui_elements(self):
         # Update with your login URL name
-        self.driver.get(self.live_server_url + reverse('login'))  
+        self.driver.get(self.live_server_url + reverse("login"))
 
         # Check page title
-        heading = self.driver.find_element(By.TAG_NAME, 'h1')
-        self.assertEqual(heading.text.strip(), 'Login')
+        heading = self.driver.find_element(By.TAG_NAME, "h1")
+        self.assertEqual(heading.text.strip(), "Login")
 
         # Check email field
         email_field = self.driver.find_element(By.CSS_SELECTOR, 'input[type="email"]')
         self.assertIsNotNone(email_field)
-        self.assertEqual(email_field.get_attribute('placeholder').lower(), 'email')
+        self.assertEqual(email_field.get_attribute("placeholder").lower(), "email")
 
         # Check password field
-        password_field = self.driver.find_element(By.CSS_SELECTOR, 'input[type="password"]')
+        password_field = self.driver.find_element(
+            By.CSS_SELECTOR, 'input[type="password"]'
+        )
         self.assertIsNotNone(password_field)
-        self.assertEqual(password_field.get_attribute('placeholder').lower(), 'password')
+        self.assertEqual(
+            password_field.get_attribute("placeholder").lower(), "password"
+        )
 
         # Check buttons
-        sign_in_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Sign in')]")
+        sign_in_btn = self.driver.find_element(
+            By.XPATH, "//button[contains(text(), 'Sign in')]"
+        )
         self.assertIsNotNone(sign_in_btn)
 
-        create_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Create Account')]")
+        create_btn = self.driver.find_element(
+            By.XPATH, "//button[contains(text(), 'Create Account')]"
+        )
         self.assertIsNotNone(create_btn)
 
         # Check navbar buttons
-        nav_items = ['Home', 'Catalog', 'Customization', 'Cart', 'Orders']
+        nav_items = ["Home", "Catalog", "Customization", "Cart", "Orders"]
         for item in nav_items:
-            btn = self.driver.find_element(By.XPATH, f"//button[contains(text(), '{item}')]")
+            btn = self.driver.find_element(
+                By.XPATH, f"//button[contains(text(), '{item}')]"
+            )
             self.assertIsNotNone(btn)
 
         # Check newsletter field
-        newsletter_input = self.driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Enter your email"]')
+        newsletter_input = self.driver.find_element(
+            By.CSS_SELECTOR, 'input[placeholder="Enter your email"]'
+        )
         self.assertIsNotNone(newsletter_input)
 
-        subscribe_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Subscribe')]")
+        subscribe_button = self.driver.find_element(
+            By.XPATH, "//button[contains(text(), 'Subscribe')]"
+        )
         self.assertIsNotNone(subscribe_button)
+
 
 class SignUpPageUITests(StaticLiveServerTestCase):
     """Test suite for the sign-up page UI of the print shop website."""
@@ -105,7 +127,7 @@ class SignUpPageUITests(StaticLiveServerTestCase):
         super().setUpClass()
         options = Options()
         # Run browser in headless mode
-        options.add_argument('--headless')  
+        options.add_argument("--headless")
         cls.driver = webdriver.Chrome(options=options)
 
     @classmethod
@@ -115,46 +137,66 @@ class SignUpPageUITests(StaticLiveServerTestCase):
 
     def test_signup_page_ui_elements(self):
         # Update with your signup URL name
-        self.driver.get(self.live_server_url + reverse('register'))  
+        self.driver.get(self.live_server_url + reverse("register"))
 
         # Check page title
-        heading = self.driver.find_element(By.TAG_NAME, 'h1')
-        self.assertEqual(heading.text.strip(), 'Create Account')
+        heading = self.driver.find_element(By.TAG_NAME, "h1")
+        self.assertEqual(heading.text.strip(), "Create Account")
 
         # Check First Name field
-        first_name_field = self.driver.find_element(By.CSS_SELECTOR, 'input[name="first_name"]')
+        first_name_field = self.driver.find_element(
+            By.CSS_SELECTOR, 'input[name="first_name"]'
+        )
         self.assertIsNotNone(first_name_field)
-        self.assertEqual(first_name_field.get_attribute('placeholder').lower(), 'first name')
+        self.assertEqual(
+            first_name_field.get_attribute("placeholder").lower(), "first name"
+        )
 
         # Check Last Name field
-        last_name_field = self.driver.find_element(By.CSS_SELECTOR, 'input[name="last_name"]')
+        last_name_field = self.driver.find_element(
+            By.CSS_SELECTOR, 'input[name="last_name"]'
+        )
         self.assertIsNotNone(last_name_field)
-        self.assertEqual(last_name_field.get_attribute('placeholder').lower(), 'last name')
+        self.assertEqual(
+            last_name_field.get_attribute("placeholder").lower(), "last name"
+        )
 
         # Check email field
         email_field = self.driver.find_element(By.CSS_SELECTOR, 'input[type="email"]')
         self.assertIsNotNone(email_field)
-        self.assertEqual(email_field.get_attribute('placeholder').lower(), 'email')
+        self.assertEqual(email_field.get_attribute("placeholder").lower(), "email")
 
         # Check password field
-        password_field = self.driver.find_element(By.CSS_SELECTOR, 'input[type="password"]')
+        password_field = self.driver.find_element(
+            By.CSS_SELECTOR, 'input[type="password"]'
+        )
         self.assertIsNotNone(password_field)
-        self.assertEqual(password_field.get_attribute('placeholder').lower(), 'password')
+        self.assertEqual(
+            password_field.get_attribute("placeholder").lower(), "password"
+        )
 
         # Checkbox for Register to newsletter
-        newsletter_checkbox = self.driver.find_element(By.CSS_SELECTOR, 'input[type="checkbox"]')
+        newsletter_checkbox = self.driver.find_element(
+            By.CSS_SELECTOR, 'input[type="checkbox"]'
+        )
         self.assertIsNotNone(newsletter_checkbox)
-        self.assertEqual(newsletter_checkbox.get_attribute('value'), 'on')
+        self.assertEqual(newsletter_checkbox.get_attribute("value"), "on")
 
         # Check buttons
-        sign_up_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Create')]")
+        sign_up_btn = self.driver.find_element(
+            By.XPATH, "//button[contains(text(), 'Create')]"
+        )
         self.assertIsNotNone(sign_up_btn)
 
-        login_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Sign in')]")
+        login_btn = self.driver.find_element(
+            By.XPATH, "//button[contains(text(), 'Sign in')]"
+        )
         self.assertIsNotNone(login_btn)
+
 
 class ProductCatalogUITest(StaticLiveServerTestCase):
     """Test suite for the product catalog page UI of the print shop website."""
+
     def setUp(self):
         self.browser = webdriver.Chrome()
 
@@ -164,7 +206,7 @@ class ProductCatalogUITest(StaticLiveServerTestCase):
     # Test that the product catalog page loads and displays products
     def test_catalog_page_loads(self):
         self.browser.get(self.live_server_url + "/catalog/")
-        
+
         # Check if the page title is correct
         self.assertIn("Product Catalog", self.browser.title)
 
@@ -176,10 +218,10 @@ class ProductCatalogUITest(StaticLiveServerTestCase):
         catalog_section = self.browser.find_element(By.ID, "catalog-section")
         self.assertIsNotNone(catalog_section)
 
-     # Check if the catalog section contains products   
+    # Check if the catalog section contains products
     def test_catalog_page_loads_with_products(self):
         self.browser.get(self.live_server_url + "/catalog/")
-        
+
         products = self.browser.find_elements(By.CLASS_NAME, "product-card")
         self.assertTrue(len(products) >= 1)
 
@@ -189,8 +231,10 @@ class ProductCatalogUITest(StaticLiveServerTestCase):
             self.assertIn("Color", product.text)
             self.assertIn("Material", product.text)
 
+
 class ProfileOrdersUITest(StaticLiveServerTestCase):
     """Test suite for the profile orders page UI of the print shop website."""
+
     def setUp(self):
         self.browser = webdriver.Chrome()
 
@@ -200,7 +244,7 @@ class ProfileOrdersUITest(StaticLiveServerTestCase):
     # Test that the profile page loads and displays order history
     def test_profile_order_history(self):
         self.browser.get(self.live_server_url + "/profile/")
-        
+
         self.assertIn("Welcome", self.browser.page_source)
         self.assertIn("Order History", self.browser.page_source)
 
@@ -208,10 +252,17 @@ class ProfileOrdersUITest(StaticLiveServerTestCase):
         self.assertTrue(len(orders) >= 1)
 
         statuses = [o.text for o in orders]
-        self.assertTrue(any("Processing" in s or "Shipping" in s or "Completed" in s for s in statuses))
+        self.assertTrue(
+            any(
+                "Processing" in s or "Shipping" in s or "Completed" in s
+                for s in statuses
+            )
+        )
+
 
 class CartCheckoutUITest(StaticLiveServerTestCase):
     """Test suite for the cart checkout page UI of the print shop website."""
+
     def setUp(self):
         self.browser = webdriver.Chrome()
 
@@ -221,7 +272,7 @@ class CartCheckoutUITest(StaticLiveServerTestCase):
     # Test that the cart page loads and displays items
     def test_cart_checkout_page_elements(self):
         self.browser.get(self.live_server_url + "/cart/")
-        
+
         self.assertIn("Your Shopping Bag", self.browser.page_source)
         self.assertIn("Order Summary", self.browser.page_source)
         self.assertIn("Checkout", self.browser.page_source)
@@ -233,6 +284,7 @@ class CartCheckoutUITest(StaticLiveServerTestCase):
 
 class OrderTrackingUITest(StaticLiveServerTestCase):
     """Test suite for the order tracking page UI of the print shop website."""
+
     def setUp(self):
         self.browser = webdriver.Chrome()
 
@@ -242,9 +294,7 @@ class OrderTrackingUITest(StaticLiveServerTestCase):
     # Test that the order tracking page loads and displays tracking information
     def test_order_tracking_page_elements(self):
         self.browser.get(self.live_server_url + "/track-order/")
-        
+
         self.assertIn("Order History", self.browser.page_source)
         self.assertIn("Order Summary", self.browser.page_source)
         self.assertIn("Track", self.browser.page_source)
-
-        

@@ -5,15 +5,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('store', '0005_alter_inventorychange_quantityweightavailable_and_more'),
+        ("store", "0005_alter_inventorychange_quantityweightavailable_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='models',
-            name='FilePath',
-            field=models.FileField(upload_to='models/', validators=[django.core.validators.FileExtensionValidator(allowed_extensions=['stl', 'obj', '3mf', 'amf'])]),
+            model_name="models",
+            name="FilePath",
+            field=models.FileField(
+                upload_to="models/",
+                validators=[
+                    django.core.validators.FileExtensionValidator(
+                        allowed_extensions=["stl", "obj", "3mf", "amf"]
+                    )
+                ],
+            ),
         ),
     ]

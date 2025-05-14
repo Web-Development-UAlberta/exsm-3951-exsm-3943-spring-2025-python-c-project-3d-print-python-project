@@ -1,12 +1,12 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
-from selenium import webdriver # type: ignore
-from selenium.webdriver.chrome.options import Options # type: ignore
-from selenium.webdriver.common.by import By # type: ignore
+from selenium import webdriver  # type: ignore
+from selenium.webdriver.chrome.options import Options  # type: ignore
+from selenium.webdriver.common.by import By  # type: ignore
 import time
 
-class InventoryManagementFrontendTestCase(StaticLiveServerTestCase):
 
+class InventoryManagementFrontendTestCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -50,7 +50,7 @@ class InventoryManagementFrontendTestCase(StaticLiveServerTestCase):
     def test_filter_by_material(self):
         self.browser.get(self.live_server_url + reverse("inventory_management"))
         material_filter = self.browser.find_element(By.NAME, "material")
-        material_filter.send_keys("ABS") 
+        material_filter.send_keys("ABS")
         material_filter.submit()
         time.sleep(1)
         self.assertIn("ABS", self.browser.page_source)
