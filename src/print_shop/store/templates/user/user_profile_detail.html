@@ -3,48 +3,99 @@
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
-    <section>
-        <h1>{% if is_admin_view %}User Profile: {{ user_profile.user.username }}{% else %}Your Profile{% endif %}</h1>
-        
-        <article>
-            <h2>User Information</h2>
-            <dl>
-                <dt>Username</dt>
-                <dd>{{ user_profile.user.username }}</dd>
-                
-                <dt>First Name</dt>
-                <dd>{{ user_profile.user.first_name }}</dd>
-                
-                <dt>Last Name</dt>
-                <dd>{{ user_profile.user.last_name }}</dd>
-                
-                <dt>Email</dt>
-                <dd>{{ user_profile.user.email }}</dd>
-                
-                <dt>Address</dt>
-                <dd>{{ user_profile.Address }}</dd>
-                
-                <dt>Phone</dt>
-                <dd>{{ user_profile.Phone }}</dd>
-                
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container.mx-auto.px-4.py-8 {
+            padding: 0 !important;
+            max-width: none !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        .fade-in {
+            animation: fadeIn 1.2s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <div class="relative h-[calc(100vh-100px)] flex items-center justify-center pl-16 overflow-hidden">
+        <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply"></div>
+        <div class="relative z-10 w-full max-w-2xl p-12 mx-4 -mt-36 ml-2 rounded-3xl bg-gradient-to-br from-black backdrop-blur-xl text-white shadow-[0_8px_30px_rgba(0,0,0,0.3)] border border-white/20 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)] transition-transform duration-500 fade-in">
+            
+            <h1 class="text-3xl font-bold mb-6 text-white border-b border-gray-200 pb-3">
+                {% if is_admin_view %}User Profile: {{ user_profile.user.username }}{% else %}Your Profile{% endif %}
+            </h1>
+            
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4 text-white">User Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <div class="flex flex-col">
+                            <span class="text-lg font-medium text-white">Username</span>
+                            <span class="text-base text-white">{{ user_profile.user.username }}</span>
+                        </div>
+                        
+                        <div class="flex flex-col">
+                            <span class="text-lg font-medium text-white">First Name</span>
+                            <span class="text-base text-white">{{ user_profile.user.first_name }}</span>
+                        </div>
+                        
+                        <div class="flex flex-col">
+                            <span class="text-lg font-medium text-white">Last Name</span>
+                            <span class="text-base text-white">{{ user_profile.user.last_name }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="flex flex-col">
+                            <span class="text-lg font-medium text-white">Email</span>
+                            <span class="text-base text-white">{{ user_profile.user.email }}</span>
+                        </div>
+                        
+                        <div class="flex flex-col">
+                            <span class="text-lg font-medium text-white">Address</span>
+                            <span class="text-base text-white">{{ user_profile.Address }}</span>
+                        </div>
+                        
+                        <div class="flex flex-col">
+                            <span class="text-lg font-medium text-white">Phone</span>
+                            <span class="text-base text-white">{{ user_profile.Phone }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if is_admin_view %}
+                    <div class="col-span-1 md:col-span-2 space-y-2">
+                        <div class="flex flex-col">
+                            <span class="text-lg font-medium text-white">Staff Status</span>
+                            <span class="text-base text-white">{{ user_profile.user.is_staff|yesno:"Yes,No" }}</span>
+                        </div>
+                        
+                        <div class="flex flex-col">
+                            <span class="text-lg font-medium text-white">Active</span>
+                            <span class="text-base text-white">{{ user_profile.user.is_active|yesno:"Yes,No" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
                 {% if is_admin_view %}
-                <dt>Staff Status</dt>
-                <dd>{{ user_profile.user.is_staff|yesno:"Yes,No" }}</dd>
-                
-                <dt>Active</dt>
-                <dd>{{ user_profile.user.is_active|yesno:"Yes,No" }}</dd>
+                    <a href="{% url 'edit-user-profile' user_profile.id %}" class="bg-black hover:bg-blue-500 text-white px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">Edit</a>
+                    <a href="{% url 'delete-user-profile' user_profile.id %}" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">Delete</a>
+                    <a href="{% url 'user-profile-list' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">Back to List</a>
+                {% else %}
+                    <a href="{% url 'edit-profile' %}" class="bg-black hover:bg-blue-500 text-white px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">Edit Profile</a>
                 {% endif %}
-            </dl>
-        </article>
-        
-        <div>
-            {% if is_admin_view %}
-                <a href="{% url 'edit-user-profile' user_profile.id %}">Edit</a>
-                <a href="{% url 'delete-user-profile' user_profile.id %}">Delete</a>
-                <a href="{% url 'user-profile-list' %}">Back to List</a>
-            {% else %}
-                <a href="{% url 'edit-profile' %}">Edit Profile</a>
-            {% endif %}
+            </div>
         </div>
-    </section>
+    </div>
 {% endblock %}
