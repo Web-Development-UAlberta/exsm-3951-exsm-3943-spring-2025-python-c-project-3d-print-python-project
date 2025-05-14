@@ -114,7 +114,9 @@ class InventoryChangeManager(models.Manager):
             "RawMaterial__PurchasedDate", "-InventoryChangeDate"
         )
 
-    def find_for_weight(self, required_weight, safety_margin=Decimal("1.15"), raw_material=None):
+    def find_for_weight(
+        self, required_weight, safety_margin=Decimal("1.15"), raw_material=None
+    ):
         """Find inventory with enough material for the required weight
 
         Args:
@@ -155,7 +157,9 @@ class InventoryChange(models.Model):
         Check if current inventory level is below reorder threshold
         Threshold set to 20% of original amount
         """
-        threshold = Decimal(str(self.RawMaterial.MaterialWeightPurchased)) * Decimal("0.2")
+        threshold = Decimal(str(self.RawMaterial.MaterialWeightPurchased)) * Decimal(
+            "0.2"
+        )
         return self.QuantityWeightAvailable < threshold
 
 
@@ -190,8 +194,8 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
                 initial_inventory.QuantityWeightAvailable = (
                     instance.MaterialWeightPurchased
                 )
-                initial_inventory.UnitCost = (
-                    instance.Cost / Decimal(str(instance.MaterialWeightPurchased))
+                initial_inventory.UnitCost = instance.Cost / Decimal(
+                    str(instance.MaterialWeightPurchased)
                 )
                 initial_inventory.save(
                     update_fields=["QuantityWeightAvailable", "UnitCost"]
@@ -270,7 +274,9 @@ class Orders(models.Model):
     """Table to store all orders"""
 
     User = models.ForeignKey(User, on_delete=models.PROTECT)
-    Shipping = models.ForeignKey(Shipping, on_delete=models.PROTECT)
+    Shipping = models.ForeignKey(
+        Shipping, on_delete=models.PROTECT, null=True, blank=True
+    )
     TotalPrice = models.DecimalField(max_digits=10, decimal_places=2)
     CreatedAt = models.DateTimeField(auto_now_add=True)
     EstimatedShipDate = models.DateTimeField(null=True)
@@ -300,7 +306,9 @@ class OrderItems(models.Model):
     InventoryChange = models.ForeignKey(InventoryChange, on_delete=models.PROTECT)
     Order = models.ForeignKey(Orders, on_delete=models.SET_NULL, null=True, blank=True)
     Model = models.ForeignKey(Models, on_delete=models.PROTECT)
-    InfillMultiplier = models.DecimalField(max_digits=3, decimal_places=2, default=Decimal("1.00"))
+    InfillMultiplier = models.DecimalField(
+        max_digits=3, decimal_places=2, default=Decimal("1.00")
+    )
     TotalWeight = models.IntegerField()
     CostOfGoodsSold = models.DecimalField(
         max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]

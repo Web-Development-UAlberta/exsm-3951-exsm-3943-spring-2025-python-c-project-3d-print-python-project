@@ -38,7 +38,7 @@ def custom_gallery(request):
     if selected_material:
         available_colors = (
             Filament.objects.filter(
-                material_id=selected_material,
+                Material_id=selected_material,
                 rawmaterials__inventorychange__in=current_inventory,
             )
             .distinct()
@@ -112,7 +112,7 @@ def model_detail(request, model_id):
     if selected_material:
         available_filaments = (
             Filament.objects.filter(
-                material_id=selected_material,
+                Material_id=selected_material,
                 rawmaterials__id__in=sufficient_raw_materials,
             )
             .distinct()
@@ -123,19 +123,47 @@ def model_detail(request, model_id):
             current_inventory = current_inventory.filter(
                 RawMaterial__Filament_id=selected_filament
             )
+    form = CustomOrderItemForm(model=model, initial={"Model": model})
+    form.fields["InventoryChange"].queryset = current_inventory
 
     if request.method == "POST":
-        form = CustomOrderItemForm(request.POST)
-        if form.is_valid():
-            order_item = form.save(commit=False)
-            order_item.Model = model
-            order_item.IsCustom = True
-            order_item.save()
-            messages.success(request, f"{model.Name} has been added to your cart.")
-            return redirect("custom-gallery")
-    else:
-        form = CustomOrderItemForm(model=model, initial={"Model": model})
-        form.fields["InventoryChange"].queryset = current_inventory
+        if selected_filament and current_inventory.exists():
+            try:
+                best_inventory = current_inventory.first()
+                infill_percentage = int(request.POST.get("infill_percentage", 30))
+                quantity = int(request.POST.get("ItemQuantity", 1))
+
+                base_infill = model.BaseInfill * 100
+                multiplier = infill_percentage / base_infill
+
+                draft_order, created = Orders.objects.get_or_create(
+                    User=request.user,
+                    fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT,
+                    defaults={"TotalPrice": 0, "ExpeditedService": False},
+                )
+                if created:
+                    FulfillmentStatus.objects.create(
+                        Order=draft_order, OrderStatus=FulfillmentStatus.Status.DRAFT
+                    )
+                order_item = OrderItems(
+                    Model=model,
+                    InventoryChange=best_inventory,
+                    InfillMultiplier=multiplier,
+                    ItemQuantity=quantity,
+                    IsCustom=True,
+                    Order=draft_order,
+                )
+                order_item.save()
+
+                messages.success(request, f"{model.Name} has been added to your cart.")
+                return redirect("cart")
+            except Exception as e:
+                messages.error(request, f"Error adding item to cart: {str(e)}")
+                print(f"Error: {str(e)}")
+        else:
+            messages.error(
+                request, "Please select a material and color before adding to cart."
+            )
 
     context = {
         "model": model,
@@ -189,6 +217,7 @@ def premade_item_detail(request, item_id):
 
             draft_order, created = Orders.objects.get_or_create(
                 User=request.user,
+                fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT,
                 defaults={
                     "TotalPrice": 0,
                     "ExpeditedService": False,
