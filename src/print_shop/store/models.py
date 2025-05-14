@@ -175,7 +175,7 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
         InventoryChange.objects.create(
             RawMaterial=instance,
             QuantityWeightAvailable=instance.MaterialWeightPurchased,
-            UnitCost=instance.Cost / Decimal(str(instance.MaterialWeightPurchased)),
+            UnitCost=Decimal(str(instance.Cost)) / Decimal(str(instance.MaterialWeightPurchased)),
         )
     else:
         initial_inventory = (
@@ -194,9 +194,7 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
                 initial_inventory.QuantityWeightAvailable = (
                     instance.MaterialWeightPurchased
                 )
-                initial_inventory.UnitCost = instance.Cost / Decimal(
-                    str(instance.MaterialWeightPurchased)
-                )
+                initial_inventory.UnitCost = Decimal(str(instance.Cost)) / Decimal(str(instance.MaterialWeightPurchased))
                 initial_inventory.save(
                     update_fields=["QuantityWeightAvailable", "UnitCost"]
                 )
@@ -293,9 +291,11 @@ class Orders(models.Model):
                 item.ItemPrice * item.ItemQuantity for item in order_items
             )
             shipping_cost = self.Shipping.Rate
+            items_total = sum(Decimal(str(item.ItemPrice)) * item.ItemQuantity for item in order_items)
+            shipping_cost = Decimal(str(self.Shipping.Rate))
             self.TotalPrice = items_total + shipping_cost
             if self.ExpeditedService:
-                self.TotalPrice *= Decimal("1.5")
+                self.TotalPrice = self.TotalPrice * Decimal("1.5")
 
         super().save(*args, **kwargs)
 
@@ -365,11 +365,11 @@ class OrderItems(models.Model):
         Item price = Cost of goods sold * markup
         """
         self.TotalWeight = self.calculate_required_weight()
-        cost_per_gram = self.InventoryChange.UnitCost
-        wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
-        material_cost = self.TotalWeight * cost_per_gram * wear_tear
-        self.CostOfGoodsSold = self.Model.FixedCost + material_cost
-        self.ItemPrice = self.CostOfGoodsSold * self.Markup
+        cost_per_gram = Decimal(str(self.InventoryChange.UnitCost))
+        wear_tear = Decimal(str(self.InventoryChange.RawMaterial.WearAndTearMultiplier))
+        material_cost = Decimal(str(self.TotalWeight)) * cost_per_gram * wear_tear
+        self.CostOfGoodsSold = Decimal(str(self.Model.FixedCost)) + material_cost
+        self.ItemPrice = self.CostOfGoodsSold * Decimal(str(self.Markup))
 
         super().save(*args, **kwargs)
 

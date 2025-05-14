@@ -16,6 +16,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User
 import os
+from decimal import Decimal
 
 
 class MaterialsModelTestCase(TestCase):
@@ -451,8 +452,8 @@ class OrderItemsModelTestCase(TestCase):
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
         )
-        expected_cogs = self.model.FixedCost + expected_material_cost
-        expected_price = expected_cogs * self.order_item.Markup
+        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(str(expected_material_cost))
+        expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
 
         # Test that calculated fields match expected values
         self.assertEqual(self.order_item.TotalWeight, expected_weight)
@@ -505,8 +506,8 @@ class OrderItemsModelTestCase(TestCase):
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
         )
-        expected_cogs = self.model.FixedCost + expected_material_cost
-        expected_price = expected_cogs * self.order_item.Markup
+        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(str(expected_material_cost))
+        expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
 
         # Quantity change should affect calculated values
         self.assertEqual(self.order_item.ItemQuantity, new_quantity)
@@ -544,8 +545,8 @@ class OrderItemsModelTestCase(TestCase):
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
         )
-        expected_cogs = self.model.FixedCost + expected_material_cost
-        expected_price = expected_cogs * self.order_item.Markup
+        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(str(expected_material_cost))
+        expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
 
         # Verify that changing infill multiplier affects calculated fields
         self.assertEqual(self.order_item.InfillMultiplier, 2.0)
