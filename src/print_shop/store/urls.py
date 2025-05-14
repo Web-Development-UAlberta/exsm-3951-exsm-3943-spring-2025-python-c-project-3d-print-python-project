@@ -214,6 +214,11 @@ urlpatterns = [
         cart_checkout_view.remove_from_cart,
         name="remove-from-cart",
     ),
+    path(
+        "cart/update/<int:item_id>/",
+        cart_checkout_view.update_cart_item,
+        name="update-cart-item",
+    ),
     path("checkout/", cart_checkout_view.checkout, name="checkout"),
     path(
         "checkout/confirm/",
