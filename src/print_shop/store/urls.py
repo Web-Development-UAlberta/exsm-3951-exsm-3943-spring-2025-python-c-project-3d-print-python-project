@@ -264,4 +264,5 @@ urlpatterns = [
     ),
 
     path("admin-dashboard/", admin_dashboard_view.admin_dashboard, name="admin_dashboard"),
+    path("inventory-management/", admin_dashboard_view.inventory_management, name="inventory_management"),
 ]

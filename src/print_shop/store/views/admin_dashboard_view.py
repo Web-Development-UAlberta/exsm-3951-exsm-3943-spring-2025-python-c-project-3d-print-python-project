@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
 from store.models import Orders, FulfillmentStatus, Models, InventoryChange 
+from django.db.models import Q
 
 # Check if the user is admin (Staff or Superuser)
 def is_admin(user):
@@ -26,3 +27,33 @@ def admin_dashboard(request):
    
     }
     return render(request, 'admin_dashboard/admin_dashboard_list.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def inventory_management(request):
+    query = request.GET.get("q", "")
+    material = request.GET.get("material", "")
+    quantity = request.GET.get("quantity", "")
+
+    inventory = InventoryChange.objects.select_related(
+        "RawMaterial__Filament__Material"
+    ).all()
+
+    if query:
+        inventory = inventory.filter(
+            Q(RawMaterial__Filament__Name__icontains=query)
+            | Q(RawMaterial__Filament__Material__Name__icontains=query)
+        )
+
+    if material:
+        inventory = inventory.filter(RawMaterial__Filament__Material__Name__icontains=material)
+
+    if quantity:
+        try:
+            quantity = int(quantity)
+            inventory = inventory.filter(QuantityWeightAvailable__gte=quantity)
+        except ValueError:
+            pass
+
+    return render(request, "admin_dashboard/inventory_management.html", {"inventory": inventory})
