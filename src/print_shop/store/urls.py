@@ -15,6 +15,7 @@ from store.views import gallery_view
 from store.views import product_admin_view
 from store.views import cart_checkout_view
 from store.views import home_page_view
+from store.views import order_tracking_view
 from store.views import admin_dashboard_view
 
 urlpatterns = [
@@ -117,7 +118,7 @@ urlpatterns = [
         shipping_view.delete_shipping,
         name="delete-shipping",
     ),
-    # Fulfillment Status URLs disabled until Orders forms/templates are created
+    # Fulfillment Status URLs
     path(
         "fulfillment-status/",
         fulfillment_status_view.fulfillment_status_list,
@@ -149,6 +150,7 @@ urlpatterns = [
     # User Profile URLs - Customer views
     path("profile/", user_profiles_view.view_profile, name="view-profile"),
     path("profile/edit/", user_profiles_view.edit_profile, name="edit-profile"),
+    path("profile/change-password/", user_profiles_view.change_password, name="change-password"),
     # User Profile URLs - Admin views
     path(
         "user-profiles/", user_profiles_view.user_profile_list, name="user-profile-list"
@@ -214,6 +216,11 @@ urlpatterns = [
         cart_checkout_view.remove_from_cart,
         name="remove-from-cart",
     ),
+    path(
+        "cart/update/<int:item_id>/",
+        cart_checkout_view.update_cart_item,
+        name="update-cart-item",
+    ),
     path("checkout/", cart_checkout_view.checkout, name="checkout"),
     path(
         "checkout/confirm/",
@@ -225,6 +232,9 @@ urlpatterns = [
         cart_checkout_view.order_success,
         name="order-success",
     ),
+    # Order Tracking URLs
+    path("orders/tracking/", order_tracking_view.order_tracking, name="order_tracking"),
+    path("orders/details/<int:order_id>/", order_tracking_view.order_details, name="order_details"),
     # Product Admin URLs (for store staff to manage premade items)
     path(
         "product-admin/premade/",
@@ -252,5 +262,6 @@ urlpatterns = [
         product_admin_view.generate_quote,
         name="product-admin-generate-quote",
     ),
+
     path("admin-dashboard/", admin_dashboard_view.admin_dashboard, name="admin_dashboard"),
 ]

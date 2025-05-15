@@ -3,11 +3,11 @@
     "model": "auth.user",
     "pk": 1,
     "fields": {
-      "username": "alice",
-      "password": "pbkdf2_sha256$260000$example$hash",
-      "email": "alice@example.com",
+      "username": "admin",
+      "password": "admin",
+      "email": "admin@example.com",
       "is_staff": true,
-      "is_superuser": false
+      "is_superuser": true
     }
   },
   {

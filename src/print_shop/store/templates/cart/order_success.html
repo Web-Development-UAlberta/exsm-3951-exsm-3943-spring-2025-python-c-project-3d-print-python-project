@@ -1,4 +1,56 @@
-{% extends "base.html" %} {% block title %}Order Confirmation{% endblock %} {%
-block content %}
-<section class="order-success">{% if payment_pending %} {% endif %}</section>
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation{% endblock %}
+
+{% block content %}
+<section class="order-success">
+  <h1>Order Placed Successfully!</h1>
+  
+  <div class="order-details">
+    <h2>Order #{{ order.id }}</h2>
+    <p>Thank you for your order. We'll begin processing it right away.</p>
+    
+    <div class="order-summary">
+      <h3>Order Summary</h3>
+      <ul>
+        {% for item in order_items %}
+          <li>
+            <strong>{{ item.Model.Name }}</strong> - Quantity: {{ item.ItemQuantity }}
+            <span>Price: ${{ item.ItemPrice }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+      <p><strong>Total:</strong> ${{ total }}</p>
+    </div>
+    
+    <div class="order-status">
+      <h3>Order Status</h3>
+      <p><strong>Current Status:</strong> {{ status.get_OrderStatus_display }}</p>
+      <p><strong>Estimated Ship Date:</strong> {{ order.EstimatedShipDate|date:"F j, Y" }}</p>
+    </div>
+    
+    {% if payment_pending %}
+    <div class="payment-instructions">
+      <h3>Payment Instructions</h3>
+      <p>Your order is awaiting payment. Please follow these instructions to complete your purchase:</p>
+      <ol>
+        <li>Send payment of ${{ total }} to our account.</li>
+        <li>Include your order number ({{ order.id }}) in the payment reference.</li>
+        <li>Once payment is confirmed, your order will begin processing.</li>
+      </ol>
+      <p>For any questions about payment, please contact our customer service.</p>
+    </div>
+    {% endif %}
+    
+    <div class="next-steps">
+      <h3>What's Next?</h3>
+      <p>You'll receive an email confirmation with your order details.</p>
+      <p>You can track your order status at any time by visiting your <a href="{% url 'order_tracking' %}">Order Tracking</a> page.</p>
+    </div>
+  </div>
+  
+  <div class="actions">
+    <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
+  </div>
+</section>
 {% endblock %}

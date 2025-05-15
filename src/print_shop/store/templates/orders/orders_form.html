@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section>
+    <h1>{% if form.instance.id %}Edit Order{% else %}Create Order{% endif %}</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% if form.instance.id %}Update{% else %}Create{% endif %}</button>
+    </form>
+    
+    <a href="{% url 'orders-list' %}">Back to Orders</a>
+</section>
+{% endblock %}
