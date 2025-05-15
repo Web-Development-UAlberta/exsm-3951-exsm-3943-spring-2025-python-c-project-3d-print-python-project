@@ -1,9 +1,7 @@
 from django.shortcuts import render
-from django.db.models import Count, Sum
-from store.models import Orders, FulfillmentStatus, Models, InventoryChange, OrderItems
-from django.utils.timezone import now, timedelta
-from collections import defaultdict
-import json
+
+from store.models import Orders, FulfillmentStatus, Models, InventoryChange 
+
 
 def admin_dashboard(request):
     total_orders = Orders.objects.count()
