@@ -11,6 +11,7 @@ from store.models import (
     FulfillmentStatus,
 )
 from store.forms.order_forms import CustomOrderItemForm, PremadeItemCartForm
+from store.views.cart_checkout_view import get_draft_order
 
 
 def custom_gallery(request):
@@ -136,14 +137,14 @@ def model_detail(request, model_id):
                 base_infill = model.BaseInfill * 100
                 multiplier = infill_percentage / base_infill
 
-                draft_order, created = Orders.objects.get_or_create(
-                    User=request.user,
-                    fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT,
-                    defaults={"TotalPrice": 0, "ExpeditedService": False},
-                )
-                if created:
-                    FulfillmentStatus.objects.create(
-                        Order=draft_order, OrderStatus=FulfillmentStatus.Status.DRAFT
+                draft_order = get_draft_order(request)
+
+                if not draft_order:
+                    draft_order = Orders.objects.create(
+                        User=request.user,
+                        TotalPrice=0,
+                        ExpeditedService=False,
+                        Shipping=None,
                     )
                 order_item = OrderItems(
                     Model=model,
@@ -215,18 +216,14 @@ def premade_item_detail(request, item_id):
         if form.is_valid():
             quantity = form.cleaned_data["quantity"]
 
-            draft_order, created = Orders.objects.get_or_create(
-                User=request.user,
-                fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT,
-                defaults={
-                    "TotalPrice": 0,
-                    "ExpeditedService": False,
-                },
-            )
+            draft_order = get_draft_order(request)
 
-            if created:
-                FulfillmentStatus.objects.create(
-                    Order=draft_order, OrderStatus=FulfillmentStatus.Status.DRAFT
+            if not draft_order:
+                draft_order = Orders.objects.create(
+                    User=request.user,
+                    TotalPrice=0,
+                    ExpeditedService=False,
+                    Shipping=None,
                 )
 
             OrderItems.objects.create(

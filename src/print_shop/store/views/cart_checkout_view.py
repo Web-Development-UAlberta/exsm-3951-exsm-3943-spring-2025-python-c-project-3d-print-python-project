@@ -13,27 +13,36 @@ from store.forms.checkout_form import CheckoutForm
 
 def get_cart_items(request):
     """
-    Get cart items for the current user
+    Get cart items for the current user's active draft order.
+    Users must be logged in to have a cart to track adding items to cart.
     """
-    draft_orders = Orders.objects.filter(
-        User=request.user, fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT
-    )
-
-    if not draft_orders.exists():
+    if not request.user.is_authenticated:
         return OrderItems.objects.none()
 
-    return OrderItems.objects.filter(Order__in=draft_orders).select_related(
+    draft_order = get_draft_order(request)
+    if not draft_order:
+        return OrderItems.objects.none()
+
+    return OrderItems.objects.filter(Order=draft_order).select_related(
         "Model", "InventoryChange__RawMaterial__Filament__Material"
     )
 
 
 def get_draft_order(request):
     """
-    Get the user's draft order
+    Get the user's active draft order.
+    Returns the most recent order that has a current status of DRAFT.
     """
-    return Orders.objects.filter(
-        User=request.user, fulfillmentstatus__OrderStatus=FulfillmentStatus.Status.DRAFT
-    ).first()
+    if not request.user.is_authenticated:
+        return None
+
+    user_orders = Orders.objects.filter(User=request.user).order_by("-CreatedAt")
+
+    for order in user_orders:
+        if order.current_status == FulfillmentStatus.Status.DRAFT:
+            return order
+
+    return None
 
 
 def calculate_shipping(shipping, subtotal, expedited=False):
@@ -93,38 +102,45 @@ def update_cart_item(request, item_id):
     Checks if there's sufficient inventory for the new quantity
     """
     item = get_object_or_404(OrderItems, pk=item_id, Order__User=request.user)
-    
+
     if request.method == "POST":
         try:
             new_quantity = int(request.POST.get("quantity", 1))
-            
+
             if new_quantity <= 0:
                 item_name = item.Model.Name
                 item.delete()
-                messages.success(request, f"{item_name} has been removed from your cart.")
+                messages.success(
+                    request, f"{item_name} has been removed from your cart."
+                )
                 item_name = item.Model.Name
                 item.delete()
-                messages.success(request, f"{item_name} has been removed from your cart.")
+                messages.success(
+                    request, f"{item_name} has been removed from your cart."
+                )
                 return redirect("cart")
-            
+
             original_quantity = item.ItemQuantity
-            
+
             item.ItemQuantity = new_quantity
             total_weight = item.calculate_required_weight()
-            
+
             raw_material = item.InventoryChange.RawMaterial
             sufficient_inventory = raw_material.find_inventory_for_weight(total_weight)
-            
+
             if sufficient_inventory:
                 item.save()
                 messages.success(request, f"Quantity updated to {new_quantity}.")
             else:
                 item.ItemQuantity = original_quantity
                 item.save()
-                messages.error(request, f"Not enough inventory available for the requested quantity.")
+                messages.error(
+                    request,
+                    f"Not enough inventory available for the requested quantity.",
+                )
         except ValueError:
             messages.error(request, "Please enter a valid quantity.")
-    
+
     return redirect("cart")
 
 
@@ -188,10 +204,7 @@ def checkout_confirm(request):
         draft_order.TotalPrice = total
         draft_order.ExpeditedService = expedited
         draft_order.EstimatedShipDate = estimated_ship_date
-        draft_order.save()
-        FulfillmentStatus.objects.create(
-            Order=draft_order, OrderStatus=FulfillmentStatus.Status.PENDING_PAYMENT
-        )
+        draft_order.update_status(FulfillmentStatus.Status.PENDING_PAYMENT, save=True)
         if "checkout_shipping_id" in request.session:
             del request.session["checkout_shipping_id"]
         if "checkout_expedited" in request.session:

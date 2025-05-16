@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from store.models import OrderItems, Orders, FulfillmentStatus
 from store.forms.order_forms import AdminItemForm
+from store.views.cart_checkout_view import get_draft_order
 from store.forms.customer_selection_form import CustomerSelectionForm
 
 
@@ -96,23 +97,34 @@ def delete_premade_item(request, pk):
 def generate_quote(request):
     """
     Generate a custom order quote for a customer
-    This allows store owners to create quotes for customers who request them in-store
+    This allows store owners to create quotes on behalf of a customer
+    Because of how we create carts, we need to temporarily set the request.user to the customer.
     """
     if request.method == "POST":
         form = AdminItemForm(request.POST)
         customer_form = CustomerSelectionForm(request.POST)
 
         if form.is_valid() and customer_form.is_valid():
+            customer = customer_form.cleaned_data["customer"]
+            original_user = request.user
+            request.user = customer
+
+            try:
+                draft_order = get_draft_order(request)
+
+                if not draft_order:
+                    draft_order = Orders.objects.create(
+                        User=customer,
+                        TotalPrice=0,
+                        ExpeditedService=False,
+                        Shipping=None,
+                    )
+            finally:
+                request.user = original_user
+
             item = form.save(commit=False)
             item.IsCustom = True
-            customer = customer_form.cleaned_data["customer"]
-            order = Orders.objects.create(
-                User=customer, Shipping=None, TotalPrice=0, ExpeditedService=False
-            )
-            FulfillmentStatus.objects.create(
-                Order=order, OrderStatus=FulfillmentStatus.Status.DRAFT
-            )
-            item.Order = order
+            item.Order = draft_order
             item.save()
             messages.success(
                 request,

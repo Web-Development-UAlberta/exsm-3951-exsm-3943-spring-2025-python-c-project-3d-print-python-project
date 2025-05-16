@@ -13,6 +13,7 @@ from django.core.validators import (
 )
 from django.core.exceptions import ValidationError
 from decimal import Decimal
+from django.utils import timezone
 
 
 class Materials(models.Model):
@@ -175,7 +176,8 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
         InventoryChange.objects.create(
             RawMaterial=instance,
             QuantityWeightAvailable=instance.MaterialWeightPurchased,
-            UnitCost=Decimal(str(instance.Cost)) / Decimal(str(instance.MaterialWeightPurchased)),
+            UnitCost=Decimal(str(instance.Cost))
+            / Decimal(str(instance.MaterialWeightPurchased)),
         )
     else:
         initial_inventory = (
@@ -194,7 +196,9 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
                 initial_inventory.QuantityWeightAvailable = (
                     instance.MaterialWeightPurchased
                 )
-                initial_inventory.UnitCost = Decimal(str(instance.Cost)) / Decimal(str(instance.MaterialWeightPurchased))
+                initial_inventory.UnitCost = Decimal(str(instance.Cost)) / Decimal(
+                    str(instance.MaterialWeightPurchased)
+                )
                 initial_inventory.save(
                     update_fields=["QuantityWeightAvailable", "UnitCost"]
                 )
@@ -283,21 +287,63 @@ class Orders(models.Model):
     def __str__(self):
         return f"{self.User.username} - {self.CreatedAt} - {self.TotalPrice}"
 
+    @property
+    def current_status(self):
+        """
+        Get the most recent status of this order.
+        Returns None if no status has been set.
+        """
+        latest_status = self.fulfillmentstatus_set.order_by("-StatusChangeDate").first()
+        return latest_status.OrderStatus if latest_status else None
+
+    def update_status(self, new_status, save=True):
+        """
+        Update the order status, creating a new FulfillmentStatus record.
+
+        Args:
+            new_status: The new status to set (from FulfillmentStatus.Status)
+            save: Whether to save the order after updating status (default: True)
+        """
+
+        FulfillmentStatus.objects.create(
+            Order=self, OrderStatus=new_status, StatusChangeDate=timezone.now()
+        )
+
+        if save:
+            self.save()
+
     def save(self, *args, **kwargs):
-        """Calculate total price before saving"""
+        """
+        Calculate total price before saving.
+        If this is a new order and doesn't have a status, set it to DRAFT.
+        """
+        is_new = self.pk is None
+
         if self.pk:
             order_items = self.orderitems_set.all()
-            items_total = sum(
-                item.ItemPrice * item.ItemQuantity for item in order_items
-            )
-            shipping_cost = self.Shipping.Rate
-            items_total = sum(Decimal(str(item.ItemPrice)) * item.ItemQuantity for item in order_items)
-            shipping_cost = Decimal(str(self.Shipping.Rate))
-            self.TotalPrice = items_total + shipping_cost
-            if self.ExpeditedService:
-                self.TotalPrice = self.TotalPrice * Decimal("1.5")
+            if order_items.exists():
+                items_total = sum(
+                    Decimal(str(item.ItemPrice)) * item.ItemQuantity
+                    for item in order_items
+                )
+                shipping_cost = (
+                    Decimal(str(self.Shipping.Rate)) if self.Shipping else Decimal("0")
+                )
+                self.TotalPrice = items_total + shipping_cost
+
+                if self.ExpeditedService:
+                    self.TotalPrice = self.TotalPrice * Decimal("1.5")
 
         super().save(*args, **kwargs)
+
+        if is_new and not self.fulfillmentstatus_set.exists():
+            from django.utils import timezone
+
+            FulfillmentStatus.objects.create(
+                Order=self,
+                OrderStatus=FulfillmentStatus.Status.DRAFT,
+                StatusChangeDate=timezone.now(),
+            )
 
 
 class OrderItems(models.Model):
