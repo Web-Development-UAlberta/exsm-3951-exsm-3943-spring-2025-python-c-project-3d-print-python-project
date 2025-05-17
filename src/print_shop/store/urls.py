@@ -212,7 +212,12 @@ urlpatterns = [
     path(
         "store/api/model/<int:model_id>/material/<int:material_id>/filaments/",
         gallery_view.get_filaments_for_material,
-        name="api-filaments-for-material"
+        name="get-filaments-for-material",
+    ),
+    path(
+        "store/api/model/<int:model_id>/filament/<int:filament_id>/calculate-price/",
+        gallery_view.calculate_price,
+        name="calculate-price",
     ),
     # Cart and Checkout URLs
     path("cart/", cart_checkout_view.cart_view, name="cart"),

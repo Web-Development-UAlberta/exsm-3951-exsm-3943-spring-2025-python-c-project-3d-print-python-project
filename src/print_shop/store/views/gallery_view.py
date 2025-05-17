@@ -130,7 +130,7 @@ def model_detail(request, model_id):
             )
     form = CustomOrderItemForm(model=model, initial={"Model": model})
     form.fields["InventoryChange"].queryset = current_inventory
-    
+
     if request.method == "POST":
         if selected_filament and current_inventory.exists():
             try:
@@ -170,6 +170,8 @@ def model_detail(request, model_id):
                 request, "Please select a material and color before adding to cart."
             )
 
+    default_infill = int(float(model.BaseInfill) * 100)
+
     context = {
         "model": model,
         "form": form,
@@ -178,6 +180,7 @@ def model_detail(request, model_id):
         "available_filaments": available_filaments,
         "selected_material": selected_material,
         "selected_filament": selected_filament,
+        "default_infill": default_infill,
     }
 
     return render(request, "gallery/model_detail.html", context)
@@ -188,59 +191,161 @@ def get_filaments_for_material(request, model_id, material_id):
     """
     API endpoint to get filaments for a specific material that have available inventory.
     This is used by the frontend to populate the filament dropdown when a material is selected.
+    Uses the same inventory logic as calculate_price to ensure consistency.
     """
     try:
         model = get_object_or_404(Models, pk=model_id)
         material = get_object_or_404(Materials, pk=material_id)
-        raw_materials = RawMaterials.objects.filter(
-            Filament__Material=material,
-            inventorychange__QuantityWeightAvailable__gt=0
-        ).distinct()
-        
-        sufficient_raw_materials = []
-        for raw_material in raw_materials:
-            inventory = raw_material.inventorychange_set.available().first()
-            if not inventory:
-                continue
-                
+        raw_materials = (
+            RawMaterials.objects.filter(
+                Filament__Material=material,
+                inventorychange__QuantityWeightAvailable__gt=0,
+            )
+            .select_related("Filament")
+            .distinct()
+        )
+
+        sufficient_filaments = set()
+
+        for raw_material in raw_materials.order_by("PurchasedDate"):
             temp_order_item = OrderItems(
                 Model=model,
-                InventoryChange=inventory,
-                InfillMultiplier=Decimal('1.0'),
+                InfillMultiplier=1.0,
                 ItemQuantity=1,
                 IsCustom=True,
             )
-            
-            total_weight = temp_order_item.calculate_required_weight()
-            sufficient_inventory = raw_material.find_inventory_for_weight(total_weight)
-            if sufficient_inventory:
-                sufficient_raw_materials.append(raw_material.id)
-        
-        filaments = Filament.objects.filter(
-            rawmaterials__id__in=sufficient_raw_materials
-        ).distinct().order_by('Name')
-        
+
+            required_weight = temp_order_item.calculate_required_weight()
+
+            inventory = InventoryChange.objects.find_for_weight(
+                required_weight=required_weight,
+                safety_margin=Decimal("1.15"),
+                raw_material=raw_material,
+            )
+            if inventory:
+                sufficient_filaments.add(raw_material.Filament_id)
+
+        filaments = Filament.objects.filter(id__in=sufficient_filaments).order_by(
+            "Name"
+        )
+
         filaments_data = [
             {
-                'id': filament.id,
-                'name': f"{filament.Name}",
-                'color_code': f"#{filament.ColorHexCode}",
+                "id": filament.id,
+                "name": f"{filament.Name}",
+                "color_code": f"#{filament.ColorHexCode}",
             }
             for filament in filaments
         ]
-        
-        return JsonResponse({
-            'status': 'success',
-            'filaments': filaments_data
-        })
-        
+
+        return JsonResponse(
+            {
+                "status": "success",
+                "filaments": filaments_data,
+            }
+        )
+
     except Exception as e:
         import traceback
+
         traceback.print_exc()
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def calculate_price(request, model_id, filament_id):
+    """
+    API endpoint to calculate the estimated price based on model, filament, infill, and quantity.
+    Uses FIFO inventory management to find the appropriate inventory record.
+    """
+    try:
+        model = get_object_or_404(Models, pk=model_id)
+        filament = get_object_or_404(Filament, pk=filament_id)
+        infill_percentage = Decimal(
+            request.GET.get("infill", str(int(model.BaseInfill * 100)))
+        )
+        quantity = int(request.GET.get("quantity", "1"))
+        base_infill_percentage = model.BaseInfill * 100
+        infill_multiplier = infill_percentage / base_infill_percentage
+        base_volume = model.EstimatedPrintVolume * model.BaseInfill
+        volume_cm3 = base_volume * infill_multiplier
+        raw_material = RawMaterials.objects.filter(
+            Filament=filament, inventorychange__QuantityWeightAvailable__gt=0
+        ).first()
+
+        if not raw_material:
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "No available inventory for this filament",
+                },
+                status=400,
+            )
+
+        weight_per_item = volume_cm3 * raw_material.MaterialDensity
+        required_weight = int(weight_per_item * quantity * Decimal("1.15"))
+
+        inventory = InventoryChange.objects.find_for_weight(
+            required_weight=required_weight,
+            safety_margin=Decimal("1.0"),
+            raw_material=raw_material,
+        )
+
+        if not inventory:
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "Not enough inventory available for the selected options",
+                },
+                status=400,
+            )
+
+        temp_order_item = OrderItems(
+            Model=model,
+            InventoryChange=inventory,
+            InfillMultiplier=infill_multiplier,
+            ItemQuantity=quantity,
+            IsCustom=True,
+        )
+        price_components = temp_order_item.calculate_price_components()
+        weight = price_components["weight"]
+        cost_of_goods = price_components["cost_of_goods"]
+        price = price_components["price"]
+
+        response_data = {
+            "status": "success",
+            "price": price.quantize(Decimal("0.01")),
+            "weight": weight,
+            "cost_of_goods": cost_of_goods.quantize(Decimal("0.01")),
+            "infill": infill_percentage,
+            "quantity": quantity,
+            "inventory_id": inventory.id,
+            "debug": {
+                "model_volume_cm3": Decimal(str(model.EstimatedPrintVolume)),
+                "base_infill": (model.BaseInfill * 100).quantize(Decimal("0.01")),
+                "effective_infill": infill_percentage.quantize(Decimal("0.01")),
+                "density": Decimal(str(inventory.RawMaterial.MaterialDensity)),
+                "cost_per_gram": Decimal(str(inventory.UnitCost)).quantize(
+                    Decimal("0.0001")
+                ),
+                "wear_tear": Decimal(
+                    str(inventory.RawMaterial.WearAndTearMultiplier)
+                ).quantize(Decimal("0.0001")),
+                "weight_per_item": (weight / Decimal(str(quantity))).quantize(
+                    Decimal("0.01")
+                ),
+                "material_cost": str(price_components["material_cost"]),
+                "fixed_cost": str(price_components["fixed_cost"]),
+            },
+        }
+
+        return JsonResponse(response_data, json_dumps_params={"default": str})
+
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 def premade_gallery(request):

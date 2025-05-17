@@ -12,7 +12,7 @@ from django.core.validators import (
     FileExtensionValidator,
 )
 from django.core.exceptions import ValidationError
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from django.utils import timezone
 
 
@@ -337,8 +337,6 @@ class Orders(models.Model):
         super().save(*args, **kwargs)
 
         if is_new and not self.fulfillmentstatus_set.exists():
-            from django.utils import timezone
-
             FulfillmentStatus.objects.create(
                 Order=self,
                 OrderStatus=FulfillmentStatus.Status.DRAFT,
@@ -393,31 +391,63 @@ class OrderItems(models.Model):
         This is used for inventory validation before saving.
         Returns the total weight required for this order item in grams
         """
-        density = self.InventoryChange.RawMaterial.MaterialDensity
-        volume_cm3 = (
-            self.Model.EstimatedPrintVolume
-            * self.Model.BaseInfill
-            * self.InfillMultiplier
+        if not hasattr(self, "InventoryChange") or not self.InventoryChange:
+            return 0
+
+        try:
+            density = self.InventoryChange.RawMaterial.MaterialDensity
+            volume_cm3 = (
+                self.Model.EstimatedPrintVolume
+                * self.Model.BaseInfill
+                * self.InfillMultiplier
+            )
+            return max(1, int(round(volume_cm3 * density * self.ItemQuantity)))
+        except (AttributeError, TypeError):
+            return 0
+
+    def calculate_price_components(self):
+        """
+        Calculate and return all price components as a dictionary.
+        This ensures consistent price calculation across the application.
+        Returns:
+            dict: Contains 'weight', 'material_cost', 'fixed_cost', 'cost_of_goods', 'price'
+        """
+        weight = Decimal(str(self.calculate_required_weight()))
+        cost_per_gram = Decimal(str(self.InventoryChange.UnitCost))
+        wear_tear = Decimal(str(self.InventoryChange.RawMaterial.WearAndTearMultiplier))
+        fixed_cost = Decimal(str(self.Model.FixedCost)) * self.ItemQuantity
+        markup = Decimal(str(self.Markup))
+        material_cost = (weight * cost_per_gram * wear_tear).quantize(
+            Decimal("0.0001"), rounding=ROUND_HALF_UP
         )
-        return int(volume_cm3 * density) * self.ItemQuantity
+        cost_of_goods = (fixed_cost + material_cost).quantize(
+            Decimal("0.0001"), rounding=ROUND_HALF_UP
+        )
+        price = (cost_of_goods * markup).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+
+        return {
+            "weight": weight,
+            "material_cost": material_cost,
+            "fixed_cost": fixed_cost,
+            "cost_of_goods": cost_of_goods,
+            "price": price,
+        }
 
     def save(self, *args, **kwargs):
         """
-        Override save to calculate costs before saving.
-        Cost of goods sold is calculated as:
-        TotalWeight = Volume * Base infill * Infill multiplier * Material density * Quantity
-        MaterialCost = TotalWeight * cost per gram * wear and tear
-        CostOfGoodsSold = Fixed cost + material cost
-        Item price = Cost of goods sold * markup
+        Override save to calculate costs before saving using the shared calculation method.
         """
         self.TotalWeight = self.calculate_required_weight()
-        cost_per_gram = Decimal(str(self.InventoryChange.UnitCost))
-        wear_tear = Decimal(str(self.InventoryChange.RawMaterial.WearAndTearMultiplier))
-        material_cost = Decimal(str(self.TotalWeight)) * cost_per_gram * wear_tear
-        self.CostOfGoodsSold = Decimal(str(self.Model.FixedCost)) + material_cost
-        self.ItemPrice = self.CostOfGoodsSold * Decimal(str(self.Markup))
-
-        super().save(*args, **kwargs)
+        try:
+            price_components = self.calculate_price_components()
+            self.CostOfGoodsSold = price_components["cost_of_goods"]
+            self.ItemPrice = price_components["price"]
+            super().save(*args, **kwargs)
+        except (AttributeError, TypeError) as e:
+            print(f"Error in OrderItems.save(): {e}")
+            raise
 
 
 @receiver(post_save, sender=OrderItems)

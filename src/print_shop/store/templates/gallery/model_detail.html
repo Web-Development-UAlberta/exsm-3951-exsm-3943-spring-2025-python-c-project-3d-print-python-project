@@ -5,7 +5,6 @@
 {% endblock title %}
 {% block content %}
   <section class="py-8">
-    <script src="{% static 'js/customize_item.js' %}"></script>
     <div class="container mx-auto px-4">
       <div class="flex flex-col md:flex-row gap-8">
         <!-- Product Image -->
@@ -86,10 +85,9 @@
                        name="{{ form.infill_percentage.html_name }}"
                        min="5"
                        max="100"
-                       value="{{ form.infill_percentage.value|default:30 }}"
-                       class="w-full"
-                       oninput="updateInfillValue(this.value)">
-                <span id="infill-value" class="ml-2 w-12 text-center">{{ form.infill_percentage.value|default:30 }}%</span>
+                       value="{{ form.infill_percentage.value|default:default_infill }}"
+                       class="w-full infill-range">
+                <span id="infill-value" class="ml-2 w-12 text-center">{{ form.infill_percentage.value|default:default_infill }}%</span>
               </div>
               {% if form.infill_percentage.errors %}
                 <p class="text-red-500 text-sm mt-1">{{ form.infill_percentage.errors.0 }}</p>
@@ -108,15 +106,18 @@
                        value="{{ form.ItemQuantity.value|default:1 }}"
                        min="1"
                        max="10"
-                       class="w-20 border rounded-md px-3 py-2">
+                       class="w-20 border rounded-md px-3 py-2 quantity-input">
               </div>
               {% if form.ItemQuantity.errors %}<p class="text-red-500 text-sm mt-1">{{ form.ItemQuantity.errors.0 }}</p>{% endif %}
             </div>
             <div class="mb-6">
-              <div id="price-estimate" class="text-lg font-bold">
-                Estimated Price: $<span id="price-value">{{ model.BasePrice }}</span>
+              <div id="price-estimate"
+                   class="text-lg transition-opacity duration-300 ease-in-out">
+                Estimated Price: $<span id="price-value">--</span>
               </div>
-              <p class="text-xs text-gray-500">Final price may vary based on exact material usage</p>
+              <p class="text-xs text-gray-500 mb-1">Price updates automatically when you change options</p>
+              <p id="price-error" class="text-red-600 text-sm hidden mt-2"></p>
+              <input type="hidden" name="inventory_id" id="inventory-id">
             </div>
             <button type="submit"
                     class="w-full py-3 bg-black text-white rounded-md hover:bg-gray-800 transition"
@@ -145,5 +146,6 @@
         </div>
       </div>
     </div>
+    <script src="{% static 'js/customize_item.js' %}"></script>
   </section>
 {% endblock content %}
