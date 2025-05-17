@@ -1,5 +1,9 @@
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.db.models import Q
 from store.models import (
     Models,
     InventoryChange,
@@ -126,7 +130,7 @@ def model_detail(request, model_id):
             )
     form = CustomOrderItemForm(model=model, initial={"Model": model})
     form.fields["InventoryChange"].queryset = current_inventory
-
+    
     if request.method == "POST":
         if selected_filament and current_inventory.exists():
             try:
@@ -177,6 +181,66 @@ def model_detail(request, model_id):
     }
 
     return render(request, "gallery/model_detail.html", context)
+
+
+@require_http_methods(["GET"])
+def get_filaments_for_material(request, model_id, material_id):
+    """
+    API endpoint to get filaments for a specific material that have available inventory.
+    This is used by the frontend to populate the filament dropdown when a material is selected.
+    """
+    try:
+        model = get_object_or_404(Models, pk=model_id)
+        material = get_object_or_404(Materials, pk=material_id)
+        raw_materials = RawMaterials.objects.filter(
+            Filament__Material=material,
+            inventorychange__QuantityWeightAvailable__gt=0
+        ).distinct()
+        
+        sufficient_raw_materials = []
+        for raw_material in raw_materials:
+            inventory = raw_material.inventorychange_set.available().first()
+            if not inventory:
+                continue
+                
+            temp_order_item = OrderItems(
+                Model=model,
+                InventoryChange=inventory,
+                InfillMultiplier=Decimal('1.0'),
+                ItemQuantity=1,
+                IsCustom=True,
+            )
+            
+            total_weight = temp_order_item.calculate_required_weight()
+            sufficient_inventory = raw_material.find_inventory_for_weight(total_weight)
+            if sufficient_inventory:
+                sufficient_raw_materials.append(raw_material.id)
+        
+        filaments = Filament.objects.filter(
+            rawmaterials__id__in=sufficient_raw_materials
+        ).distinct().order_by('Name')
+        
+        filaments_data = [
+            {
+                'id': filament.id,
+                'name': f"{filament.Name}",
+                'color_code': f"#{filament.ColorHexCode}",
+            }
+            for filament in filaments
+        ]
+        
+        return JsonResponse({
+            'status': 'success',
+            'filaments': filaments_data
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 
 def premade_gallery(request):
