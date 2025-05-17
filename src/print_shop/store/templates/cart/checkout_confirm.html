@@ -1,61 +1,90 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block content %}
-<section>
-  <h1>Order Confirmation</h1>
-  
-  <div class="order-summary">
-    <h2>Order Summary</h2>
-    {% if cart_items %}
-      <ul>
-        {% for item in cart_items %}
-          <li>
-            <strong>{{ item.Model.Name }}</strong> - 
-            {% if item.InventoryChange %}
-              {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} - 
-              {{ item.InventoryChange.RawMaterial.Filament.Name }}
-            {% endif %}
-            <span>Quantity: {{ item.ItemQuantity }}</span>
-            <span>Price: ${{ item.ItemPrice }}</span>
-          </li>
-        {% endfor %}
-      </ul>
-      <p><strong>Subtotal:</strong> ${{ subtotal }}</p>
-    {% else %}
-      <p>Your cart is empty.</p>
-    {% endif %}
-  </div>
-  
-  <div class="shipping-details">
-    <h2>Shipping Details</h2>
-    <p><strong>Shipping Method:</strong> {{ shipping.Name }}</p>
-    <p><strong>Shipping Cost:</strong> ${{ shipping_cost }}</p>
-    {% if expedited %}
-      <p><strong>Expedited Shipping:</strong> Yes (1.5x faster delivery)</p>
-    {% endif %}
-    <p><strong>Estimated Ship Date:</strong> {{ estimated_ship_date|date:"F j, Y" }}</p>
-  </div>
-  
-  <div class="delivery-address">
-    <h2>Delivery Address</h2>
-    <p>{{ request.user.user_profile.Address }}</p>
-  </div>
-  
-  <div class="order-total">
-    <h2>Order Total</h2>
-    <p><strong>Total:</strong> ${{ total }}</p>
-  </div>
-  
-  <div class="payment-notice">
-    <p>By placing your order, you agree to our terms and conditions. Payment will be collected upon shipment.</p>
-  </div>
-  
-  <div class="form-actions">
-    <form method="POST">
-      {% csrf_token %}
-      <a href="{% url 'checkout' %}" class="btn btn-secondary">Back to Shipping</a>
-      <button type="submit" class="btn btn-primary">Place Order</button>
-    </form>
-  </div>
-</section>
-{% endblock %}
+  <section>
+    <h1>Order Confirmation</h1>
+    <div class="order-summary">
+      <h2>Order Summary</h2>
+      {% if cart_items %}
+        <ul>
+          {% for item in cart_items %}
+            <li>
+              <strong>{{ item.Model.Name }}</strong> -
+              {% if item.InventoryChange %}
+                {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} -
+                {{ item.InventoryChange.RawMaterial.Filament.Name }}
+              {% endif %}
+              <span>Quantity: {{ item.ItemQuantity }}</span>
+              <span>Price: ${{ item.ItemPrice }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <p>
+          <strong>Subtotal:</strong> ${{ subtotal }}
+        </p>
+      {% else %}
+        <p>Your cart is empty.</p>
+      {% endif %}
+    </div>
+    <div class="shipping-details">
+      <h2>Shipping Details</h2>
+      <p>
+        <strong>Shipping Method:</strong> {{ shipping.Name }}
+      </p>
+      <p>
+        <strong>Shipping Cost:</strong> ${{ shipping_cost }}
+      </p>
+      <p>
+        <strong>Estimated Ship Date:</strong> {{ estimated_ship_date|date:"F j, Y" }}
+      </p>
+      {% if expedited %}
+        <p>
+          <strong>Expedited Service:</strong> Yes, prioritize my order.
+        </p>
+      {% endif %}
+    </div>
+    <div class="delivery-address">
+      <h2>Delivery Address</h2>
+      <p>{{ request.user.user_profile.Address }}</p>
+    </div>
+    <div class="order-total border-t border-gray-200 pt-4 mt-6">
+      <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+      <div class="space-y-2">
+        <div class="flex justify-between">
+          <span>Subtotal:</span>
+          <span>${{ subtotal|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Shipping:</span>
+          <span>${{ shipping_cost|floatformat:2 }}</span>
+        </div>
+        {% if expedited %}
+          <div class="text-sm text-gray-600 border-t border-gray-100 pt-2">
+            <p class="flex justify-between">
+              <span>Subtotal before expedited service:</span>
+              <span>${{ base_total|floatformat:2 }}</span>
+            </p>
+          </div>
+          <div class="flex justify-between">
+            <span>Expedited Service (+50%):</span>
+            <span class="font-medium">${{ expedited_fee|floatformat:2 }}</span>
+          </div>
+        {% endif %}
+        <div class="flex justify-between border-t border-gray-200 pt-2 text-lg font-bold">
+          <span>Total:</span>
+          <span>${{ total|floatformat:2 }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="payment-notice">
+      <p class="mb-2">By placing your order, you agree to our terms and conditions.</p>
+      <p class="mb-2">Payment must be made in full to start manufacturing your order.</p>
+    </div>
+    <div class="form-actions">
+      <form method="post">
+        {% csrf_token %}
+        <a href="{% url 'checkout' %}" class="btn btn-secondary">Back to Shipping</a>
+        <button type="submit" class="btn btn-primary">Place Order</button>
+      </form>
+    </div>
+  </section>
+{% endblock content %}

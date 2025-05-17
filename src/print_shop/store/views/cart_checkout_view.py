@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -45,21 +46,15 @@ def get_draft_order(request):
     return None
 
 
-def calculate_shipping(shipping, subtotal, expedited=False):
+def calculate_shipping(shipping, subtotal):
     """
-    Calculate shipping cost, total, and estimated ship date
+    Calculate shipping cost and estimated ship date
     """
     shipping_cost = shipping.Rate
-    total = subtotal + shipping_cost
-
-    if expedited:
-        estimated_ship_date = timezone.now() + timezone.timedelta(days=2)
-    else:
-        estimated_ship_date = timezone.now() + timezone.timedelta(days=5)
+    estimated_ship_date = timezone.now() + timezone.timedelta(days=5)
 
     return {
         "shipping_cost": shipping_cost,
-        "total": total,
         "estimated_ship_date": estimated_ship_date,
     }
 
@@ -165,10 +160,15 @@ def checkout(request):
         request.session["checkout_shipping_id"] = shipping_method.id
         request.session["checkout_expedited"] = expedited
         return redirect("checkout-confirm")
+    default_shipping = Shipping.objects.first()
+    shipping_cost = default_shipping.Rate if default_shipping else Decimal("0")
+
     context = {
         "cart_items": cart_items,
         "subtotal": subtotal,
+        "shipping_cost": shipping_cost,
         "form": form,
+        "base_total": subtotal + shipping_cost,
     }
 
     return render(request, "cart/checkout.html", context)
@@ -193,24 +193,14 @@ def checkout_confirm(request):
         messages.error(request, "Please select a shipping method.")
         return redirect("checkout")
     shipping = get_object_or_404(Shipping, pk=shipping_id)
-    subtotal = sum(item.ItemPrice for item in cart_items)
-    shipping_details = calculate_shipping(shipping, subtotal, expedited)
+    subtotal = sum(item.ItemPrice * item.ItemQuantity for item in cart_items)
+    shipping_details = calculate_shipping(shipping, subtotal)
     shipping_cost = shipping_details["shipping_cost"]
-    total = shipping_details["total"]
     estimated_ship_date = shipping_details["estimated_ship_date"]
-
-    if request.method == "POST":
-        draft_order.Shipping = shipping
-        draft_order.TotalPrice = total
-        draft_order.ExpeditedService = expedited
-        draft_order.EstimatedShipDate = estimated_ship_date
-        draft_order.update_status(FulfillmentStatus.Status.PENDING_PAYMENT, save=True)
-        if "checkout_shipping_id" in request.session:
-            del request.session["checkout_shipping_id"]
-        if "checkout_expedited" in request.session:
-            del request.session["checkout_expedited"]
-        messages.success(request, "Your order has been placed successfully!")
-        return redirect("order-success", order_id=draft_order.id)
+    base_total = subtotal + shipping_cost
+    expedited_fee = base_total * Decimal("0.5")
+    expedited_total = base_total * Decimal("1.5")
+    total = expedited_total if expedited else base_total
 
     context = {
         "cart_items": cart_items,
@@ -218,9 +208,25 @@ def checkout_confirm(request):
         "expedited": expedited,
         "subtotal": subtotal,
         "shipping_cost": shipping_cost,
+        "base_total": base_total,
+        "expedited_fee": expedited_fee,
+        "expedited_total": expedited_total,
         "total": total,
         "estimated_ship_date": estimated_ship_date,
     }
+    if request.method == "POST":
+        draft_order.Shipping = shipping
+        draft_order.TotalPrice = expedited_total if expedited else base_total
+        draft_order.ExpeditedService = expedited
+        draft_order.EstimatedShipDate = estimated_ship_date
+        draft_order.save()
+        draft_order.update_status(FulfillmentStatus.Status.PENDING_PAYMENT, save=False)
+        if "checkout_shipping_id" in request.session:
+            del request.session["checkout_shipping_id"]
+        if "checkout_expedited" in request.session:
+            del request.session["checkout_expedited"]
+        messages.success(request, "Your order has been placed successfully!")
+        return redirect("order-success", order_id=draft_order.id)
 
     return render(request, "cart/checkout_confirm.html", context)
 
