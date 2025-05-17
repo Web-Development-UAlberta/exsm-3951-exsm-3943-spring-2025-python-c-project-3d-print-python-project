@@ -13,8 +13,7 @@
     html, body {
         height: 100%;
         margin: 0;
-        overflow-x: hidden;
-        overflow-y: auto;
+        overflow: hidden;
     }
     .container.mx-auto.px-4.py-8 {
         padding: 0 !important;
@@ -22,68 +21,75 @@
         margin: 0 !important;
         width: 100% !important;
     }
+    .fade-in {
+        animation: fadeIn 1.2s ease-out forwards;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 
-<div class="relative h-[calc(100vh-100px)] flex items-center justify-center overflow-hidden">
+<div class="relative h-auto min-h-[calc(100vh-100px)] flex items-center justify-center px-4 py-8 overflow-hidden">
     <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/50 via-purple-600/40 to-blue-800/80 mix-blend-multiply"></div>
-    <div class="relative z-10 w-full max-w-2xl p-8 mx-4 rounded-3xl bg-gradient-to-br from-black/60 via-black/50 to-black/40 backdrop-blur-xl text-white shadow-[0_8px_30px_rgba(0,0,0,0.3)] border border-white/20 fade-in">
-        <h1 class="text-2xl font-bold mb-4 border-b border-gray-500 pb-3">
+    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply"></div>
+
+    <div class="relative z-10 w-full max-w-5xl p-6 rounded-3xl bg-gradient-to-br from-black/80 to-black/70 backdrop-blur-xl text-white shadow-lg border border-white/20 flex flex-col -mt-16"
+         style="max-height: 85vh;">
+        
+        <h1 class="text-3xl font-bold mb-6 border-b border-gray-200 pb-4">
             {% if is_admin_view %}
                 {% if form.instance.pk %}Edit{% else %}Add{% endif %} User Profile
             {% else %}
                 Edit Your Profile
             {% endif %}
         </h1>
-        <form method="post">
+
+        <form method="post" class="overflow-auto flex-grow">
             {% csrf_token %}
 
-            <fieldset>
-                <legend class="text-xl font-semibold mb-4 text-white">User Information</legend>
+            <fieldset class="mb-6">
+                <legend class="text-xl font-semibold mb-4 text-white border-b border-gray-600 pb-2">User Information</legend>
 
-                {% for field in form %}
-                    <div class="mb-5">
-                        <label class="block text-sm font-medium text-white mb-1">{{ field.label }}</label>
-                        <div class="rounded-lg bg-white/10 text-white border border-white/20 px-3 py-2 focus-within:ring-2 focus-within:ring-blue-400">
-                            <input type="text" name="{{ field.name }}" class="w-full bg-white text-black border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ field.value|default:'' }}">
-                        </div>
-
-                        {% if field.help_text %}
-                            <small class="text-sm text-gray-300">{{ field.help_text }}</small>
-                        {% endif %}
-
-                        {% if field.errors %}
-                            <div class="text-red-400 text-sm mt-1">
-                                {% for error in field.errors %}
-                                    <p>{{ error }}</p>
-                                {% endfor %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for field in form %}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-white mb-1">{{ field.label }}</label>
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    name="{{ field.name }}" 
+                                    class="w-full bg-black/40 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                    value="{{ field.value|default:'' }}"
+                                    {% if field.field.required %}required{% endif %}>
                             </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+
+                            {% if field.help_text %}
+                                <small class="text-xs text-gray-400 mt-1">{{ field.help_text }}</small>
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <div class="text-red-400 text-xs mt-1">
+                                    {% for error in field.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
             </fieldset>
 
-            <div class="mt-8 flex space-x-4">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-full transition duration-300 shadow-md">Save</button>
-
+            <div class="mt-6 flex space-x-4 border-t border-gray-600 pt-4">
+                <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Save Profile</button>
+                
                 {% if is_admin_view %}
-                    <a href="{% url 'user-profile-list' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2.5 rounded-full transition duration-300 shadow-md">Cancel</a>
+                    <a href="{% url 'user-profile-list' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Cancel</a>
                 {% else %}
-                    <a href="{% url 'view-profile' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2.5 rounded-full transition duration-300 shadow-md">Cancel</a>
+                    <a href="{% url 'view-profile' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Cancel</a>
                 {% endif %}
             </div>
         </form>
     </div>
 </div>
-
-<style>
-    .fade-in {
-        animation: fadeIn 1.2s ease-out forwards;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
 {% endblock %}
