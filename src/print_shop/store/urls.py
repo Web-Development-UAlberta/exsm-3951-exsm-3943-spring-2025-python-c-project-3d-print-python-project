@@ -209,6 +209,17 @@ urlpatterns = [
         gallery_view.premade_item_detail,
         name="premade-item-detail",
     ),
+    # API URLs for the customized item to get available filaments for a material
+    path(
+        "store/api/model/<int:model_id>/material/<int:material_id>/filaments/",
+        gallery_view.get_filaments_for_material,
+        name="get-filaments-for-material",
+    ),
+    path(
+        "store/api/model/<int:model_id>/filament/<int:filament_id>/calculate-price/",
+        gallery_view.calculate_price,
+        name="calculate-price",
+    ),
     # Cart and Checkout URLs
     path("cart/", cart_checkout_view.cart_view, name="cart"),
     path(

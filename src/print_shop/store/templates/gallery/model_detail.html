@@ -1,4 +1,8 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  {{ model.Name }} - 3D Print Shop
+{% endblock title %}
 {% block content %}
   <section class="py-8">
     <div class="container mx-auto px-4">
@@ -9,6 +13,8 @@
             {% if model.Thumbnail %}
               <img src="{{ model.Thumbnail.url }}"
                    alt="{{ model.Name }}"
+                   width="500"
+                   height="500"
                    class="max-w-full max-h-full object-contain">
             {% else %}
               <div class="w-full h-full flex items-center justify-center border-2 border-gray-300">
@@ -19,6 +25,7 @@
                      stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
+                {% if filament.Name %}<span>{{ filament.Name }}</span>{% endif %}
               </div>
             {% endif %}
           </div>
@@ -27,56 +34,50 @@
         <div class="md:w-1/2">
           <div class="mb-2">
             <a href="{% url 'custom-gallery' %}"
-               class="text-blue-600 hover:underline">&larr; Back to Gallery</a>
+               class="text-blue-600 hover:underline">← Back to Gallery</a>
           </div>
           <h1 class="text-3xl font-bold mb-2">{{ model.Name }}</h1>
-          <div class="mb-4">
-            <p class="text-lg">
-              Base Price: <span class="font-bold">${{ model.BasePrice }}</span>
-            </p>
-            <p class="text-sm">Base Weight: {{ model.BaseWeight }}g</p>
-          </div>
           {% if model.Description %}
             <div class="mb-6">
               <h2 class="text-lg font-semibold mb-2">Description</h2>
               <p>{{ model.Description }}</p>
             </div>
           {% endif %}
-          <form method="POST" class="mb-6">
+          <form method="post" class="mb-6" action="{% url 'model-detail' model.id %}">
             {% csrf_token %}
             {{ form.non_field_errors }}
-            {# Hidden Model field #}
+            {# Hidden fields #}
             <input type="hidden" name="Model" value="{{ model.id }}">
+            <input type="hidden"
+                   name="selected_filament"
+                   id="selected-filament"
+                   value="{{ selected_filament }}">
             <div class="mb-4">
               <label class="block text-sm font-medium mb-1">Material</label>
               <div class="grid grid-cols-1 gap-2">
-                <select id="material-select"
-                        class="w-full border rounded-md px-3 py-2"
-                        onchange="window.location.href='{% url 'model-detail' model.id %}?material=' + this.value">
+                <select id="material-select" class="w-full border rounded-md px-3 py-2">
                   <option value="">Select a material</option>
                   {% for material in available_materials %}
                     <option value="{{ material.id }}"
-                            {% if selected_material == material.id|stringformat:'s' %}selected{% endif %}>{{ material.Name }}</option>
+                            {% if selected_material == material.id|stringformat:'s' %}selected{% endif %}>
+                      {{ material.Name }}
+                    </option>
                   {% endfor %}
                 </select>
               </div>
             </div>
-            {% if selected_material %}
-              <div class="mb-4">
-                <label class="block text-sm font-medium mb-1">Filament Color</label>
-                <div class="grid grid-cols-1 gap-2">
-                  <select id="filament-select"
-                          class="w-full border rounded-md px-3 py-2"
-                          onchange="window.location.href='{% url 'model-detail' model.id %}?material={{ selected_material }}&filament=' + this.value">
-                    <option value="">Select a color</option>
-                    {% for filament in available_filaments %}
-                      <option value="{{ filament.id }}"
-                              {% if selected_filament == filament.id|stringformat:'s' %}selected{% endif %}>{{ filament.Name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
+            <div class="mb-4 hidden" id="filament-select-container">
+              <label class="block text-sm font-medium mb-1">Filament Color</label>
+              <select id="filament-select"
+                      class="w-full border rounded-md px-3 py-2"
+                      disabled>
+                <option value="">Select a material first</option>
+              </select>
+              <div class="mt-2 flex items-center">
+                <span class="text-sm text-gray-600 mr-2">Selected color:</span>
+                <div class="w-6 h-6 rounded border border-gray-300" id="color-swatch"></div>
               </div>
-            {% endif %}
+            </div>
             {# Hidden inventory field - handled automatically by FIFO logic #}
             {{ form.InventoryChange.as_hidden }}
             <div class="mb-4">
@@ -88,10 +89,9 @@
                        name="{{ form.infill_percentage.html_name }}"
                        min="5"
                        max="100"
-                       value="{{ form.infill_percentage.value|default:30 }}"
-                       class="w-full"
-                       oninput="updateInfillValue(this.value)">
-                <span id="infill-value" class="ml-2 w-12 text-center">{{ form.infill_percentage.value|default:30 }}%</span>
+                       value="{{ form.infill_percentage.value|default:default_infill }}"
+                       class="w-full infill-range">
+                <span id="infill-value" class="ml-2 w-12 text-center">{{ form.infill_percentage.value|default:default_infill }}%</span>
               </div>
               {% if form.infill_percentage.errors %}
                 <p class="text-red-500 text-sm mt-1">{{ form.infill_percentage.errors.0 }}</p>
@@ -100,7 +100,9 @@
             </div>
             <div class="mb-4">
               <label for="{{ form.ItemQuantity.id_for_label }}"
-                     class="block text-sm font-medium mb-1">Quantity</label>
+                     class="block text-sm font-medium mb-1">
+                Quantity <small>(max 10)</small>
+              </label>
               <div class="flex items-center">
                 <input type="number"
                        id="{{ form.ItemQuantity.id_for_label }}"
@@ -108,22 +110,28 @@
                        value="{{ form.ItemQuantity.value|default:1 }}"
                        min="1"
                        max="10"
-                       class="w-20 border rounded-md px-3 py-2">
+                       class="w-20 border rounded-md px-3 py-2 quantity-input">
               </div>
               {% if form.ItemQuantity.errors %}<p class="text-red-500 text-sm mt-1">{{ form.ItemQuantity.errors.0 }}</p>{% endif %}
             </div>
             <div class="mb-6">
-              <div id="price-estimate" class="text-lg font-bold">
-                Estimated Price: $<span id="price-value">{{ model.BasePrice }}</span>
+              <div id="price-estimate"
+                   class="text-lg transition-opacity duration-300 ease-in-out">
+                Estimated Price: $<span id="price-value">--</span>
               </div>
-              <p class="text-xs text-gray-500">Final price may vary based on exact material usage</p>
+              <p class="text-xs text-gray-500 mb-1">Price updates automatically when you change options</p>
+              <p id="price-error" class="text-red-600 text-sm hidden mt-2"></p>
+              <input type="hidden" name="inventory_id" id="inventory-id">
             </div>
             <button type="submit"
-                    class="w-full py-3 bg-black text-white rounded-md hover:bg-gray-800 transition"
-                    {% if not selected_filament %}disabled{% endif %}>Add to Cart</button>
-            {% if not selected_filament %}
-              <p class="text-red-500 text-sm mt-2">Please select a material and color to continue</p>
-            {% endif %}
+                    class="w-full py-3 bg-black text-white rounded-md hover:bg-gray-800 transition flex items-center justify-center"
+                    {% if not selected_filament %}disabled{% endif %}>
+              <span class="button-text">Add to Cart</span>
+            </button>
+            <p id="filament-error"
+               class="text-red-500 text-sm mt-2 {% if selected_filament %}hidden{% endif %}">
+              Please select a material and color to continue
+            </p>
             {% if form.errors %}
               <div class="text-red-500 text-sm mt-2">
                 <p>Please correct the following errors:</p>
@@ -138,11 +146,12 @@
           <div class="border-t pt-4">
             <h3 class="text-lg font-semibold mb-2">Shipping Information</h3>
             <p class="text-sm">
-              Custom orders typically ship within 5-7 business days. Expedited shipping options available at checkout.
+              Custom orders typically ship within 5-7 business days. Expedited manufacturing options available at checkout.
             </p>
           </div>
         </div>
       </div>
     </div>
+    <script src="{% static 'js/customize_item.js' %}"></script>
   </section>
-{% endblock %}
+{% endblock content %}

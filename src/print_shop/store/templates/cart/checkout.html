@@ -1,59 +1,97 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
+{% load static %}
 {% block content %}
-<section>
-  <h1>Checkout</h1>
-  
-  <div class="order-summary">
-    <h2>Order Summary</h2>
-    {% if cart_items %}
-      <ul>
-        {% for item in cart_items %}
-          <li>
-            <strong>{{ item.Model.Name }}</strong> - 
-            {% if item.InventoryChange %}
-              {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} - 
-              {{ item.InventoryChange.RawMaterial.Filament.Name }}
-            {% endif %}
-            <span>Quantity: {{ item.ItemQuantity }}</span>
-            <span>Price: ${{ item.ItemPrice }}</span>
-          </li>
-        {% endfor %}
-      </ul>
-      <p><strong>Subtotal:</strong> ${{ subtotal }}</p>
-    {% else %}
-      <p>Your cart is empty.</p>
-    {% endif %}
-  </div>
-  
-  <div class="shipping-form">
-    <h2>Shipping Information</h2>
-    <form method="POST">
-      {% csrf_token %}
-      <div class="form-group">
-        {{ form.shipping_method.label_tag }}
-        {{ form.shipping_method }}
-        {% if form.shipping_method.errors %}
-          <div class="error">{{ form.shipping_method.errors }}</div>
-        {% endif %}
+  <section class="max-w-3xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-6">Checkout</h1>
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">Shipping Information</h2>
+      {% if not cart_items.exists %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+          <p class="text-yellow-700">Your cart is empty.</p>
+          <a href="{% url 'shop' %}"
+             class="text-blue-600 hover:text-blue-800 mt-2 inline-block">Continue Shopping</a>
+        </div>
+      {% endif %}
+      <!-- Order Summary -->
+      <div class="mb-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
+        <div class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
+          {% for item in cart_items %}
+            <div class="p-4 flex items-center">
+              <div class="flex-shrink-0 h-16 w-16 bg-gray-200 rounded-md overflow-hidden">
+                {% if item.Model.Thumbnail %}
+                  <img src="{{ item.Model.Thumbnail.url }}"
+                       alt="{{ item.Model.Name }}"
+                       class="h-full w-full object-cover object-center">
+                {% endif %}
+              </div>
+              <div class="ml-4 flex-1">
+                <div class="flex justify-between text-base font-medium text-gray-900">
+                  <h3>{{ item.Model.Name }}</h3>
+                  <p class="ml-4">${{ item.ItemPrice|floatformat:2 }}</p>
+                </div>
+                {% if item.InventoryChange %}
+                  <p class="mt-1 text-sm text-gray-500">
+                    {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} -
+                    {{ item.InventoryChange.RawMaterial.Filament.Name }}
+                  </p>
+                {% endif %}
+                <p class="text-sm text-gray-500">Qty: {{ item.ItemQuantity }}</p>
+              </div>
+            </div>
+          {% endfor %}
+          <div class="px-4 py-3 bg-gray-50 text-right text-sm font-medium">
+            <span class="text-gray-900">Subtotal:</span>
+            <span id="order-subtotal" class="ml-2 text-blue-600">${{ subtotal|floatformat:2 }}</span>
+          </div>
+        </div>
       </div>
-      
-      <div class="form-group">
-        {{ form.expedited.label_tag }}
-        {{ form.expedited }}
-        <small>{{ form.expedited.help_text }}</small>
-      </div>
-      
-      <div class="delivery-address">
-        <h3>Delivery Address</h3>
-        <p>{{ request.user.user_profile.Address }}</p>
-      </div>
-      
-      <div class="form-actions">
-        <a href="{% url 'cart' %}" class="btn btn-secondary">Back to Cart</a>
-        <button type="submit" class="btn btn-primary">Continue to Confirmation</button>
-      </div>
-    </form>
-  </div>
-</section>
-{% endblock %}
+      <form method="POST" id="checkout-form" class="space-y-6">
+        {% csrf_token %}
+        <!-- Shipping Method -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">{{ form.shipping_method.label }}</label>
+          {{ form.shipping_method }}
+          {% if form.shipping_method.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.shipping_method.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+        <!-- Expedited Service -->
+        <div class="space-y-2">
+          <div class="flex items-center space-x-2">
+            <input type="checkbox"
+                   name="expedited"
+                   id="id_expedited"
+                   class="peer h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                   {% if form.expedited.value %}checked{% endif %}>
+            <label for="id_expedited" class="text-sm font-medium text-gray-700">{{ form.expedited.label }}</label>
+          </div>
+          <p class="text-sm text-gray-500">{{ form.expedited.help_text }}</p>
+          <div class="mt-2 p-3 bg-blue-50 text-blue-700 text-sm rounded-md hidden peer-checked:block">
+            Expedited service will add 50% to your order total.
+          </div>
+        </div>
+        <!-- Delivery Address -->
+        <div class="space-y-2">
+          <h3 class="text-sm font-medium text-gray-700">Delivery Address</h3>
+          <div class="bg-gray-50 p-4 rounded-md">
+            <p class="text-gray-700">{{ request.user.user_profile.Address|linebreaksbr }}</p>
+            <a href="{% url 'edit-profile' %}"
+               class="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800">Update address</a>
+          </div>
+        </div>
+        <!-- Form Actions -->
+        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+          <a href="{% url 'cart' %}"
+             class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Back to Cart
+          </a>
+          <button type="submit"
+                  class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Continue to Confirmation
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock content %}
