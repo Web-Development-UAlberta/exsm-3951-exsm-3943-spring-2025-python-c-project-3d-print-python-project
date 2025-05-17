@@ -1,95 +1,122 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block title %}
     {% if is_admin_view %}
-        {% if form.instance.pk %}Edit{% else %}Add{% endif %} User Profile
+        {% if form.instance.pk %}
+            Edit
+        {% else %}
+            Add
+        {% endif %}
+        User Profile
     {% else %}
         Edit Your Profile
     {% endif %}
-{% endblock %}
-
+{% endblock title %}
 {% block content %}
-<style>
-    html, body {
-        height: 100%;
-        margin: 0;
-        overflow: hidden;
-    }
-    .container.mx-auto.px-4.py-8 {
-        padding: 0 !important;
-        max-width: none !important;
-        margin: 0 !important;
-        width: 100% !important;
-    }
-    .fade-in {
-        animation: fadeIn 1.2s ease-out forwards;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
 
-<div class="relative h-auto min-h-[calc(100vh-100px)] flex items-center justify-center px-4 py-8 overflow-hidden">
-    <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply"></div>
+        .container.mx-auto.px-4.py-8 {
+            padding: 0 !important;
+            max-width: none !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
 
-    <div class="relative z-10 w-full max-w-5xl p-6 rounded-3xl bg-gradient-to-br from-black/80 to-black/70 backdrop-blur-xl text-white shadow-lg border border-white/20 flex flex-col -mt-16"
-         style="max-height: 85vh;">
-        
-        <h1 class="text-3xl font-bold mb-6 border-b border-gray-200 pb-4">
-            {% if is_admin_view %}
-                {% if form.instance.pk %}Edit{% else %}Add{% endif %} User Profile
-            {% else %}
-                Edit Your Profile
-            {% endif %}
-        </h1>
+        .fade-in {
+            animation: fadeIn 1.2s ease-out forwards;
+        }
 
-        <form method="post" class="overflow-auto flex-grow">
-            {% csrf_token %}
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
 
-            <fieldset class="mb-6">
-                <legend class="text-xl font-semibold mb-4 text-white border-b border-gray-600 pb-2">User Information</legend>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {% for field in form %}
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-white mb-1">{{ field.label }}</label>
-                            <div class="relative">
-                                <input 
-                                    type="text" 
-                                    name="{{ field.name }}" 
-                                    class="w-full bg-black/40 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
-                                    value="{{ field.value|default:'' }}"
-                                    {% if field.field.required %}required{% endif %}>
-                            </div>
-
-                            {% if field.help_text %}
-                                <small class="text-xs text-gray-400 mt-1">{{ field.help_text }}</small>
-                            {% endif %}
-
-                            {% if field.errors %}
-                                <div class="text-red-400 text-xs mt-1">
-                                    {% for error in field.errors %}
-                                        <p>{{ error }}</p>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </fieldset>
-
-            <div class="mt-6 flex space-x-4 border-t border-gray-600 pt-4">
-                <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Save Profile</button>
-                
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+    <div class="relative h-auto min-h-[calc(100vh-100px)] flex items-center justify-center px-4 py-8 overflow-hidden">
+        <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply">
+        </div>
+        <div class="relative z-10 w-full max-w-5xl p-6 rounded-3xl bg-gradient-to-br from-black/80 to-black/70 backdrop-blur-xl text-white shadow-lg border border-white/20 flex flex-col -mt-16"
+             style="max-height: 85vh">
+            <h1 class="text-3xl font-bold mb-6 border-b border-gray-200 pb-4">
                 {% if is_admin_view %}
-                    <a href="{% url 'user-profile-list' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Cancel</a>
+                    {% if form.instance.pk %}
+                        Edit
+                    {% else %}
+                        Add
+                    {% endif %}
+                    User Profile
                 {% else %}
-                    <a href="{% url 'view-profile' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Cancel</a>
+                    Edit Your Profile
                 {% endif %}
-            </div>
-        </form>
+            </h1>
+            <form method="post" class="overflow-auto flex-grow">
+                {% csrf_token %}
+                <fieldset class="mb-6">
+                    <legend class="text-xl font-semibold mb-4 text-white border-b border-gray-600 pb-2">User Information</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for field in form %}
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-white mb-1">{{ field.label }}</label>
+                                <div class="relative">
+                                    {% if field.field.widget.input_type == 'checkbox' %}
+                                        <div class="flex items-center h-10">
+                                            <input type="checkbox"
+                                                   name="{{ field.name }}"
+                                                   id="{{ field.id_for_label }}"
+                                                   class="h-5 w-5 rounded border-white/20 bg-black/40 text-purple-600 focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 focus:outline-none transition"
+                                                   {% if field.value %}checked{% endif %}
+                                                   aria-labelledby="{{ field.id_for_label }}_label">
+                                            <label for="{{ field.id_for_label }}"
+                                                   id="{{ field.id_for_label }}_label"
+                                                   class="ml-2 block text-sm font-medium text-white sr-only">
+                                                {{ field.label }}
+                                            </label>
+                                        </div>
+                                    {% else %}
+                                        <input type="{{ field.field.widget.input_type|default:'text' }}"
+                                               name="{{ field.name }}"
+                                               class="w-full bg-black/40 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                               value="{{ field.value|default:'' }}"
+                                               {% if field.field.required %}required{% endif %}>
+                                    {% endif %}
+                                </div>
+                                {% if field.help_text %}<small class="text-xs text-gray-400 mt-1">{{ field.help_text }}</small>{% endif %}
+                                {% if field.errors %}
+                                    <div class="text-red-400 text-xs mt-1">
+                                        {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+                <div class="mt-6 flex space-x-4 border-t border-gray-600 pt-4">
+                    <button type="submit"
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">
+                        Save Profile
+                    </button>
+                    {% if is_admin_view %}
+                        <a href="{% url 'user-profile-list' %}"
+                           class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Cancel</a>
+                    {% else %}
+                        <a href="{% url 'view-profile' %}"
+                           class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Cancel</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-{% endblock %}
+{% endblock content %}

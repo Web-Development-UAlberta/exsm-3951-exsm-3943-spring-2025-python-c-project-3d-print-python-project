@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.db import IntegrityError
 from store.forms.user_profile_form import UserProfileForm, UserRegistrationForm
 from store.forms.user_profile_admin_form import (
     UserProfileAdminForm,
@@ -84,12 +85,24 @@ def add_user_profile(request):
     if request.method == "POST":
         form = UserProfileAdminForm(request.POST)
         if form.is_valid():
-            user_profile = form.save()
-            messages.success(
-                request,
-                f"User profile for {user_profile.user.username} was created successfully",
-            )
-            return redirect("user-profile-list")
+            try:
+                user_profile = form.save()
+                messages.success(
+                    request,
+                    f"User profile for {user_profile.user.username} was created successfully",
+                )
+                return redirect("user-profile-list")
+            except IntegrityError as e:
+                if 'username' in str(e):
+                    messages.error(
+                        request,
+                        f"Username '{form.cleaned_data.get('username')}' is already taken. Please choose a different username.",
+                    )
+                else:
+                    messages.error(
+                        request,
+                        f"An error occurred while creating the user: {str(e)}",
+                    )
     else:
         form = UserProfileAdminForm()
     return render(

@@ -6,9 +6,13 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>
-            {% block title %}Our Site{% endblock %}
+            {% block title %}
+                Our Site
+            {% endblock title %}
         </title>
-        <script src="https://cdn.tailwindcss.com"></script>
+        <meta name="description"
+              content="{% block description %}Welcome to our website{% endblock description %}">
+        {% tailwind_css %}
         <style>
             body {
                 display: flex;
@@ -95,7 +99,20 @@
         <!-- Main Content -->
         <main class="flex-grow">
             <div class="container mx-auto px-4 py-8">
-                {% block content %}<h1 class="text-3xl font-bold mb-6">Welcome to our website</h1>{% endblock %}
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-4">
+                        {% for message in messages %}
+                            <div class="mb-4 p-4 rounded-lg shadow-lg backdrop-blur-sm border {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %} bg-red-900/70 border-red-600 text-red-100 {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %} bg-green-900/70 border-green-600 text-green-100 {% else %} bg-blue-900/70 border-blue-600 text-blue-100 {% endif %} "
+                                 role="alert">
+                                <span class="font-medium">{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% block content %}
+                    <h1 class="text-3xl font-bold mb-6">Welcome to our website</h1>
+                {% endblock content %}
             </div>
         </main>
         <!-- Sticky Footer -->
