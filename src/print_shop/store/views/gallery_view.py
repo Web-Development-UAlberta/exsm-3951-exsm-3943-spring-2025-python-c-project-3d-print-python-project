@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -60,25 +61,33 @@ def custom_gallery(request):
     return render(request, "gallery/custom_gallery.html", context)
 
 
-def model_detail(request, model_id):
+def get_available_inventory_items(
+    model, selected_filament=None, quantity=1, infill_percentage=30
+):
     """
-    Detail view for a specific model with material selection
+    Helper method to get available inventory items with sufficient quantity.
+    Returns a list of dictionaries containing inventory and related data.
     """
-    model = get_object_or_404(Models, pk=model_id)
-    quantity = int(request.GET.get("quantity", 1))
-    infill_percentage = int(request.GET.get("infill", 30))
-
     base_infill = model.BaseInfill * 100
     multiplier = infill_percentage / base_infill
 
-    raw_materials = RawMaterials.objects.filter(
-        inventorychange__in=InventoryChange.objects.available()
-    ).distinct()
+    inventory_items = (
+        InventoryChange.objects.available()
+        .select_related(
+            "RawMaterial", "RawMaterial__Filament", "RawMaterial__Filament__Material"
+        )
+        .distinct()
+    )
 
-    sufficient_raw_materials = []
-    for raw_material in raw_materials:
-        inventory = raw_material.inventorychange_set.available().first()
-        if not inventory:
+    sufficient_items = []
+
+    for inventory in inventory_items:
+        if not inventory.RawMaterial or not hasattr(inventory.RawMaterial, "Filament"):
+            continue
+
+        if selected_filament and str(inventory.RawMaterial.Filament_id) != str(
+            selected_filament
+        ):
             continue
 
         temp_order_item = OrderItems(
@@ -91,96 +100,151 @@ def model_detail(request, model_id):
 
         total_weight = temp_order_item.calculate_required_weight()
 
-        sufficient_inventory = raw_material.find_inventory_for_weight(total_weight)
-        if sufficient_inventory:
-            sufficient_raw_materials.append(raw_material.id)
+        if inventory.RawMaterial.find_inventory_for_weight(total_weight):
+            sufficient_items.append(
+                {
+                    "id": inventory.id,
+                    "raw_material": inventory.RawMaterial,
+                    "inventory": inventory,
+                    "weight": total_weight,
+                    "filament": inventory.RawMaterial.Filament,
+                    "material": inventory.RawMaterial.Filament.Material
+                    if inventory.RawMaterial.Filament
+                    else None,
+                }
+            )
 
-    current_inventory = (
-        InventoryChange.objects.available()
-        .filter(RawMaterial_id__in=sufficient_raw_materials)
-        .select_related("RawMaterial__Filament__Material")
-    )
+    return sufficient_items
 
-    available_materials = (
-        Materials.objects.filter(
-            filament__rawmaterials__id__in=sufficient_raw_materials
-        )
-        .distinct()
-        .order_by("Name")
-    )
 
-    available_filaments = Filament.objects.none()
-
+def model_detail(request, model_id):
+    """
+    Detail view for a specific model with material selection
+    """
+    model = get_object_or_404(Models, pk=model_id)
+    quantity = int(request.GET.get("quantity", 1))
+    infill_percentage = int(request.GET.get("infill", 30))
     selected_material = request.GET.get("material")
     selected_filament = request.GET.get("filament")
 
+    available_items = get_available_inventory_items(
+        model=model,
+        selected_filament=selected_filament,
+        quantity=quantity,
+        infill_percentage=infill_percentage,
+    )
+
+    available_materials = list(
+        {item["material"] for item in available_items if item["material"]}
+    )
+    available_filaments = list(
+        {item["filament"] for item in available_items if item["filament"]}
+    )
+
     if selected_material:
-        available_filaments = (
-            Filament.objects.filter(
-                Material_id=selected_material,
-                rawmaterials__id__in=sufficient_raw_materials,
-            )
-            .distinct()
-            .order_by("Name")
-        )
+        available_filaments = [
+            f
+            for f in available_filaments
+            if str(f.Material_id) == str(selected_material)
+        ]
 
-        if selected_filament:
-            current_inventory = current_inventory.filter(
-                RawMaterial__Filament_id=selected_filament
-            )
     form = CustomOrderItemForm(model=model, initial={"Model": model})
-    form.fields["InventoryChange"].queryset = current_inventory
+    form.fields["InventoryChange"].queryset = InventoryChange.objects.filter(
+        id__in=[item["inventory"].id for item in available_items]
+    )
 
-    if request.method == "POST":
-        if selected_filament and current_inventory.exists():
-            try:
-                best_inventory = current_inventory.first()
-                infill_percentage = int(request.POST.get("infill_percentage", 30))
-                quantity = int(request.POST.get("ItemQuantity", 1))
+    if (
+        request.method == "POST"
+        and request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    ):
+        try:
+            inventory_id = request.POST.get("inventory_id")
+            selected_item = None
 
-                base_infill = model.BaseInfill * 100
-                multiplier = infill_percentage / base_infill
-
-                draft_order = get_draft_order(request)
-
-                if not draft_order:
-                    draft_order = Orders.objects.create(
-                        User=request.user,
-                        TotalPrice=0,
-                        ExpeditedService=False,
-                        Shipping=None,
-                    )
-                order_item = OrderItems(
-                    Model=model,
-                    InventoryChange=best_inventory,
-                    InfillMultiplier=multiplier,
-                    ItemQuantity=quantity,
-                    IsCustom=True,
-                    Order=draft_order,
+            if inventory_id:
+                selected_item = next(
+                    (
+                        item
+                        for item in available_items
+                        if str(item["inventory"].id) == str(inventory_id)
+                    ),
+                    None,
                 )
-                order_item.save()
 
-                messages.success(request, f"{model.Name} has been added to your cart.")
-                return redirect("cart")
-            except Exception as e:
-                messages.error(request, f"Error adding item to cart: {str(e)}")
-                print(f"Error: {str(e)}")
-        else:
-            messages.error(
-                request, "Please select a material and color before adding to cart."
+            if not selected_item and available_items:
+                selected_item = available_items[0]
+
+            if not selected_item:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "No inventory available for the selected options",
+                    },
+                    status=400,
+                )
+
+            quantity = int(request.POST.get("ItemQuantity", 1))
+            selected_inventory = selected_item["inventory"]
+
+            temp_order_item = OrderItems(
+                Model=model,
+                InventoryChange=selected_inventory,
+                InfillMultiplier=selected_item["weight"]
+                / (model.BaseInfill * 100 * quantity),
+                ItemQuantity=quantity,
+                IsCustom=True,
+            )
+            total_weight = temp_order_item.calculate_required_weight()
+
+            if not selected_inventory.RawMaterial.find_inventory_for_weight(
+                total_weight
+            ):
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "Insufficient inventory available for the selected options",
+                    },
+                    status=400,
+                )
+
+            draft_order = get_draft_order(request) or Orders.objects.create(
+                User=request.user,
+                TotalPrice=0,
+                ExpeditedService=False,
+                Shipping=None,
             )
 
-    default_infill = int(float(model.BaseInfill) * 100)
+            order_item = OrderItems(
+                Model=model,
+                InventoryChange=selected_inventory,
+                InfillMultiplier=temp_order_item.InfillMultiplier,
+                ItemQuantity=quantity,
+                IsCustom=True,
+                Order=draft_order,
+            )
+            order_item.save()
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": f"{model.Name} has been added to your cart.",
+                    "redirect_url": reverse("cart"),
+                }
+            )
+
+        except Exception as e:
+            error_msg = f"Error adding item to cart: {str(e)}"
+            print(f"Error: {error_msg}")
+            return JsonResponse({"success": False, "message": error_msg}, status=400)
 
     context = {
         "model": model,
         "form": form,
-        "current_inventory": current_inventory,
         "available_materials": available_materials,
         "available_filaments": available_filaments,
         "selected_material": selected_material,
         "selected_filament": selected_filament,
-        "default_infill": default_infill,
+        "default_infill": int(model.BaseInfill * 100),
     }
 
     return render(request, "gallery/model_detail.html", context)

@@ -91,6 +91,7 @@
 
 - [Require HTTP Method](https://docs.djangoproject.com/en/5.2/topics/http/decorators/#allowed-http-methods)
 - [Create an API response example](https://www.geeksforgeeks.org/creating-a-json-response-using-django-and-python/)
+- [Django Json Response](https://docs.djangoproject.com/en/5.2/ref/request-response/#jsonresponse-objects)
 
 ### Media Files
 

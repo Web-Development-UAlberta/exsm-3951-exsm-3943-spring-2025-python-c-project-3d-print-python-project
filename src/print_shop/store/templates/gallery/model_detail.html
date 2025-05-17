@@ -43,11 +43,15 @@
               <p>{{ model.Description }}</p>
             </div>
           {% endif %}
-          <form method="post" class="mb-6">
+          <form method="post" class="mb-6" action="{% url 'model-detail' model.id %}">
             {% csrf_token %}
             {{ form.non_field_errors }}
-            {# Hidden Model field #}
+            {# Hidden fields #}
             <input type="hidden" name="Model" value="{{ model.id }}">
+            <input type="hidden"
+                   name="selected_filament"
+                   id="selected-filament"
+                   value="{{ selected_filament }}">
             <div class="mb-4">
               <label class="block text-sm font-medium mb-1">Material</label>
               <div class="grid grid-cols-1 gap-2">
@@ -120,8 +124,10 @@
               <input type="hidden" name="inventory_id" id="inventory-id">
             </div>
             <button type="submit"
-                    class="w-full py-3 bg-black text-white rounded-md hover:bg-gray-800 transition"
-                    {% if not selected_filament %}disabled{% endif %}>Add to Cart</button>
+                    class="w-full py-3 bg-black text-white rounded-md hover:bg-gray-800 transition flex items-center justify-center"
+                    {% if not selected_filament %}disabled{% endif %}>
+              <span class="button-text">Add to Cart</span>
+            </button>
             <p id="filament-error"
                class="text-red-500 text-sm mt-2 {% if selected_filament %}hidden{% endif %}">
               Please select a material and color to continue

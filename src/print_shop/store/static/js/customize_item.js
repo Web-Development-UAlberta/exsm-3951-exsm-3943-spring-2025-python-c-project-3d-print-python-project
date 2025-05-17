@@ -364,4 +364,168 @@ function initializePage() {
   };
 }
 
+/**
+ * Handle form submission via AJAX
+ */
+async function handleFormSubmit(event) {
+  event.preventDefault();
+
+  const form = event.target;
+  const formData = new FormData(form);
+  const submitButton = form.querySelector('button[type="submit"]');
+  const originalButtonText = submitButton.textContent;
+
+  try {
+    submitButton.disabled = true;
+    submitButton.textContent = "Adding to Cart...";
+
+    const response = await fetch(form.action, {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    });
+
+    if (response.redirected) {
+      window.location.href = response.url;
+    } else {
+      const data = await response.json();
+      if (data.success) {
+        window.location.href = data.redirect_url || "/cart/";
+      } else {
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "text-red-500 text-sm mt-2";
+        errorDiv.textContent = data.message || "Error adding item to cart";
+        const existingError = form.querySelector(".form-error");
+        if (existingError) {
+          existingError.remove();
+        }
+
+        form.appendChild(errorDiv);
+      }
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("An error occurred while adding the item to your cart.");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = originalButtonText;
+  }
+}
+
+/**
+ * Initialize the page when DOM is fully loaded
+ */
+function initializePage() {
+  const materialSelect = document.getElementById("material-select");
+  const filamentSelect = document.getElementById("filament-select");
+  const infillRange = document.querySelector(".infill-range");
+  const infillValue = document.getElementById("infill-value");
+  const quantityInput = document.querySelector(".quantity-input");
+  const form = document.querySelector("form");
+
+  if (!materialSelect || !filamentSelect) {
+    console.error(
+      "Required elements (materialSelect or filamentSelect) not found"
+    );
+    return;
+  }
+
+  updateFormState(materialSelect.value !== "");
+
+  const handleFilamentChange = (e) => {
+    updateColorSwatch(e.target);
+    updateFilamentErrorVisibility();
+    debouncedCalculatePrice();
+
+    const selectedFilamentInput = document.getElementById("selected-filament");
+    if (selectedFilamentInput) {
+      selectedFilamentInput.value = e.target.value;
+    }
+
+    const addToCartButton = document.querySelector('button[type="submit"]');
+    if (addToCartButton) {
+      addToCartButton.disabled = !e.target.value;
+    }
+  };
+
+  const handleInfillChange = (e) => {
+    const value = e.target.value;
+    if (infillValue) {
+      infillValue.textContent = `${value}%`;
+    }
+    debouncedCalculatePrice();
+  };
+
+  const handleQuantityChange = (e) => {
+    debouncedCalculatePrice();
+  };
+
+  const updateInfillDisplay = (value) => {
+    const infillValue = document.getElementById("infill-value");
+    if (infillValue) {
+      infillValue.textContent = `${value}%`;
+    }
+  };
+
+  if (infillRange) {
+    updateInfillDisplay(infillRange.value);
+  }
+
+  try {
+    if (materialSelect) {
+      materialSelect.addEventListener("change", handleMaterialChange);
+    }
+
+    if (filamentSelect) {
+      filamentSelect.addEventListener("change", handleFilamentChange);
+    }
+
+    if (infillRange) {
+      infillRange.addEventListener("input", (e) => {
+        updateInfillDisplay(e.target.value);
+        debouncedCalculatePrice();
+      });
+    }
+
+    if (quantityInput) {
+      quantityInput.addEventListener("input", handleQuantityChange);
+    }
+
+    if (form) {
+      form.addEventListener("submit", handleFormSubmit);
+    }
+  } catch (error) {
+    console.error("Error adding event listeners:", error);
+  }
+
+  window._eventHandlers = {
+    materialSelect: { element: materialSelect, handler: handleMaterialChange },
+    filamentSelect: { element: filamentSelect, handler: handleFilamentChange },
+    infillRange: { element: infillRange, handler: handleInfillChange },
+    quantityInput: { element: quantityInput, handler: handleQuantityChange },
+  };
+
+  if (materialSelect.value) {
+    handleMaterialChange({ target: materialSelect });
+  }
+
+  if (materialSelect.value && filamentSelect.value) {
+    debouncedCalculatePrice();
+  }
+
+  return () => {
+    Object.values(window._eventHandlers || {}).forEach(
+      ({ element, handler }) => {
+        if (element && handler) {
+          element.removeEventListener("input", handler);
+          element.removeEventListener("change", handler);
+        }
+      }
+    );
+    delete window._eventHandlers;
+  };
+}
+
 document.addEventListener("DOMContentLoaded", initializePage);
