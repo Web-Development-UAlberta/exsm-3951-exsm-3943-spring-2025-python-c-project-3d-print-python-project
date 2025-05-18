@@ -14,16 +14,15 @@
 <div class="container">
   <div class="sidebar">  
     <div><a href={% url 'admin_dashboard' %} >Dashboard </a></div>
-    <div> Order Management </div>
+    <div> <a href={% url 'order_management' %} >  Order Management </div>
     <div><a href={% url 'inventory_management' %} > Inventory Management </a> </div>
-    <div>User Management</div>
-    <div>CSV Upload</div>
+    <div> <a href={% url 'user-profile-list' %} > User Management</div>
+   
   </div>
 
   <div class="admin-dashboard">
     <div class="card">Total Orders<br><h2>{{ total_orders }}</h2></div>
     <div class="card">Active Orders<br><h2>{{ active_orders }}</h2></div>
-    <div class="card">Pending Uploads<br><h2>{{ pending_uploads }}</h2></div>
     <div class="card">Inventory Warnings<br><h2>{{ inventory_warnings }}</h2></div>
     
   </div>

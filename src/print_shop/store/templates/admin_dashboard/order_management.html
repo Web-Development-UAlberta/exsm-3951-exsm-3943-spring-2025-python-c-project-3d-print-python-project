@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="order-management">
+    <div style="display: flex;">
+
+        <!-- Sidebar Filters -->
+        <aside style="width: 20%; padding: 20px; background-color: #f1f1f1;">
+            <h2>Filter</h2>
+            <form method="get" >
+                <label for="material"><strong>Material</strong></label><br>
+                <input type="text" name="material" id="material" value="{{ request.GET.material }}"><br><br>
+
+                <label for="status"><strong>Status</strong></label><br>
+                <input type="text" name="status" id="status" value="{{ request.GET.status }}"><br><br>
+
+                <label for="priority"><strong>Priority</strong></label><br>
+                <input type="text" name="priority" id="priority" value="{{ request.GET.priority }}"><br><br>
+
+                <button type="submit">Apply</button>
+            </form>
+        </aside>
+
+        <!-- Main Content -->
+        <main style="flex: 1; padding: 20px;">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>Order Management</h1>
+                <form method="get">
+                    <input type="text" name="search" placeholder="Search" value="{{ request.GET.search }}">
+                    <button type="submit">🔍</button>
+                </form>
+            </div>
+
+            <!-- Order Table -->
+            <table border="1" cellspacing="0" cellpadding="8" style="width: 100%; margin-top: 20px;">
+                <thead>
+                    <tr style="background-color: #ddd;">
+                        <th>Order ID</th>
+                        <th>Model Name</th>
+                        <th>Material</th>
+                        <th>Qty</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        {% for item in order.orderitems_set.all %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>{{ item.Model.Name }}</td>
+                                <td>{{ item.InventoryChange.RawMaterial.Filament.Material.Name }}</td>
+                                <td>{{ item.ItemQuantity }}</td>
+                                <td>{{ order.current_status }}</td>
+                                <td>
+                                    {% if order.ExpeditedService %}
+                                        High
+                                    {% else %}
+                                        Normal
+                                    {% endif %}
+                                </td>
+                                <td>
+                                  
+                                    <a href="{% url 'edit-order' order.id %}">Edit</a> |
+                                    <a href="{% url 'delete-order' order.id %}">Delete</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% empty %}
+                        <tr><td colspan="7">No orders found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Create Button -->
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="{% url 'add-order' %}">
+                    <button style="padding: 10px 20px; font-weight: bold; border-radius: 8px;">
+                        Create New Order
+                    </button>
+                </a>
+                <div><a href={% url 'admin_dashboard' %} >Admin Dashboard </a></div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

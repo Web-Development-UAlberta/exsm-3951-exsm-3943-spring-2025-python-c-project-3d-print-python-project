@@ -25,7 +25,7 @@
       </form>
     </div>
     <div class="main">
-      <form method="get" class="searchbar">
+      <form method="get" class="searchbar" >
         <input type="text" name="q" placeholder="Search" value="{{ request.GET.q }}">
         <button type="submit">🔍</button>
       </form>
@@ -55,6 +55,7 @@
         </tbody>
       </table>
       <a href="{% url 'add-raw-material' %}" class="btn">Add New Material</a>
+      <div><a href={% url 'admin_dashboard' %} >Admin Dashboard </a></div>
     </div>
   </div>
 
