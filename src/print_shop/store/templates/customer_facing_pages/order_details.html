@@ -1,66 +1,99 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<section>
-    <h1>Order Details</h1>
-    
-    <div class="order-details">
-        <h2>Order #{{ order.id }}</h2>
-        <p>Date: {{ order.CreatedAt }}</p>
-        
-        <h3>Delivery Address</h3>
-        <p>{{ order.User.user_profile.Address }}</p>
-        
-        <h3>Items</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Material</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Subtotal</th>
-                </tr>
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+    .container.mx-auto.px-4.py-8 {
+        padding: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+</style>
+<div class="relative min-h-[calc(100vh-100px)] overflow-hidden px-6 py-16 flex justify-center">
+  <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl z-0"></div>
+  <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply z-0"></div>
+  <section class="relative z-20 max-w-5xl w-full text-white space-y-10">
+
+    <h1 class="text-5xl font-extrabold tracking-tight drop-shadow-lg">
+      Order Details
+    </h1>
+
+    <div class="space-y-6">
+
+      <div>
+        <h2 class="text-3xl font-semibold drop-shadow-md">Order #{{ order.id }}</h2>
+        <p class="text-lg text-white/90 mt-1 drop-shadow-sm">Date: {{ order.CreatedAt }}</p>
+      </div>
+
+      <div>
+        <h3 class="text-2xl font-semibold border-b border-white/30 pb-1 mb-3 drop-shadow-md">Delivery Address</h3>
+        <p class="text-lg text-white/90 leading-relaxed drop-shadow-sm">{{ order.User.user_profile.Address }}</p>
+      </div>
+
+      <div>
+        <h3 class="text-2xl font-semibold border-b border-white/30 pb-1 mb-5 drop-shadow-md">Items</h3>
+        <div class="overflow-x-auto rounded-lg shadow-lg shadow-black/40">
+          <table class="min-w-full table-auto border-collapse text-white">
+            <thead class="bg-white/20">
+              <tr>
+                <th class="px-5 py-3 text-left font-semibold uppercase tracking-wide">Item</th>
+                <th class="px-5 py-3 text-left font-semibold uppercase tracking-wide">Material</th>
+                <th class="px-5 py-3 text-right font-semibold uppercase tracking-wide">Quantity</th>
+                <th class="px-5 py-3 text-right font-semibold uppercase tracking-wide">Price</th>
+                <th class="px-5 py-3 text-right font-semibold uppercase tracking-wide">Subtotal</th>
+              </tr>
             </thead>
             <tbody>
-                {% for item in order.orderitems_set.all %}
-                <tr>
-                    <td>{{ item.Model.Name }}</td>
-                    <td>
-                        {% if item.InventoryChange %}
-                            {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} - 
-                            {{ item.InventoryChange.RawMaterial.Filament.Name }}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </td>
-                    <td>{{ item.ItemQuantity }}</td>
-                    <td>${{ item.ItemPrice }}</td>
-                    <td>${{ item.ItemPrice|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
+              {% for item in order.orderitems_set.all %}
+              <tr class="even:bg-white/10 odd:bg-white/5">
+                <td class="px-5 py-3">{{ item.Model.Name }}</td>
+                <td class="px-5 py-3">
+                  {% if item.InventoryChange %}
+                    {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} - {{ item.InventoryChange.RawMaterial.Filament.Name }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+                <td class="px-5 py-3 text-right">{{ item.ItemQuantity }}</td>
+                <td class="px-5 py-3 text-right">${{ item.ItemPrice }}</td>
+                <td class="px-5 py-3 text-right">${{ item.ItemPrice|floatformat:2 }}</td>
+              </tr>
+              {% endfor %}
             </tbody>
-        </table>
-        
-        <div class="order-summary">
-            <p>Order subtotal: ${{ order.TotalPrice|floatformat:2 }}</p>
-            {% if order.Shipping %}
-                <p>Shipping: ${{ order.Shipping.Rate|floatformat:2 }}</p>
-            {% endif %}
-            <p><strong>Total: ${{ order.TotalPrice|floatformat:2 }}</strong></p>
+          </table>
         </div>
-        
-        <h3>Status</h3>
-        {% if order.fulfillmentstatus_set.first %}
-            <p>{{ order.fulfillmentstatus_set.first.get_OrderStatus_display }}</p>
-            <p>Last Updated: {{ order.fulfillmentstatus_set.first.StatusChangeDate }}</p>
-        {% else %}
-            <p>Processing</p>
+      </div>
+
+      <div class="text-lg font-semibold space-y-1">
+        {% if order.Shipping %}
+          <p>Shipping: ${{ order.Shipping.Rate|floatformat:2 }}</p>
         {% endif %}
+          <p>Order subtotal: ${{ order.TotalPrice|floatformat:2 }}</p>
+          <p class="text-2xl font-extrabold mt-2">Total: ${{ order.TotalPrice|floatformat:2 }}</p>
+      </div>
+
+      <div>
+        <h3 class="text-2xl font-semibold border-b border-white/30 pb-1 mb-3 drop-shadow-md">Status</h3>
+        {% if order.fulfillmentstatus_set.first %}
+          <p class="text-lg">{{ order.fulfillmentstatus_set.first.get_OrderStatus_display }}</p>
+          <p class="text-sm text-white/70 mt-1">Last Updated: {{ order.fulfillmentstatus_set.first.StatusChangeDate }}</p>
+        {% else %}
+          <p class="text-lg">Processing</p>
+        {% endif %}
+      </div>
+
     </div>
-    
-    <div class="actions">
-        <a href="{% url 'order_tracking' %}">Back to Order Tracking</a>
+
+    <div class="mt-10">
+      <a href="{% url 'order_tracking' %}"
+         class="inline-block bg-white/20 hover:bg-red-400 text-white font-semibold px-7 py-3 rounded-full shadow-lg shadow-black/50 transition-colors focus:outline-none focus:ring-4 focus:ring-white/50">
+         Back to Order Tracking
+      </a>
     </div>
-</section>
+  </section>
+</div>
 {% endblock %}
