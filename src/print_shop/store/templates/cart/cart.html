@@ -1,36 +1,96 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Cart | 3D Print Store{% endblock %}
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
+    .container.mx-auto.px-4.py-8 {
+        padding: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+    .fade-in {
+        animation: fadeIn 1.2s ease-out forwards;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 
 {% block content %}
-    <h1>Your Cart</h1>
-    
-    {% if cart_items %}
-        <ul>
+<div class="relative min-h-[calc(100vh-100px)] overflow-y-auto">
+    <div class="fixed inset-0 -z-10 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl"></div>
+    <div class="fixed inset-0 -z-10 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-500/30 mix-blend-multiply"></div>
+    <div class="relative z-20 max-w-6xl mx-auto p-8 mt-32 bg-white/10 backdrop-blur-xl rounded-2xl text-white shadow-lg">
+        <h1 class="text-3xl font-bold mb-6">Your Cart</h1>
+
+        {% if cart_items %}
+        <ul class="space-y-6">
             {% for item in cart_items %}
-                <li>
-                    <strong>{{ item.Model.Name }}</strong> - 
+            <li class="p-6 rounded-lg flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 bg-black/40">
+                <div>
+                    <strong class="text-xl">{{ item.Model.Name }}</strong><br />
                     {% if item.InventoryChange %}
-                        {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} - 
-                        {{ item.InventoryChange.RawMaterial.Filament.Name }}
+                    <span class="text-gray-300">
+                        {{ item.InventoryChange.RawMaterial.Filament.Material.Name }} - {{ item.InventoryChange.RawMaterial.Filament.Name }}
+                    </span>
                     {% endif %}
-                    <span>Price: ${{ item.ItemPrice }}</span>
-                    <div class="quantity-controls">
-                        <form action="{% url 'update-cart-item' item.id %}" method="POST" class="quantity-form">
-                            {% csrf_token %}
-                            <label for="quantity-{{ item.id }}">Quantity:</label>
-                            <input type="number" id="quantity-{{ item.id }}" name="quantity" value="{{ item.ItemQuantity }}" min="1" max="10">
-                            <button type="submit">Update</button>
-                        </form>
-                        <form action="{% url 'remove-from-cart' item.id %}" method="POST" class="remove-form">
-                            {% csrf_token %}
-                            <button type="submit">Remove</button>
-                        </form>
-                    </div>
-                </li>
+                </div>
+                <div class="text-lg font-semibold">Price: ${{ item.ItemPrice }}</div>
+
+                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                    <form action="{% url 'update-cart-item' item.id %}" method="POST" class="flex items-center space-x-2">
+                        {% csrf_token %}
+                        <label for="quantity-{{ item.id }}" class="text-white">Quantity:</label>
+                        <input
+                            type="number"
+                            id="quantity-{{ item.id }}"
+                            name="quantity"
+                            value="{{ item.ItemQuantity }}"
+                            min="1"
+                            max="10"
+                            class="w-16 text-black rounded px-2 py-1"
+                        />
+                        <button
+                            type="submit"
+                            class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded transition duration-300"
+                        >
+                            Update
+                        </button>
+                    </form>
+
+                    <form action="{% url 'remove-from-cart' item.id %}" method="POST">
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            class="bg-red-600 hover:bg-red-500 text-white px-4 py-1 rounded transition duration-300"
+                        >
+                            Remove
+                        </button>
+                    </form>
+                </div>
+            </li>
             {% endfor %}
         </ul>
-        <p><strong>Subtotal:</strong> ${{ subtotal }}</p>
-        <a href="{% url 'checkout' %}">Proceed to Checkout</a>
-    {% else %}
-        <p>Your cart is empty.</p>
-    {% endif %}
+
+        <p class="mt-8 text-2xl font-semibold text-white">Subtotal: ${{ subtotal }}</p>
+
+        <a
+            href="{% url 'checkout' %}"
+            class="inline-block mt-4 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded transition duration-300"
+        >
+            Proceed to Checkout
+        </a>
+        {% else %}
+        <p class="text-white">Your cart is empty.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
