@@ -17,6 +17,7 @@ from store.views import cart_checkout_view
 from store.views import home_page_view
 from store.views import order_tracking_view
 from store.views import admin_dashboard_view
+from store.views import logout_view
 
 urlpatterns = [
     # Home Page URL
@@ -145,7 +146,8 @@ urlpatterns = [
         auth_views.LoginView.as_view(template_name="auth/login.html"),
         name="login",
     ),
-    path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
+    # path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
+    path("logout/", logout_view.logout_view, name="logout"),
     path("register/", user_profiles_view.register, name="register"),
     # User Profile URLs - Customer views
     path("profile/", user_profiles_view.view_profile, name="view-profile"),

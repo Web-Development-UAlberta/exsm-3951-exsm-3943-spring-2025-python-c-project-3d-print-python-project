@@ -82,7 +82,8 @@
         Create New Order
       </a>
       <div class="mt-4">
-        <a href="{% url 'admin_dashboard' %}" class="text-blue-600 hover:underline">Admin Dashboard</a>
+        {% comment %} <a href="{% url 'admin_dashboard' %}" class="text-blue-600 hover:underline">Admin Dashboard</a> {% endcomment %}
+        <a href="{% url 'admin_dashboard' %}" class="text-indigo-700 hover:underline font-semibold">← Back to Admin Dashboard</a>
       </div>
     </div>
   </main>
