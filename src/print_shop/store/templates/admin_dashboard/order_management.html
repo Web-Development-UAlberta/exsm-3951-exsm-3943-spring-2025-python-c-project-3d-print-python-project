@@ -7,7 +7,7 @@
         <!-- Sidebar Filters -->
         <aside style="width: 20%; padding: 20px; background-color: #f1f1f1;">
             <h2>Filter</h2>
-            <form method="get" action="{% url 'orders-list' %}">
+            <form method="get" >
                 <label for="material"><strong>Material</strong></label><br>
                 <input type="text" name="material" id="material" value="{{ request.GET.material }}"><br><br>
 
@@ -26,7 +26,7 @@
             <!-- Header -->
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h1>Order Management</h1>
-                <form method="get" action="{% url 'orders-list' %}">
+                <form method="get">
                     <input type="text" name="search" placeholder="Search" value="{{ request.GET.search }}">
                     <button type="submit">🔍</button>
                 </form>
@@ -62,7 +62,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'orders-list' %}">View</a> |
+                                  
                                     <a href="{% url 'edit-order' order.id %}">Edit</a> |
                                     <a href="{% url 'delete-order' order.id %}">Delete</a>
                                 </td>
@@ -81,6 +81,7 @@
                         Create New Order
                     </button>
                 </a>
+                <div><a href={% url 'admin_dashboard' %} >Admin Dashboard </a></div>
             </div>
         </main>
     </div>
