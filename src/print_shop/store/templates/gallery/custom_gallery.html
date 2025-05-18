@@ -1,12 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
-  <section class="py-8">
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+    .container.mx-auto.px-4.py-8 {
+        padding: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+</style>
+
+<div class="relative min-h-[calc(100vh-100px)] overflow-hidden">
+  <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl z-0"></div>
+  <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply z-0"></div>
+
+  <section class="py-8 relative z-10">
     <div class="container mx-auto px-4">
-      <h1 class="text-3xl font-bold mb-6">Custom 3D Printing</h1>
+      <h1 class="text-3xl font-bold mb-6 text-white">Custom 3D Printing</h1>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {% for model in models %}
-          <div class="border rounded-lg overflow-hidden">
-            <div class="aspect-square bg-gray-200 flex items-center justify-center">
+          <div class="rounded-xl bg-white/80 backdrop-blur-md shadow-lg ring-1 ring-black/10 overflow-hidden transition duration-300 fade-in">
+            <div class="aspect-square bg-gray-100 flex items-center justify-center">
               <div class="w-full h-full flex items-center justify-center">
                 {% if model.Thumbnail %}
                   <img src="{{ model.Thumbnail.url }}"
@@ -26,17 +43,19 @@
               </div>
             </div>
             <div class="p-4">
-              <h3 class="font-medium">{{ model.Name }}</h3>
+              <h3 class="font-semibold text-gray-800 mb-2">{{ model.Name }}</h3>
               <a href="{% url 'model-detail' model.id %}{% if selected_material %}?material={{ selected_material }}{% if selected_color %}&color={{ selected_color }}{% endif %}{% endif %}"
-                 class="block w-full py-2 text-center bg-black text-white rounded-md hover:bg-gray-800 transition">Customize</a>
+                 class="block w-full py-2 text-center bg-black text-white rounded-md hover:bg-blue-500 transition">Customize</a>
             </div>
           </div>
         {% empty %}
           <div class="col-span-full text-center py-8">
-            <p>No models available with the selected filters.</p>
+            <p class="text-white">No models available with the selected filters.</p>
           </div>
         {% endfor %}
       </div>
     </div>
   </section>
+</div>
 {% endblock %}
+
