@@ -1,10 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from store.models import OrderItems, Orders, FulfillmentStatus
+from django.db import transaction
+from django.http import JsonResponse
+from django.urls import reverse
+from store.models import OrderItems, Models, Materials, Filament, Orders, FulfillmentStatus, InventoryChange
 from store.forms.order_forms import AdminItemForm
 from store.views.cart_checkout_view import get_draft_order
 from store.forms.customer_selection_form import CustomerSelectionForm
+
 
 
 def is_staff(user):
@@ -31,20 +35,103 @@ def premade_items_list(request):
 @user_passes_test(is_staff)
 def add_premade_item(request):
     """
-    Add a new premade item (admin view)
+    Add a new premade item (admin view) with FIFO inventory checks
     """
+    available_models = Models.objects.all().order_by("Name")
+    available_materials = Materials.objects.all().order_by("Name")
+    default_infill = 30
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
     if request.method == "POST":
-        form = AdminItemForm(request.POST)
-        if form.is_valid():
-            item = form.save()
-            messages.success(
-                request, f"Premade item '{item.Model.Name}' was created successfully"
-            )
-            return redirect("product-admin-premade-items")
+        try:
+            form = AdminItemForm(request.POST, request.FILES)
+            
+            if not form.is_valid():
+                if is_ajax:
+                    return JsonResponse({
+                        "success": False,
+                        "message": "Form validation failed",
+                        "errors": form.errors.get_json_data()
+                    }, status=400)
+                return render(request, "admin/premade_item_form.html", {
+                    "form": form,
+                    "title": "Add Premade Item",
+                    "available_models": available_models,
+                    "available_materials": available_materials,
+                    "default_infill": default_infill,
+                })
+            
+            with transaction.atomic():
+                item = form.save(commit=False)
+                item.IsCustom = False
+                item.save()
+                
+                required_weight = item.calculate_required_weight()
+                
+                available_inventory = item.InventoryChange.RawMaterial.find_inventory_for_weight(required_weight)
+                
+                if not available_inventory:
+                    transaction.set_rollback(True)
+                    error_msg = "Insufficient inventory available for the selected filament. Please check available stock."
+                    if is_ajax:
+                        return JsonResponse({
+                            "success": False,
+                            "message": error_msg,
+                            "errors": {"__all__": [error_msg]}
+                        }, status=400)
+                    messages.error(request, error_msg)
+                    return redirect(request.path_info)
+                
+                if item.InventoryChange_id != available_inventory.id:
+                    item.InventoryChange = available_inventory
+                    item.save()
+                
+                success_msg = f"Premade item '{item.Model.Name}' was created successfully"
+                if is_ajax:
+                    return JsonResponse({
+                        "success": True,
+                        "message": success_msg,
+                        "redirect_url": reverse("product-admin-premade-items")
+                    })
+                messages.success(request, success_msg)
+                return redirect("product-admin-premade-items")
+                
+        except Exception as e:
+            error_msg = f"Error creating premade item: {str(e)}"
+            if is_ajax:
+                return JsonResponse({
+                    "success": False,
+                    "message": error_msg
+                }, status=400)
+            messages.error(request, error_msg)
+            return redirect(request.path_info)
     else:
-        form = AdminItemForm()
+        form = AdminItemForm(initial={'IsCustom': False})
 
-    context = {"form": form, "title": "Add Premade Item"}
+    context = {
+        "form": form, 
+        "title": "Add Premade Item",
+        "available_models": available_models,
+        "available_materials": available_materials,
+        "default_infill": default_infill,
+    }
+
+    if is_ajax:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid request",
+            "errors": {}
+        }, status=400)
+        
+    return render(request, "admin/premade_item_form.html", context)
+
+    context = {
+        "form": form, 
+        "title": "Add Premade Item",
+        "available_models": available_models,
+        "available_materials": available_materials,
+        "default_infill": default_infill,
+    }
 
     return render(request, "admin/premade_item_form.html", context)
 
@@ -56,11 +143,16 @@ def edit_premade_item(request, pk):
     Edit an existing premade item (admin view)
     """
     item = get_object_or_404(OrderItems, pk=pk, Order__isnull=True, IsCustom=False)
-
+    available_models = Models.objects.all().order_by("Name")
+    available_materials = Materials.objects.all().order_by("Name")
+    default_infill = int(item.InfillMultiplier * (item.Model.BaseInfill * 100)) if item.Model else 30
+    
     if request.method == "POST":
         form = AdminItemForm(request.POST, instance=item)
         if form.is_valid():
-            item = form.save()
+            item = form.save(commit=False)
+            item.IsCustom = False
+            item.save()
             messages.success(
                 request, f"Premade item '{item.Model.Name}' was updated successfully"
             )
@@ -68,7 +160,13 @@ def edit_premade_item(request, pk):
     else:
         form = AdminItemForm(instance=item)
 
-    context = {"form": form, "title": "Edit Premade Item"}
+    context = {
+        "form": form, 
+        "title": "Edit Premade Item",
+        "available_models": available_models,
+        "available_materials": available_materials,
+        "default_infill": default_infill,
+    }
 
     return render(request, "admin/premade_item_form.html", context)
 
