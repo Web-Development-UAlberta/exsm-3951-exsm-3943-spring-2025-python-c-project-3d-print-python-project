@@ -57,3 +57,39 @@ def inventory_management(request):
             pass
 
     return render(request, "admin_dashboard/inventory_management.html", {"inventory": inventory})
+
+
+@login_required
+@user_passes_test(is_admin)
+def order_management(request):
+    search = request.GET.get("search", "")
+    material = request.GET.get("material", "")
+    status = request.GET.get("status", "")
+    priority = request.GET.get("priority", "")
+
+    orders = Orders.objects.all()
+
+    if search:
+        orders = orders.filter(
+            Q(orderitems__Model__Name__icontains=search) |
+            Q(orderitems__InventoryChange__RawMaterial__Filament__Material__Name__icontains=search)
+        ).distinct()
+
+    if material:
+        orders = orders.filter(
+            orderitems__InventoryChange__RawMaterial__Filament__Material__Name__icontains=material
+        ).distinct()
+
+    if status:
+        orders = [
+            o for o in orders if o.current_status and status.lower() in o.current_status.lower()
+        ]
+
+    if priority:
+        if priority.lower() == "high":
+            orders = orders.filter(ExpeditedService=True)
+        elif priority.lower() == "normal":
+            orders = orders.filter(ExpeditedService=False)
+
+    context = {"orders": orders}
+    return render(request, "admin_dashboard/order_management.html", context)
