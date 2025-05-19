@@ -63,6 +63,9 @@ def add_premade_item(request):
             
             with transaction.atomic():
                 item = form.save(commit=False)
+                infill_percentage = form.cleaned_data.get("infill_percentage")
+                if infill_percentage is not None:
+                    item.InfillMultiplier = item.calculate_infill_multiplier(infill_percentage)
                 item.IsCustom = False
                 item.save()
                 
