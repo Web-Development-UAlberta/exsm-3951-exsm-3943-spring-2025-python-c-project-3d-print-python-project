@@ -445,11 +445,13 @@ def premade_gallery(request):
 
     grouped_items = {}
     for item in premade_items:
+        infill_percentage = round(item.Model.BaseInfill * item.InfillMultiplier * 100)
         key = (
             item.Model.id,
             item.InventoryChange.RawMaterial.Filament.Material.id,
             item.InventoryChange.RawMaterial.Filament.id,
-            str(item.ItemPrice)
+            str(item.ItemPrice),
+            infill_percentage
         )
         
         if key not in grouped_items:
@@ -458,7 +460,7 @@ def premade_gallery(request):
                 'material': item.InventoryChange.RawMaterial.Filament.Material,
                 'filament': item.InventoryChange.RawMaterial.Filament,
                 'price': item.ItemPrice,
-                'infill_percentage': round(item.InfillMultiplier * 100),
+                'infill_percentage': infill_percentage,
                 'quantity': 1,
                 'first_item': item
             }
@@ -539,7 +541,7 @@ def premade_item_detail(request, item_id):
             messages.error(request, "An error occurred while adding the item to your cart.")
             return redirect("premade-item-detail", item_id=item_id)
     
-    infill_percentage = round(item.InfillMultiplier * 100)
+    infill_percentage = round(item.Model.BaseInfill * item.InfillMultiplier * 100)
     
     context = {
         "item": item,
