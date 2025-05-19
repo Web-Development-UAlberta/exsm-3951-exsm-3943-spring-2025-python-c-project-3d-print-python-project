@@ -245,9 +245,22 @@ def generate_quote(request):
     model = None
     form = None
 
+    current_inventory = InventoryChange.objects.available().select_related(
+        "RawMaterial__Filament__Material"
+    )
+    
+    available_materials = (
+        Materials.objects.filter(
+            filament__rawmaterials__inventorychange__in=current_inventory
+        )
+        .distinct()
+        .order_by("Name")
+    )
+    
     context = {
         "all_models": all_models,
         "customer_form": customer_form,
+        "available_materials": available_materials,
         "default_infill": 30,
     }
     if (
