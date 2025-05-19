@@ -59,12 +59,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     try {
-      const numericPrice =
-        typeof price === "number" ? price : parseFloat(price);
-      if (isNaN(numericPrice)) {
-        throw new Error(`Invalid price value: ${price}`);
-      }
-      priceValue.textContent = numericPrice.toFixed(2);
+      const formattedPrice = new Decimal(price).toFixed(2);
+      priceValue.textContent = formattedPrice;
       priceEstimate.classList.add("text-green-600", "font-bold");
       priceError.classList.add("hidden");
     } catch (error) {
@@ -207,9 +203,16 @@ document.addEventListener("DOMContentLoaded", function () {
   async function calculatePrice() {
     const modelId = modelSelect?.value;
     const filamentId = filamentSelect?.value;
-    const infillValue = infillSlider?.value;
+    const infillValueRaw = infillSlider?.value;
+    let infillValue;
+    try {
+      infillValue = new Decimal(infillValueRaw || "0");
+    } catch (err) {
+      updatePriceDisplay(null);
+      return;
+    }
 
-    if (!modelId || !filamentId || !infillValue) {
+    if (!modelId || !filamentId || infillValue.isZero()) {
       updatePriceDisplay(null);
       return;
     }
@@ -218,8 +221,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     try {
       const params = new URLSearchParams({
-        infill: infillValue,
-        quantity: 1,
+        infill: infillValue.toString(),
+        quantity: "1",
       });
 
       const url =

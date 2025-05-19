@@ -90,9 +90,14 @@ function updatePriceDisplay(price) {
       priceElement.textContent = "Calculating...";
       priceContainer.classList.remove("text-green-600", "font-bold");
     } else {
-      const formattedPrice = parseFloat(price).toFixed(2);
-      priceElement.textContent = formattedPrice;
-      priceContainer.classList.add("text-green-600", "font-bold");
+      try {
+        const formattedPrice = new Decimal(price).toFixed(2);
+        priceElement.textContent = formattedPrice;
+        priceContainer.classList.add("text-green-600", "font-bold");
+      } catch (err) {
+        priceElement.textContent = price;
+        priceContainer.classList.remove("text-green-600", "font-bold");
+      }
     }
     priceContainer.style.opacity = "1";
   }, 150);
@@ -108,14 +113,22 @@ async function calculatePrice() {
     const infillInput = document.querySelector(".infill-range");
     const quantityInput = document.querySelector(".quantity-input");
     const errorMessage = document.getElementById("price-error");
-
-    const infillValue = infillInput?.value;
+    const infillValueRaw = infillInput?.value;
+    const quantityValueRaw = quantityInput?.value;
+    let infillValue, quantityValue;
+    try {
+      infillValue = new Decimal(infillValueRaw || "0");
+      quantityValue = new Decimal(quantityValueRaw || "1");
+    } catch (err) {
+      updatePriceDisplay(null);
+      return;
+    }
 
     if (
       !modelId ||
       !filamentSelect?.value ||
-      !infillValue ||
-      !quantityInput?.value
+      infillValue.isZero() ||
+      quantityValue.isZero()
     ) {
       updatePriceDisplay(null);
       return;
@@ -124,8 +137,8 @@ async function calculatePrice() {
     updatePriceDisplay("loading");
 
     const params = new URLSearchParams({
-      infill: infillValue,
-      quantity: quantityInput.value,
+      infill: infillValue.toString(),
+      quantity: quantityValue.toString(),
     });
     const response = await fetch(
       `/store/api/model/${modelId}/filament/${filamentSelect.value}/calculate-price/?${params}`
@@ -374,6 +387,11 @@ async function handleFormSubmit(event) {
   const formData = new FormData(form);
   const submitButton = form.querySelector('button[type="submit"]');
   const originalButtonText = submitButton.textContent;
+
+  const priceElement = document.getElementById("price-value");
+  if (priceElement && priceElement.textContent !== "--") {
+    formData.append("calculated_price", priceElement.textContent);
+  }
 
   try {
     submitButton.disabled = true;
