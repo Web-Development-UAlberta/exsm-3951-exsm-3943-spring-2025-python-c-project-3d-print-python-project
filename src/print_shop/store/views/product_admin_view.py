@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
@@ -16,6 +17,9 @@ from store.models import (
 from store.forms.order_forms import AdminItemForm
 from store.views.cart_checkout_view import get_draft_order
 from store.forms.customer_selection_form import CustomerSelectionForm
+from store.forms.order_forms import CustomOrderItemForm
+from store.views.gallery_view import get_available_inventory_items
+from decimal import Decimal
 
 
 def is_staff(user):
@@ -31,7 +35,11 @@ def premade_items_list(request):
     """
     premade_items = OrderItems.objects.filter(
         Order__isnull=True, IsCustom=False
-    ).select_related("Model", "InventoryChange__RawMaterial__Filament__Material")
+    ).select_related("Model", "InventoryChange__RawMaterial__Filament__Material").order_by(
+        "Model__Name",
+        "InventoryChange__RawMaterial__Filament__Material__Name",
+        "InventoryChange__RawMaterial__Filament__Name"
+    )
 
     context = {"premade_items": premade_items}
 
@@ -227,45 +235,164 @@ def generate_quote(request):
     This allows store owners to create quotes on behalf of a customer
     Because of how we create carts, we need to temporarily set the request.user to the customer.
     """
-    if request.method == "POST":
-        form = AdminItemForm(request.POST)
-        customer_form = CustomerSelectionForm(request.POST)
+    quantity = 1
+    infill_percentage = 30
+    all_models = Models.objects.order_by("Name")
+    customer_form = CustomerSelectionForm()
+    available_items = []
+    available_materials = []
+    available_filaments = []
+    model = None
+    form = None
 
-        if form.is_valid() and customer_form.is_valid():
-            customer = customer_form.cleaned_data["customer"]
+    context = {
+        "all_models": all_models,
+        "customer_form": customer_form,
+        "default_infill": 30,
+    }
+    if (
+        request.method == "GET"
+        and request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        and not request.POST
+    ):
+        return render(request, "admin/quote_form.html", context)
+
+    if (
+        request.method == "POST"
+        and request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    ):
+        try:
+            customer_id = request.POST.get("customer_id")
+            if not customer_id:
+                return JsonResponse(
+                    {"success": False, "message": "Please select a customer"},
+                    status=400,
+                )
+
+            customer = get_object_or_404(User, pk=customer_id)
+
+            model_id = request.POST.get("model_id")
+            if not model_id:
+                return JsonResponse(
+                    {"success": False, "message": "Please select a model"},
+                    status=400,
+                )
+
+            model = get_object_or_404(Models, pk=model_id)
+
+            inventory_id = request.POST.get("inventory_id")
+            quantity = int(request.POST.get("ItemQuantity", 1))
+            infill_percentage = Decimal(
+                request.POST.get("infill_percentage", model.BaseInfill * 100)
+            )
+
+            selected_inventory = None
+            if inventory_id:
+                try:
+                    selected_inventory = InventoryChange.objects.get(id=inventory_id)
+                except InventoryChange.DoesNotExist:
+                    return JsonResponse(
+                        {
+                            "success": False,
+                            "message": "Selected inventory not found",
+                        },
+                        status=400,
+                    )
+
+            available_items = get_available_inventory_items(
+                model=model,
+                quantity=quantity,
+                infill_percentage=int(infill_percentage),
+            )
+
+            selected_item = None
+            if selected_inventory:
+                selected_item = next(
+                    (
+                        item
+                        for item in available_items
+                        if str(item["inventory"].id) == str(inventory_id)
+                    ),
+                    None,
+                )
+
+            if not selected_item and available_items:
+                selected_item = available_items[0]
+                selected_inventory = selected_item["inventory"]
+
+            if not selected_item or not selected_inventory:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "No inventory available for the selected options",
+                    },
+                    status=400,
+                )
+
+            temp_order_item = OrderItems(
+                Model=model,
+                InventoryChange=selected_inventory,
+                ItemQuantity=quantity,
+                IsCustom=True,
+            )
+
+            infill_multiplier = temp_order_item.calculate_infill_multiplier(
+                infill_percentage
+            )
+            temp_order_item.InfillMultiplier = infill_multiplier
+
+            total_weight = temp_order_item.calculate_required_weight()
+
+            if not selected_inventory.RawMaterial.find_inventory_for_weight(
+                total_weight
+            ):
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "Insufficient inventory available for the selected options",
+                    },
+                    status=400,
+                )
+
             original_user = request.user
             request.user = customer
 
-            try:
-                draft_order = get_draft_order(request)
+            draft_order = get_draft_order(request) or Orders.objects.create(
+                User=customer,
+                TotalPrice=0,
+                ExpeditedService=False,
+                Shipping=None,
+            )
 
-                if not draft_order:
-                    draft_order = Orders.objects.create(
-                        User=customer,
-                        TotalPrice=0,
-                        ExpeditedService=False,
-                        Shipping=None,
-                    )
-            finally:
+            if original_user:
                 request.user = original_user
 
-            item = form.save(commit=False)
-            item.IsCustom = True
-            item.Order = draft_order
-            item.save()
-            messages.success(
-                request,
-                f"Quote for '{item.Model.Name}' was generated successfully for {customer.username}",
-            )
-            return redirect("orders-list")
-    else:
-        form = AdminItemForm(initial={"IsCustom": True})
-        customer_form = CustomerSelectionForm()
+            price_components = temp_order_item.calculate_price_components()
 
-    context = {
-        "form": form,
-        "customer_form": customer_form,
-        "title": "Generate Customer Quote",
-    }
+            order_item = OrderItems(
+                Model=model,
+                InventoryChange=selected_inventory,
+                InfillMultiplier=infill_multiplier,
+                ItemQuantity=quantity,
+                IsCustom=True,
+                Order=draft_order,
+                TotalWeight=price_components["weight"],
+                CostOfGoodsSold=price_components["cost_of_goods"],
+                ItemPrice=price_components["price"],
+            )
+            order_item.save()
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": f"Quote for {model.Name} has been created for {customer.username}.",
+                    "redirect_url": reverse("orders-list"),
+                }
+            )
+
+        except Exception as e:
+            error_msg = f"Error creating quote: {str(e)}"
+            print(f"Error: {error_msg}")
+            return JsonResponse({"success": False, "message": error_msg}, status=400)
 
     return render(request, "admin/quote_form.html", context)
