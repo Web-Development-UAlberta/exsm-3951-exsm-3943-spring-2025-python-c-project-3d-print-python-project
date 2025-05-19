@@ -67,7 +67,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+            
         </div>
+        <a href="{% url 'admin_dashboard' %}" class="text-indigo-700 hover:underline font-semibold">← Back to Admin Dashboard</a>
         {% else %}
             <p class="text-center text-gray-300 italic mt-6">No user profiles found.</p>
         {% endif %}
