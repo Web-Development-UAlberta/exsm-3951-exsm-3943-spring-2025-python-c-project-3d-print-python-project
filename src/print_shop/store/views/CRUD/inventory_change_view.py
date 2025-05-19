@@ -30,17 +30,22 @@ def current_inventory_levels(request):
     If inventory levels are low, mark them for reorder.
     Uses the RawMaterials.current_inventory property from the model manager.
     """
-    raw_materials_with_inventory = [
-        {
-            "raw_material": raw_material,
-            "inventory_change": raw_material.current_inventory,
-            "needs_reorder": raw_material.current_inventory.needs_reorder
-            if raw_material.current_inventory
-            else False,
-        }
-        for raw_material in RawMaterials.objects.all()
-        if raw_material.current_inventory
-    ]
+    raw_materials = RawMaterials.objects.select_related(
+        'Filament__Material'
+    ).order_by(
+        'Filament__Material__Name',
+        'Filament__Name',
+        'PurchasedDate'
+    )
+    raw_materials_with_inventory = []
+    for raw_material in raw_materials:
+        current_inventory = raw_material.current_inventory
+        if current_inventory:
+            raw_materials_with_inventory.append({
+                "raw_material": raw_material,
+                "inventory_change": current_inventory,
+                "needs_reorder": current_inventory.needs_reorder,
+            })
     return render(
         request,
         "inventory/current_inventory_levels.html",
