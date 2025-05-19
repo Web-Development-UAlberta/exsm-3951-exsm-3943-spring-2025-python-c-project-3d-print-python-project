@@ -1,6 +1,7 @@
 /**
  * Pre-made item form JS to handle the dynamic inputs and displays for the user.
  */
+
 document.addEventListener("DOMContentLoaded", function () {
   const modelSelect = document.getElementById("model-select");
   const materialSelect = document.getElementById("material-select");
@@ -21,57 +22,6 @@ document.addEventListener("DOMContentLoaded", function () {
     "model-thumbnail-container"
   );
   const modelThumbnail = document.getElementById("model-thumbnail");
-
-  const urls = document.getElementById("urls").dataset;
-  const filamentsUrlTemplate = urls.filamentsUrl;
-  const calculatePriceUrlTemplate = urls.calculatePriceUrl;
-
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-
-  function updatePriceDisplay(price) {
-    if (!priceValue || !priceEstimate || !priceError) {
-      console.error("Required price display elements not found");
-      return;
-    }
-
-    if (price === null || price === undefined) {
-      priceValue.textContent = "--";
-      priceEstimate.classList.remove("text-green-600", "font-bold");
-      priceError.classList.add("hidden");
-      return;
-    }
-
-    if (price === "loading") {
-      priceValue.textContent = "...";
-      priceEstimate.classList.remove("text-green-600", "font-bold");
-      priceError.classList.add("hidden");
-      return;
-    }
-
-    try {
-      const formattedPrice = new Decimal(price).toFixed(2);
-      priceValue.textContent = formattedPrice;
-      priceEstimate.classList.add("text-green-600", "font-bold");
-      priceError.classList.add("hidden");
-    } catch (error) {
-      priceValue.textContent = "--";
-      priceEstimate.classList.remove("text-green-600", "font-bold");
-      if (priceError) {
-        priceError.textContent = "Error displaying price";
-        priceError.classList.remove("hidden");
-      }
-    }
-  }
 
   function updateFormState() {
     const modelId = modelSelect.value;
@@ -109,9 +59,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const baseInfill =
-      parseFloat(
-        modelSelect.options[modelSelect.selectedIndex].dataset.baseInfill
-      ) * 100 || 30;
+      parseInt(
+        modelSelect.options[modelSelect.selectedIndex].dataset.baseInfill * 100
+      ) || 30;
+
     infillSlider.value = baseInfill;
     infillValue.textContent = `${baseInfill}%`;
     infillSlider.disabled = false;
@@ -126,6 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
   /**
    * Fetches and updates the filaments dropdown based on selected model and material.
    * Takes in modelId and materialId.
+   * Uses the shared fetchFilaments function from order_item.js
    */
   async function updateFilaments(modelId, materialId) {
     if (!materialId) {
@@ -138,20 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     try {
-      const url = filamentsUrlTemplate
-        .replace("/model/0/", `/model/${modelId}/`)
-        .replace("/material/0/", `/material/${materialId}/`);
-      const response = await fetch(url, {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch filaments");
-      }
-
-      const data = await response.json();
+      const data = await fetchFilaments(modelId, materialId);
 
       filamentSelect.innerHTML = '<option value="">Select a color</option>';
       data.filaments.forEach((filament) => {
@@ -183,14 +122,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /**
    * Updates the color swatch based on the selected filament.
+   * Uses the shared updateColorSwatch function from order_item.js
    */
   function updateColorSwatch(select) {
+    const colorSwatch = document.getElementById("color-swatch");
     const selectedOption = select.options[select.selectedIndex];
     if (selectedOption && selectedOption.dataset.color) {
       colorSwatch.style.backgroundColor = selectedOption.dataset.color;
-      selectedFilamentInput.value = selectedOption.value;
     } else {
       colorSwatch.style.backgroundColor = "transparent";
+    }
+
+    if (selectedOption && selectedOption.value) {
+      selectedFilamentInput.value = selectedOption.value;
+    } else {
       selectedFilamentInput.value = "";
     }
     updateSubmitButtonState();
@@ -199,6 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
   /**
    * Calculates the price based on current selections by making an API call.
    * Updates the UI with the calculated price or error message.
+   * Uses the shared calculateItemPrice function from order_item.js
    */
   async function calculatePrice() {
     const modelId = modelSelect?.value;
@@ -220,44 +166,12 @@ document.addEventListener("DOMContentLoaded", function () {
     updatePriceDisplay("loading");
 
     try {
-      const params = new URLSearchParams({
+      const data = await calculateItemPrice({
+        modelId,
+        filamentId,
         infill: infillValue.toString(),
         quantity: "1",
       });
-
-      const url =
-        calculatePriceUrlTemplate
-          .replace("0", modelId)
-          .replace("0", filamentId) + `?${params}`;
-
-      const response = await fetch(url, {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-        },
-        credentials: "same-origin",
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData = {};
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (e) {
-          console.error("Failed to parse error response as JSON");
-        }
-        const errorMessage =
-          errorData.message || `HTTP error! status: ${response.status}`;
-        console.error("Error:", errorMessage);
-        throw new Error(errorMessage);
-      }
-
-      const responseText = await response.text();
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error("Invalid response from server");
-      }
 
       if (data.status === "success") {
         updatePriceDisplay(data.price);
@@ -313,9 +227,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   if (infillSlider) {
-    infillSlider.addEventListener("input", function () {
+    infillSlider.addEventListener("input", function (e) {
+      const value = e.target.value;
       if (infillValue) {
-        infillValue.textContent = `${this.value}%`;
+        infillValue.textContent = `${value}%`;
       }
       if (modelSelect?.value && filamentSelect?.value) {
         debouncedCalculatePrice();
