@@ -5,15 +5,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('store', '0008_alter_models_baseinfill_alter_orderitems_markup'),
+        ("store", "0008_alter_models_baseinfill_alter_orderitems_markup"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='orders',
-            name='Shipping',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='store.shipping'),
+            model_name="orders",
+            name="Shipping",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to="store.shipping",
+            ),
         ),
     ]

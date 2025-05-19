@@ -152,7 +152,11 @@ urlpatterns = [
     # User Profile URLs - Customer views
     path("profile/", user_profiles_view.view_profile, name="view-profile"),
     path("profile/edit/", user_profiles_view.edit_profile, name="edit-profile"),
-    path("profile/change-password/", user_profiles_view.change_password, name="change-password"),
+    path(
+        "profile/change-password/",
+        user_profiles_view.change_password,
+        name="change-password",
+    ),
     # User Profile URLs - Admin views
     path(
         "user-profiles/", user_profiles_view.user_profile_list, name="user-profile-list"
@@ -247,7 +251,11 @@ urlpatterns = [
     ),
     # Order Tracking URLs
     path("orders/tracking/", order_tracking_view.order_tracking, name="order_tracking"),
-    path("orders/details/<int:order_id>/", order_tracking_view.order_details, name="order_details"),
+    path(
+        "orders/details/<int:order_id>/",
+        order_tracking_view.order_details,
+        name="order_details",
+    ),
     # Product Admin URLs (for store staff to manage premade items)
     path(
         "product-admin/premade/",
@@ -275,8 +283,17 @@ urlpatterns = [
         product_admin_view.generate_quote,
         name="product-admin-generate-quote",
     ),
-
-    path("admin-dashboard/", admin_dashboard_view.admin_dashboard, name="admin_dashboard"),
-    path("inventory-management/", admin_dashboard_view.inventory_management, name="inventory_management"),
-    path("order-management/", admin_dashboard_view.order_management, name="order_management"),
+    path(
+        "admin-dashboard/", admin_dashboard_view.admin_dashboard, name="admin_dashboard"
+    ),
+    path(
+        "inventory-management/",
+        admin_dashboard_view.inventory_management,
+        name="inventory_management",
+    ),
+    path(
+        "order-management/",
+        admin_dashboard_view.order_management,
+        name="order_management",
+    ),
 ]

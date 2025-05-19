@@ -193,7 +193,9 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
                 initial_inventory.QuantityWeightAvailable = (
                     instance.MaterialWeightPurchased
                 )
-                initial_inventory.UnitCost = instance.Cost / Decimal(instance.MaterialWeightPurchased)
+                initial_inventory.UnitCost = instance.Cost / Decimal(
+                    instance.MaterialWeightPurchased
+                )
                 initial_inventory.save(
                     update_fields=["QuantityWeightAvailable", "UnitCost"]
                 )
@@ -318,12 +320,9 @@ class Orders(models.Model):
             order_items = self.orderitems_set.all()
             if order_items.exists():
                 items_total = sum(
-                    item.ItemPrice * item.ItemQuantity
-                    for item in order_items
+                    item.ItemPrice * item.ItemQuantity for item in order_items
                 )
-                shipping_cost = (
-                    self.Shipping.Rate if self.Shipping else Decimal("0")
-                )
+                shipping_cost = self.Shipping.Rate if self.Shipping else Decimal("0")
                 self.TotalPrice = items_total + shipping_cost
 
                 if self.ExpeditedService:
@@ -386,19 +385,18 @@ class OrderItems(models.Model):
         If no percentage is provided, use the model's base infill.
         """
         if infill_percentage is None:
-            return Decimal('1.0')
-            
+            return Decimal("1.0")
+
         try:
             base_infill = self.Model.BaseInfill * 100
             if base_infill == 0:
-                base_infill = Decimal('20')
-                
+                base_infill = Decimal("20")
+
             return (Decimal(infill_percentage) / base_infill).quantize(
-                Decimal('0.0001'), 
-                rounding=ROUND_HALF_UP
+                Decimal("0.0001"), rounding=ROUND_HALF_UP
             )
         except (AttributeError, InvalidOperation, TypeError):
-            return Decimal('1.0')
+            return Decimal("1.0")
 
     def calculate_required_weight(self):
         """
@@ -414,11 +412,11 @@ class OrderItems(models.Model):
             infill_multiplier = self.InfillMultiplier  # Decimal
             quantity = self.ItemQuantity  # int
             estimated_print_volume = self.Model.EstimatedPrintVolume  # Decimal
-            base_infill = self.Model.BaseInfill  
+            base_infill = self.Model.BaseInfill
             volume_cm3 = estimated_print_volume * base_infill * infill_multiplier
             weight = volume_cm3 * density * quantity
-            return max(1, int(weight.quantize(Decimal('1'), rounding=ROUND_HALF_UP)))
-            
+            return max(1, int(weight.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
+
         except (AttributeError, TypeError, InvalidOperation) as e:
             print(f"Error in calculate_required_weight: {e}")
             return 0

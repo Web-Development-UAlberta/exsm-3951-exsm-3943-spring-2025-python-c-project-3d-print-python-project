@@ -452,7 +452,9 @@ class OrderItemsModelTestCase(TestCase):
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
         )
-        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(str(expected_material_cost))
+        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(
+            str(expected_material_cost)
+        )
         expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
 
         # Test that calculated fields match expected values
@@ -506,7 +508,9 @@ class OrderItemsModelTestCase(TestCase):
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
         )
-        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(str(expected_material_cost))
+        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(
+            str(expected_material_cost)
+        )
         expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
 
         # Quantity change should affect calculated values
@@ -545,7 +549,9 @@ class OrderItemsModelTestCase(TestCase):
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
         )
-        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(str(expected_material_cost))
+        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(
+            str(expected_material_cost)
+        )
         expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
 
         # Verify that changing infill multiplier affects calculated fields

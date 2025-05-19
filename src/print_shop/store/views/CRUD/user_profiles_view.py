@@ -93,7 +93,7 @@ def add_user_profile(request):
                 )
                 return redirect("user-profile-list")
             except IntegrityError as e:
-                if 'username' in str(e):
+                if "username" in str(e):
                     messages.error(
                         request,
                         f"Username '{form.cleaned_data.get('username')}' is already taken. Please choose a different username.",

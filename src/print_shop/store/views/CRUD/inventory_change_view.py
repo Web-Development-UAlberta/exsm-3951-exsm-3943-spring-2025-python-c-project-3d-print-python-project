@@ -9,6 +9,7 @@ from store.models import InventoryChange, RawMaterials
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff)
 
+
 # List all inventory changes - accessible to all authenticated users
 @login_required
 def inventory_change_list(request):
@@ -18,6 +19,7 @@ def inventory_change_list(request):
         "inventory/inventory_change_list.html",
         {"inventory_changes": inventory_changes},
     )
+
 
 # Show details of a specific raw material's inventory
 @login_required
@@ -91,7 +93,7 @@ def edit_inventory_change(request, pk):
 
 
 # Delete an inventory change - only accessible to admin users
-@login_required 
+@login_required
 @user_passes_test(is_admin)
 def delete_inventory_change(request, pk):
     inventory_change = get_object_or_404(InventoryChange, pk=pk)

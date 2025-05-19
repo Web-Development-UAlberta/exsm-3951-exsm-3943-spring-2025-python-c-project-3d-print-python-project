@@ -21,7 +21,7 @@ class OrderManagementTestCase(TestCase):
         self.user.is_staff = True
         self.user.save()
         self.client.login(username="admin", password="admin123")
-        
+
         # Create a 3D model
         self.model = Models.objects.create(
             Name="Test Cube",
@@ -30,9 +30,9 @@ class OrderManagementTestCase(TestCase):
             Thumbnail="thumbnails/cube.jpg",
             EstimatedPrintVolume=100,
             BaseInfill=0.3,
-            FixedCost=3.00
+            FixedCost=3.00,
         )
-        
+
         self.material = Materials.objects.create(Name="PLA")
         self.filament = Filament.objects.create(
             Name="PLA Blue", Material=self.material, ColorHexCode="0000FF"

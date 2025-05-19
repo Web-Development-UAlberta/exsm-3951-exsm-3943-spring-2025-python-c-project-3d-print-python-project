@@ -107,7 +107,9 @@ def update_cart_item(request, item_id):
             if new_quantity <= 0:
                 item_name = item.Model.Name
                 item.delete()
-                messages.success(request, f"{item_name} has been removed from your cart.")
+                messages.success(
+                    request, f"{item_name} has been removed from your cart."
+                )
                 return redirect("cart")
 
             original_quantity = item.ItemQuantity
@@ -117,7 +119,9 @@ def update_cart_item(request, item_id):
                 total_weight = item.calculate_required_weight()
                 weight_with_margin = total_weight * 1.15
                 inventory = item.InventoryChange
-                sufficient_inventory, error_message = validate_inventory_availability(inventory, weight_with_margin)
+                sufficient_inventory, error_message = validate_inventory_availability(
+                    inventory, weight_with_margin
+                )
                 if sufficient_inventory:
                     if sufficient_inventory != inventory:
                         item.InventoryChange = sufficient_inventory
@@ -126,20 +130,27 @@ def update_cart_item(request, item_id):
                 else:
                     item.ItemQuantity = original_quantity
                     item.save()
-                    messages.error(request, error_message or "Not enough inventory available for the requested quantity.")
+                    messages.error(
+                        request,
+                        error_message
+                        or "Not enough inventory available for the requested quantity.",
+                    )
             else:
                 available_quantity = OrderItems.objects.filter(
                     Model=item.Model,
                     InventoryChange__RawMaterial__Filament=item.InventoryChange.RawMaterial.Filament,
                     Order__isnull=True,
                     IsCustom=False,
-                    ItemPrice=item.ItemPrice
+                    ItemPrice=item.ItemPrice,
                 ).count()
                 available_quantity += original_quantity
                 if new_quantity > available_quantity:
                     item.ItemQuantity = original_quantity
                     item.save()
-                    messages.error(request, f"Only {available_quantity} of this item are available.")
+                    messages.error(
+                        request,
+                        f"Only {available_quantity} of this item are available.",
+                    )
                 else:
                     item.save()
                     messages.success(request, f"Quantity updated to {new_quantity}.")
