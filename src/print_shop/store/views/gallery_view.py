@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
@@ -67,9 +67,15 @@ def get_available_inventory_items(
     """
     Helper method to get available inventory items with sufficient quantity.
     Returns a list of dictionaries containing inventory and related data.
+
+    Args:
+        model: The 3D model being ordered
+        selected_filament: Optional filament ID to filter by
+        quantity: Number of items being ordered
+        infill_percentage: The final infill percentage (e.g., 20 for 20%)
     """
     base_infill = model.BaseInfill * 100
-    multiplier = infill_percentage / base_infill
+    infill_multiplier = Decimal(infill_percentage) / base_infill
 
     inventory_items = (
         InventoryChange.objects.available()
@@ -93,7 +99,7 @@ def get_available_inventory_items(
         temp_order_item = OrderItems(
             Model=model,
             InventoryChange=inventory,
-            InfillMultiplier=multiplier,
+            InfillMultiplier=infill_multiplier,
             ItemQuantity=quantity,
             IsCustom=True,
         )
@@ -184,16 +190,22 @@ def model_detail(request, model_id):
                 )
 
             quantity = int(request.POST.get("ItemQuantity", 1))
+            infill_percentage = Decimal(
+                request.POST.get("infill_percentage", model.BaseInfill * 100)
+            )
             selected_inventory = selected_item["inventory"]
-
             temp_order_item = OrderItems(
                 Model=model,
                 InventoryChange=selected_inventory,
-                InfillMultiplier=selected_item["weight"]
-                / (model.BaseInfill * 100 * quantity),
                 ItemQuantity=quantity,
                 IsCustom=True,
             )
+
+            infill_multiplier = temp_order_item.calculate_infill_multiplier(
+                infill_percentage
+            )
+            temp_order_item.InfillMultiplier = infill_multiplier
+
             total_weight = temp_order_item.calculate_required_weight()
 
             if not selected_inventory.RawMaterial.find_inventory_for_weight(
@@ -214,13 +226,20 @@ def model_detail(request, model_id):
                 Shipping=None,
             )
 
+            calculated_price = request.POST.get("calculated_price")
+
+            price_components = temp_order_item.calculate_price_components()
+
             order_item = OrderItems(
                 Model=model,
                 InventoryChange=selected_inventory,
-                InfillMultiplier=temp_order_item.InfillMultiplier,
+                InfillMultiplier=infill_multiplier,
                 ItemQuantity=quantity,
                 IsCustom=True,
                 Order=draft_order,
+                TotalWeight=price_components["weight"],
+                CostOfGoodsSold=price_components["cost_of_goods"],
+                ItemPrice=price_components["price"],
             )
             order_item.save()
 
@@ -325,14 +344,25 @@ def calculate_price(request, model_id, filament_id):
     try:
         model = get_object_or_404(Models, pk=model_id)
         filament = get_object_or_404(Filament, pk=filament_id)
-        infill_percentage = Decimal(
-            request.GET.get("infill", str(int(model.BaseInfill * 100)))
-        )
-        quantity = int(request.GET.get("quantity", "1"))
         base_infill_percentage = model.BaseInfill * 100
-        infill_multiplier = infill_percentage / base_infill_percentage
-        base_volume = model.EstimatedPrintVolume * model.BaseInfill
-        volume_cm3 = base_volume * infill_multiplier
+        try:
+            infill_percentage = Decimal(
+                request.GET.get("infill", str(int(base_infill_percentage)))
+            )
+            infill_percentage = max(
+                Decimal("1"), min(Decimal("100"), infill_percentage)
+            )
+        except (TypeError, ValueError, InvalidOperation):
+            infill_percentage = base_infill_percentage
+
+        quantity = int(request.GET.get("quantity", "1"))
+
+        temp_order_item = OrderItems(Model=model)
+        infill_multiplier = temp_order_item.calculate_infill_multiplier(
+            infill_percentage
+        )
+
+        volume_cm3 = model.EstimatedPrintVolume * model.BaseInfill * infill_multiplier
         raw_material = RawMaterials.objects.filter(
             Filament=filament, inventorychange__QuantityWeightAvailable__gt=0
         ).first()
@@ -385,17 +415,15 @@ def calculate_price(request, model_id, filament_id):
             "quantity": quantity,
             "inventory_id": inventory.id,
             "debug": {
-                "model_volume_cm3": Decimal(str(model.EstimatedPrintVolume)),
+                "model_volume_cm3": Decimal(model.EstimatedPrintVolume),
                 "base_infill": (model.BaseInfill * 100).quantize(Decimal("0.01")),
                 "effective_infill": infill_percentage.quantize(Decimal("0.01")),
-                "density": Decimal(str(inventory.RawMaterial.MaterialDensity)),
-                "cost_per_gram": Decimal(str(inventory.UnitCost)).quantize(
+                "density": inventory.RawMaterial.MaterialDensity,
+                "cost_per_gram": inventory.UnitCost.quantize(Decimal("0.0001")),
+                "wear_tear": inventory.RawMaterial.WearAndTearMultiplier.quantize(
                     Decimal("0.0001")
                 ),
-                "wear_tear": Decimal(
-                    str(inventory.RawMaterial.WearAndTearMultiplier)
-                ).quantize(Decimal("0.0001")),
-                "weight_per_item": (weight / Decimal(str(quantity))).quantize(
+                "weight_per_item": (weight / Decimal(quantity)).quantize(
                     Decimal("0.01")
                 ),
                 "material_cost": str(price_components["material_cost"]),
@@ -415,11 +443,15 @@ def calculate_price(request, model_id, filament_id):
 def premade_gallery(request):
     """
     Gallery for premade items (OrderItems with no Order assigned)
-    with simple sorting by model name, material, and color
+    Groups identical items by model, material, color, and price
     """
     premade_items = (
         OrderItems.objects.filter(Order__isnull=True, IsCustom=False)
-        .select_related("Model", "InventoryChange__RawMaterial__Filament__Material")
+        .select_related(
+            "Model",
+            "InventoryChange__RawMaterial__Filament__Material",
+            "InventoryChange__RawMaterial__Filament",
+        )
         .order_by(
             "Model__Name",
             "InventoryChange__RawMaterial__Filament__Material__Name",
@@ -427,8 +459,32 @@ def premade_gallery(request):
         )
     )
 
+    grouped_items = {}
+    for item in premade_items:
+        infill_percentage = round(item.Model.BaseInfill * item.InfillMultiplier * 100)
+        key = (
+            item.Model.id,
+            item.InventoryChange.RawMaterial.Filament.Material.id,
+            item.InventoryChange.RawMaterial.Filament.id,
+            str(item.ItemPrice),
+            infill_percentage,
+        )
+
+        if key not in grouped_items:
+            grouped_items[key] = {
+                "model": item.Model,
+                "material": item.InventoryChange.RawMaterial.Filament.Material,
+                "filament": item.InventoryChange.RawMaterial.Filament,
+                "price": item.ItemPrice,
+                "infill_percentage": infill_percentage,
+                "quantity": 1,
+                "first_item": item,
+            }
+        else:
+            grouped_items[key]["quantity"] += 1
+
     context = {
-        "premade_items": premade_items,
+        "grouped_items": grouped_items.values(),
     }
 
     return render(request, "gallery/premade_gallery.html", context)
@@ -438,19 +494,35 @@ def premade_item_detail(request, item_id):
     """
     Detail view for a specific premade item
     """
-    item = get_object_or_404(OrderItems, pk=item_id, Order__isnull=True, IsCustom=False)
+    item = get_object_or_404(
+        OrderItems.objects.select_related(
+            "Model",
+            "InventoryChange__RawMaterial__Filament__Material",
+            "InventoryChange__RawMaterial__Filament",
+        ),
+        pk=item_id,
+        Order__isnull=True,
+        IsCustom=False,
+    )
+
+    available_quantity = OrderItems.objects.filter(
+        Model=item.Model,
+        InventoryChange__RawMaterial__Filament=item.InventoryChange.RawMaterial.Filament,
+        Order__isnull=True,
+        IsCustom=False,
+        ItemPrice=item.ItemPrice,
+    ).count()
 
     if request.method == "POST":
         if not request.user.is_authenticated:
             messages.info(request, "Please log in to add items to your cart.")
             return redirect("login")
 
-        form = PremadeItemCartForm(request.POST)
-        if form.is_valid():
-            quantity = form.cleaned_data["quantity"]
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+            quantity = max(1, min(quantity, available_quantity))
 
             draft_order = get_draft_order(request)
-
             if not draft_order:
                 draft_order = Orders.objects.create(
                     User=request.user,
@@ -459,21 +531,43 @@ def premade_item_detail(request, item_id):
                     Shipping=None,
                 )
 
-            OrderItems.objects.create(
-                Order=draft_order,
+            items_to_add = OrderItems.objects.filter(
                 Model=item.Model,
-                InventoryChange=item.InventoryChange,
-                InfillMultiplier=item.InfillMultiplier,
-                ItemQuantity=quantity,
-                ItemPrice=item.ItemPrice,
+                InventoryChange__RawMaterial__Filament=item.InventoryChange.RawMaterial.Filament,
+                Order__isnull=True,
                 IsCustom=False,
+                ItemPrice=item.ItemPrice,
+            ).order_by("id")[:quantity]
+
+            if not items_to_add.exists():
+                messages.error(request, "This item is no longer available.")
+                return redirect("premade-gallery")
+
+            for item_to_add in items_to_add:
+                item_to_add.Order = draft_order
+                item_to_add.save()
+
+            draft_order.TotalPrice = sum(
+                item.ItemPrice * item.ItemQuantity
+                for item in draft_order.orderitems_set.all()
             )
+            draft_order.save()
 
             messages.success(request, f"{quantity} x {item.Model.Name} added to cart.")
             return redirect("cart")
-    else:
-        form = PremadeItemCartForm(initial={"item_id": item.id})
 
-    context = {"item": item, "form": form}
+        except (ValueError, Exception) as e:
+            messages.error(
+                request, "An error occurred while adding the item to your cart."
+            )
+            return redirect("premade-item-detail", item_id=item_id)
+
+    infill_percentage = round(item.Model.BaseInfill * item.InfillMultiplier * 100)
+
+    context = {
+        "item": item,
+        "available_quantity": available_quantity,
+        "infill_percentage": infill_percentage,
+    }
 
     return render(request, "gallery/premade_item_detail.html", context)

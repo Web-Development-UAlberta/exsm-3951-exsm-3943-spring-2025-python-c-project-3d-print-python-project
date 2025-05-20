@@ -13,7 +13,7 @@ class UserManagementTestCase(TestCase):
         # Make the user a staff member so they can access admin views
         self.admin_user.is_staff = True
         self.admin_user.save()
-        
+
         self.profile = UserProfiles.objects.get(user=self.admin_user)
         self.profile.Address = "123 Admin St"
         self.profile.Phone = "1234567890"
@@ -69,24 +69,24 @@ class UserManagementTestCase(TestCase):
         regular_profile.Address = "456 Regular St"
         regular_profile.Phone = "0987654321"
         regular_profile.save()
-        
+
         # Prepare data to mark user as inactive using fields from UserProfileAdminForm
         form_data = {
-            'username': regular_user.username,
-            'first_name': regular_user.first_name,
-            'last_name': regular_user.last_name,
-            'email': regular_user.email,
-            'is_staff': regular_user.is_staff,
-            'is_active': False,  # Setting user to inactive
-            'Address': regular_profile.Address,
-            'Phone': regular_profile.Phone
+            "username": regular_user.username,
+            "first_name": regular_user.first_name,
+            "last_name": regular_user.last_name,
+            "email": regular_user.email,
+            "is_staff": regular_user.is_staff,
+            "is_active": False,  # Setting user to inactive
+            "Address": regular_profile.Address,
+            "Phone": regular_profile.Phone,
         }
-        
-        response = self.client.post(reverse("edit-user-profile", args=[regular_profile.id]), form_data)
+
+        response = self.client.post(
+            reverse("edit-user-profile", args=[regular_profile.id]), form_data
+        )
         self.assertEqual(response.status_code, 302)
-        
+
         # Refresh user from database and check if they're marked inactive
         regular_user.refresh_from_db()
         self.assertFalse(regular_user.is_active)
-
-

@@ -4,9 +4,11 @@ from django.contrib import messages
 from store.forms.shipping_form import ShippingForm
 from store.models import Shipping
 
+
 # Check if the user is admin (Staff or Superuser)
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff)
+
 
 # List all shipping methods - accessible to all authenticated users
 @login_required

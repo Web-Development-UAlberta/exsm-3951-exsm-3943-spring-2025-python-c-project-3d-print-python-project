@@ -9,6 +9,7 @@ from store.models import InventoryChange, RawMaterials
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff)
 
+
 # List all inventory changes - accessible to all authenticated users
 @login_required
 def inventory_change_list(request):
@@ -19,6 +20,7 @@ def inventory_change_list(request):
         {"inventory_changes": inventory_changes},
     )
 
+
 # Show details of a specific raw material's inventory
 @login_required
 @user_passes_test(is_admin)
@@ -28,17 +30,22 @@ def current_inventory_levels(request):
     If inventory levels are low, mark them for reorder.
     Uses the RawMaterials.current_inventory property from the model manager.
     """
-    raw_materials_with_inventory = [
-        {
-            "raw_material": raw_material,
-            "inventory_change": raw_material.current_inventory,
-            "needs_reorder": raw_material.current_inventory.needs_reorder
-            if raw_material.current_inventory
-            else False,
-        }
-        for raw_material in RawMaterials.objects.all()
-        if raw_material.current_inventory
-    ]
+    raw_materials = RawMaterials.objects.select_related(
+        'Filament__Material'
+    ).order_by(
+        'Filament__Material__Name',
+        'Filament__Name',
+        'PurchasedDate'
+    )
+    raw_materials_with_inventory = []
+    for raw_material in raw_materials:
+        current_inventory = raw_material.current_inventory
+        if current_inventory:
+            raw_materials_with_inventory.append({
+                "raw_material": raw_material,
+                "inventory_change": current_inventory,
+                "needs_reorder": current_inventory.needs_reorder,
+            })
     return render(
         request,
         "inventory/current_inventory_levels.html",
@@ -91,7 +98,7 @@ def edit_inventory_change(request, pk):
 
 
 # Delete an inventory change - only accessible to admin users
-@login_required 
+@login_required
 @user_passes_test(is_admin)
 def delete_inventory_change(request, pk):
     inventory_change = get_object_or_404(InventoryChange, pk=pk)

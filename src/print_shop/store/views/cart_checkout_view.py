@@ -10,6 +10,7 @@ from store.models import (
     FulfillmentStatus,
 )
 from store.forms.checkout_form import CheckoutForm
+from store.forms.order_forms import validate_inventory_availability
 
 
 def get_cart_items(request):
@@ -96,6 +97,7 @@ def update_cart_item(request, item_id):
     Update the quantity of an item in the cart
     Checks if there's sufficient inventory for the new quantity
     """
+
     item = get_object_or_404(OrderItems, pk=item_id, Order__User=request.user)
 
     if request.method == "POST":
@@ -108,31 +110,50 @@ def update_cart_item(request, item_id):
                 messages.success(
                     request, f"{item_name} has been removed from your cart."
                 )
-                item_name = item.Model.Name
-                item.delete()
-                messages.success(
-                    request, f"{item_name} has been removed from your cart."
-                )
                 return redirect("cart")
 
             original_quantity = item.ItemQuantity
-
             item.ItemQuantity = new_quantity
-            total_weight = item.calculate_required_weight()
 
-            raw_material = item.InventoryChange.RawMaterial
-            sufficient_inventory = raw_material.find_inventory_for_weight(total_weight)
-
-            if sufficient_inventory:
-                item.save()
-                messages.success(request, f"Quantity updated to {new_quantity}.")
-            else:
-                item.ItemQuantity = original_quantity
-                item.save()
-                messages.error(
-                    request,
-                    f"Not enough inventory available for the requested quantity.",
+            if item.IsCustom:
+                total_weight = item.calculate_required_weight()
+                weight_with_margin = total_weight * 1.15
+                inventory = item.InventoryChange
+                sufficient_inventory, error_message = validate_inventory_availability(
+                    inventory, weight_with_margin
                 )
+                if sufficient_inventory:
+                    if sufficient_inventory != inventory:
+                        item.InventoryChange = sufficient_inventory
+                    item.save()
+                    messages.success(request, f"Quantity updated to {new_quantity}.")
+                else:
+                    item.ItemQuantity = original_quantity
+                    item.save()
+                    messages.error(
+                        request,
+                        error_message
+                        or "Not enough inventory available for the requested quantity.",
+                    )
+            else:
+                available_quantity = OrderItems.objects.filter(
+                    Model=item.Model,
+                    InventoryChange__RawMaterial__Filament=item.InventoryChange.RawMaterial.Filament,
+                    Order__isnull=True,
+                    IsCustom=False,
+                    ItemPrice=item.ItemPrice,
+                ).count()
+                available_quantity += original_quantity
+                if new_quantity > available_quantity:
+                    item.ItemQuantity = original_quantity
+                    item.save()
+                    messages.error(
+                        request,
+                        f"Only {available_quantity} of this item are available.",
+                    )
+                else:
+                    item.save()
+                    messages.success(request, f"Quantity updated to {new_quantity}.")
         except ValueError:
             messages.error(request, "Please enter a valid quantity.")
 

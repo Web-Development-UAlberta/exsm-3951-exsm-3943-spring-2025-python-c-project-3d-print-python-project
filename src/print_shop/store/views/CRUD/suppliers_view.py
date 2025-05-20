@@ -4,9 +4,11 @@ from django.contrib import messages
 from store.forms.suppliers_form import SuppliersForm
 from store.models import Suppliers
 
+
 # Check if the user is admin (Staff or Superuser)
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff)
+
 
 # List all suppliers - accessible to admin users
 @login_required

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Generate Quote - 3D Print Shop
+{% endblock title %}
+{% block content %}
+  <section class="py-8">
+    <div class="container mx-auto px-4">
+      <div class="mb-4">
+        <a href="{% url 'admin_dashboard' %}"
+           class="text-blue-600 hover:underline">← Back to Dashboard</a>
+      </div>
+      <h1 class="text-3xl font-bold mb-6">Generate Custom Quote</h1>
+      <div class="flex flex-col md:flex-row gap-8">
+        <div class="w-full">
+          <form method="post" id="quote-form" class="mb-6">
+            {% csrf_token %}
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h2 class="text-xl font-semibold mb-4">1. Select Customer</h2>
+              <div class="mb-4">
+                <label for="{{ customer_form.customer.id_for_label }}"
+                       class="block text-sm font-medium mb-1">Customer</label>
+                {{ customer_form.customer }}
+                <input type="hidden" name="customer_id" id="customer-id" value="">
+                {% if customer_form.customer.errors %}
+                  <p class="text-red-500 text-sm mt-1">{{ customer_form.customer.errors.0 }}</p>
+                {% endif %}
+              </div>
+            </div>
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h2 class="text-xl font-semibold mb-4">2. Select Model</h2>
+              <div class="mb-4">
+                <label for="model-select" class="block text-sm font-medium mb-1">Model</label>
+                <select id="model-select"
+                        name="model"
+                        class="w-full border rounded-md px-3 py-2">
+                  <option value="">Select a model</option>
+                  {% for model_item in all_models %}
+                    <option value="{{ model_item.id }}"
+                            data-base-infill="{{ model_item.BaseInfill }}"
+                            data-thumbnail="{{ model_item.Thumbnail.url }}"
+                            {% if selected_model == model_item.id|stringformat:'s' %}selected{% endif %}>
+                      {{ model_item.Name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div id="model-thumbnail-container" class="mt-4 hidden">
+                <img id="model-thumbnail"
+                     src=""
+                     alt="Model thumbnail"
+                     width="500"
+                     height="500"
+                     class="w-full max-w-xs mx-auto rounded-lg shadow-md">
+              </div>
+            </div>
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg"
+                 id="customization-section"
+                 {% if not model %}style="display: none;"{% endif %}>
+              <h2 class="text-xl font-semibold mb-4">3. Customize Print Options</h2>
+              {% if model %}
+                <input type="hidden" name="model_id" id="model-id" value="{{ model.id }}">
+              {% else %}
+                <input type="hidden" name="model_id" id="model-id" value="">
+              {% endif %}
+              <input type="hidden"
+                     name="selected_filament"
+                     id="selected-filament"
+                     value="{{ selected_filament }}">
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Material</label>
+                <div class="grid grid-cols-1 gap-2">
+                  <select id="material-select" class="w-full border rounded-md px-3 py-2">
+                    <option value="">Select a material</option>
+                    {% for material in available_materials %}
+                      <option value="{{ material.id }}"
+                              {% if selected_material == material.id|stringformat:'s' %}selected{% endif %}>
+                        {{ material.Name }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="mb-4 hidden" id="filament-select-container">
+                <label class="block text-sm font-medium mb-1">Filament Color</label>
+                <select id="filament-select"
+                        class="w-full border rounded-md px-3 py-2"
+                        disabled>
+                  <option value="">Select a material first</option>
+                </select>
+                <div class="mt-2 flex items-center">
+                  <span class="text-sm text-gray-600 mr-2">Selected color:</span>
+                  <div class="w-6 h-6 rounded border border-gray-300" id="color-swatch"></div>
+                </div>
+              </div>
+              {% if form %}
+                {# Hidden inventory field - handled automatically by FIFO logic #}
+                {{ form.InventoryChange.as_hidden }}
+              {% endif %}
+              <div class="mb-4">
+                <label for="infill-percentage" class="block text-sm font-medium mb-1">Infill Percentage</label>
+                <div class="flex items-center">
+                  <input type="range"
+                         id="infill-percentage"
+                         name="infill_percentage"
+                         min="5"
+                         max="100"
+                         value="{{ default_infill }}"
+                         class="w-full infill-range">
+                  <span id="infill-value" class="ml-2 w-12 text-center">{{ default_infill }}%</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Higher infill = stronger print, but more material and cost</p>
+              </div>
+              <div class="mb-4">
+                <label for="ItemQuantity" class="block text-sm font-medium mb-1">
+                  Quantity <small>(max 10)</small>
+                </label>
+                <div class="flex items-center">
+                  <input type="number"
+                         id="ItemQuantity"
+                         name="ItemQuantity"
+                         value="1"
+                         min="1"
+                         max="10"
+                         class="w-20 border rounded-md px-3 py-2 quantity-input">
+                </div>
+              </div>
+              <div class="mb-6">
+                <div id="price-estimate"
+                     class="text-lg transition-opacity duration-300 ease-in-out">
+                  Estimated Price: $<span id="price-value">--</span>
+                </div>
+                <p class="text-xs text-gray-500 mb-1">Price updates automatically when you change options</p>
+                <p id="price-error" class="text-red-600 text-sm hidden mt-2"></p>
+                <input type="hidden" name="inventory_id" id="inventory-id">
+              </div>
+            </div>
+            <button type="submit"
+                    id="generate-quote-btn"
+                    class="w-full py-3 bg-black text-white rounded-md hover:bg-blue-600 transition flex items-center justify-center"
+                    disabled>
+              <span class="button-text">Generate Quote</span>
+            </button>
+            <p id="form-error" class="text-red-500 text-sm mt-2">Please complete all required fields to continue</p>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script src="{% static 'js/order_item.js' %}"></script>
+    <script src="{% static 'js/quote_generation.js' %}"></script>
+  </section>
+{% endblock content %}

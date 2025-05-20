@@ -55,18 +55,6 @@ function updateFilamentErrorVisibility() {
     errorMessage.classList.remove("hidden");
   }
 }
-/**
- * Update the color swatch based on selected filament
- */
-function updateColorSwatch(select) {
-  const colorSwatch = document.getElementById("color-swatch");
-  const selectedOption = select.options[select.selectedIndex];
-  if (selectedOption && selectedOption.dataset.color) {
-    colorSwatch.style.backgroundColor = selectedOption.dataset.color;
-  } else {
-    colorSwatch.style.backgroundColor = "transparent";
-  }
-}
 
 /**
  * Update the price display with smooth transitions
@@ -90,9 +78,14 @@ function updatePriceDisplay(price) {
       priceElement.textContent = "Calculating...";
       priceContainer.classList.remove("text-green-600", "font-bold");
     } else {
-      const formattedPrice = parseFloat(price).toFixed(2);
-      priceElement.textContent = formattedPrice;
-      priceContainer.classList.add("text-green-600", "font-bold");
+      try {
+        const formattedPrice = new Decimal(price).toFixed(2);
+        priceElement.textContent = formattedPrice;
+        priceContainer.classList.add("text-green-600", "font-bold");
+      } catch (err) {
+        priceElement.textContent = price;
+        priceContainer.classList.remove("text-green-600", "font-bold");
+      }
     }
     priceContainer.style.opacity = "1";
   }, 150);
@@ -100,22 +93,35 @@ function updatePriceDisplay(price) {
 
 /**
  * Calculate the estimated price based on current selections
+ * Uses the shared calculateItemPrice function from order_item.js
  */
 async function calculatePrice() {
   try {
-    const modelId = document.querySelector('input[name="Model"]')?.value;
+    let modelId = document.querySelector('input[name="Model"]')?.value;
+    if (!modelId) {
+      modelId = document.getElementById("model-id")?.value;
+    }
+
     const filamentSelect = document.getElementById("filament-select");
     const infillInput = document.querySelector(".infill-range");
     const quantityInput = document.querySelector(".quantity-input");
     const errorMessage = document.getElementById("price-error");
-
-    const infillValue = infillInput?.value;
+    const infillValueRaw = infillInput?.value;
+    const quantityValueRaw = quantityInput?.value;
+    let infillValue, quantityValue;
+    try {
+      infillValue = new Decimal(infillValueRaw || "0");
+      quantityValue = new Decimal(quantityValueRaw || "1");
+    } catch (err) {
+      updatePriceDisplay(null);
+      return;
+    }
 
     if (
       !modelId ||
       !filamentSelect?.value ||
-      !infillValue ||
-      !quantityInput?.value
+      infillValue.isZero() ||
+      quantityValue.isZero()
     ) {
       updatePriceDisplay(null);
       return;
@@ -123,60 +129,41 @@ async function calculatePrice() {
 
     updatePriceDisplay("loading");
 
-    const params = new URLSearchParams({
-      infill: infillValue,
-      quantity: quantityInput.value,
-    });
-    const response = await fetch(
-      `/store/api/model/${modelId}/filament/${filamentSelect.value}/calculate-price/?${params}`
-    );
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `HTTP error! status: ${response.status}`
-      );
-    }
+    try {
+      const data = await calculateItemPrice({
+        modelId,
+        filamentId: filamentSelect.value,
+        infill: infillValue.toString(),
+        quantity: quantityValue.toString(),
+      });
 
-    const data = await response.json();
-    if (data.status === "success") {
-      updatePriceDisplay(data.price);
-      const inventoryIdInput = document.getElementById("inventory-id");
-      if (inventoryIdInput && data.inventory_id) {
-        inventoryIdInput.value = data.inventory_id;
+      if (data.status === "success") {
+        updatePriceDisplay(data.price);
+        const inventoryIdInput = document.getElementById("inventory-id");
+        if (inventoryIdInput && data.inventory_id) {
+          inventoryIdInput.value = data.inventory_id;
+        }
+        if (errorMessage) {
+          errorMessage.classList.add("hidden");
+        }
+      } else {
+        const errorMsg = data.message || "Error calculating price";
+        console.error("Error in response:", errorMsg);
+        throw new Error(errorMsg);
       }
+    } catch (error) {
+      console.error("Error calculating price:", error);
+      updatePriceDisplay(null);
+
       if (errorMessage) {
-        errorMessage.classList.add("hidden");
+        errorMessage.textContent = error.message || "Error calculating price";
+        errorMessage.classList.remove("hidden");
       }
-    } else {
-      throw new Error(data.message || "Error calculating price");
     }
   } catch (error) {
-    console.error("Error calculating price:", error);
+    console.error("Error in calculatePrice:", error);
     updatePriceDisplay(null);
-
-    const errorMessage = document.getElementById("price-error");
-    if (errorMessage) {
-      errorMessage.textContent = error.message || "Error calculating price";
-      errorMessage.classList.remove("hidden");
-      errorMessage.classList.add("block");
-    }
   }
-}
-
-/**
- * Debounce function to limit how often we call the API
- */
-function debounce(func, wait) {
-  let timeout = null;
-  return function (...args) {
-    const context = this;
-    const later = () => {
-      timeout = null;
-      func.apply(context, args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
 }
 
 /**
@@ -270,159 +257,6 @@ function initializePage() {
   const infillRange = document.querySelector(".infill-range");
   const infillValue = document.getElementById("infill-value");
   const quantityInput = document.querySelector(".quantity-input");
-
-  if (!materialSelect || !filamentSelect) {
-    console.error(
-      "Required elements (materialSelect or filamentSelect) not found"
-    );
-    return;
-  }
-
-  updateFormState(materialSelect.value !== "");
-
-  const handleFilamentChange = (e) => {
-    updateColorSwatch(e.target);
-    updateFilamentErrorVisibility();
-    debouncedCalculatePrice();
-    const addToCartButton = document.querySelector('button[type="submit"]');
-    if (addToCartButton) {
-      addToCartButton.disabled = !e.target.value;
-    }
-  };
-
-  const handleInfillChange = (e) => {
-    const value = e.target.value;
-    if (infillValue) {
-      infillValue.textContent = `${value}%`;
-    }
-    debouncedCalculatePrice();
-  };
-
-  const handleQuantityChange = (e) => {
-    debouncedCalculatePrice();
-  };
-
-  const updateInfillDisplay = (value) => {
-    const infillValue = document.getElementById("infill-value");
-    if (infillValue) {
-      infillValue.textContent = `${value}%`;
-    }
-  };
-
-  if (infillRange) {
-    updateInfillDisplay(infillRange.value);
-  }
-
-  try {
-    if (materialSelect) {
-      materialSelect.addEventListener("change", handleMaterialChange);
-    }
-
-    if (filamentSelect) {
-      filamentSelect.addEventListener("change", handleFilamentChange);
-    }
-
-    if (infillRange) {
-      infillRange.addEventListener("input", (e) => {
-        updateInfillDisplay(e.target.value);
-        debouncedCalculatePrice();
-      });
-    }
-
-    if (quantityInput) {
-      quantityInput.addEventListener("input", handleQuantityChange);
-    }
-  } catch (error) {
-    console.error("Error adding event listeners:", error);
-  }
-
-  window._eventHandlers = {
-    materialSelect: { element: materialSelect, handler: handleMaterialChange },
-    filamentSelect: { element: filamentSelect, handler: handleFilamentChange },
-    infillRange: { element: infillRange, handler: handleInfillChange },
-    quantityInput: { element: quantityInput, handler: handleQuantityChange },
-  };
-
-  if (materialSelect.value) {
-    handleMaterialChange({ target: materialSelect });
-  }
-
-  if (materialSelect.value && filamentSelect.value) {
-    debouncedCalculatePrice();
-  }
-
-  return () => {
-    Object.values(window._eventHandlers || {}).forEach(
-      ({ element, handler }) => {
-        if (element && handler) {
-          element.removeEventListener("input", handler);
-          element.removeEventListener("change", handler);
-        }
-      }
-    );
-    delete window._eventHandlers;
-  };
-}
-
-/**
- * Handle form submission via AJAX
- */
-async function handleFormSubmit(event) {
-  event.preventDefault();
-
-  const form = event.target;
-  const formData = new FormData(form);
-  const submitButton = form.querySelector('button[type="submit"]');
-  const originalButtonText = submitButton.textContent;
-
-  try {
-    submitButton.disabled = true;
-    submitButton.textContent = "Adding to Cart...";
-
-    const response = await fetch(form.action, {
-      method: "POST",
-      body: formData,
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-      },
-    });
-
-    if (response.redirected) {
-      window.location.href = response.url;
-    } else {
-      const data = await response.json();
-      if (data.success) {
-        window.location.href = data.redirect_url || "/cart/";
-      } else {
-        const errorDiv = document.createElement("div");
-        errorDiv.className = "text-red-500 text-sm mt-2";
-        errorDiv.textContent = data.message || "Error adding item to cart";
-        const existingError = form.querySelector(".form-error");
-        if (existingError) {
-          existingError.remove();
-        }
-
-        form.appendChild(errorDiv);
-      }
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    alert("An error occurred while adding the item to your cart.");
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = originalButtonText;
-  }
-}
-
-/**
- * Initialize the page when DOM is fully loaded
- */
-function initializePage() {
-  const materialSelect = document.getElementById("material-select");
-  const filamentSelect = document.getElementById("filament-select");
-  const infillRange = document.querySelector(".infill-range");
-  const infillValue = document.getElementById("infill-value");
-  const quantityInput = document.querySelector(".quantity-input");
   const form = document.querySelector("form");
 
   if (!materialSelect || !filamentSelect) {
@@ -439,34 +273,14 @@ function initializePage() {
     updateFilamentErrorVisibility();
     debouncedCalculatePrice();
 
-    const selectedFilamentInput = document.getElementById("selected-filament");
-    if (selectedFilamentInput) {
-      selectedFilamentInput.value = e.target.value;
-    }
-
     const addToCartButton = document.querySelector('button[type="submit"]');
     if (addToCartButton) {
       addToCartButton.disabled = !e.target.value;
     }
   };
 
-  const handleInfillChange = (e) => {
-    const value = e.target.value;
-    if (infillValue) {
-      infillValue.textContent = `${value}%`;
-    }
-    debouncedCalculatePrice();
-  };
-
   const handleQuantityChange = (e) => {
     debouncedCalculatePrice();
-  };
-
-  const updateInfillDisplay = (value) => {
-    const infillValue = document.getElementById("infill-value");
-    if (infillValue) {
-      infillValue.textContent = `${value}%`;
-    }
   };
 
   if (infillRange) {
@@ -526,6 +340,61 @@ function initializePage() {
     );
     delete window._eventHandlers;
   };
+}
+
+/**
+ * Handle form submission via AJAX
+ */
+async function handleFormSubmit(event) {
+  event.preventDefault();
+
+  const form = event.target;
+  const formData = new FormData(form);
+  const submitButton = form.querySelector('button[type="submit"]');
+  const originalButtonText = submitButton.textContent;
+
+  const priceElement = document.getElementById("price-value");
+  if (priceElement && priceElement.textContent !== "--") {
+    formData.append("calculated_price", priceElement.textContent);
+  }
+
+  try {
+    submitButton.disabled = true;
+    submitButton.textContent = "Adding to Cart...";
+
+    const response = await fetch(form.action, {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    });
+
+    if (response.redirected) {
+      window.location.href = response.url;
+    } else {
+      const data = await response.json();
+      if (data.success) {
+        window.location.href = data.redirect_url || "/cart/";
+      } else {
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "text-red-500 text-sm mt-2";
+        errorDiv.textContent = data.message || "Error adding item to cart";
+        const existingError = form.querySelector(".form-error");
+        if (existingError) {
+          existingError.remove();
+        }
+
+        form.appendChild(errorDiv);
+      }
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("An error occurred while adding the item to your cart.");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = originalButtonText;
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initializePage);

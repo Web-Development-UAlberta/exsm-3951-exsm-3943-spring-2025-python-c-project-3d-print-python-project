@@ -9,6 +9,7 @@ from store.models import FulfillmentStatus
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff)
 
+
 # List all fulfillment statuses - accessible to all authenticated users
 @login_required
 def fulfillment_status_list(request):
@@ -18,7 +19,9 @@ def fulfillment_status_list(request):
         fulfillment_statuses = FulfillmentStatus.objects.all()
     else:
         # If the user is not admin, show only their own fulfillment statuses
-        fulfillment_statuses = FulfillmentStatus.objects.filter(order__user=request.user)
+        fulfillment_statuses = FulfillmentStatus.objects.filter(
+            order__user=request.user
+        )
     fulfillment_statuses = FulfillmentStatus.objects.all()
     return render(
         request,

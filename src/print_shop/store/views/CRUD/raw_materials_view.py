@@ -4,9 +4,11 @@ from django.contrib import messages
 from store.forms.raw_materials_form import RawMaterialsForm
 from store.models import RawMaterials
 
+
 # Check if user is an admin (staff or superuser)
 def is_admin(user):
     return user.is_authenticated and (user.is_staff or user.is_superuser)
+
 
 # List all raw materials - accessible to all authenticated users
 @login_required
