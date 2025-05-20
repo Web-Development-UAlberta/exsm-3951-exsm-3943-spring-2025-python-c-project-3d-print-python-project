@@ -91,7 +91,7 @@ def add_user_profile(request):
                     request,
                     f"User profile for {user_profile.user.username} was created successfully",
                 )
-                return redirect("user-profile-list")
+                return redirect("user-profile-list")               
             except IntegrityError as e:
                 if "username" in str(e):
                     messages.error(
