@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.contrib import messages
 from django.http import JsonResponse
@@ -122,7 +123,7 @@ def get_available_inventory_items(
 
     return sufficient_items
 
-
+@login_required
 def model_detail(request, model_id):
     """
     Detail view for a specific model with material selection
@@ -489,7 +490,7 @@ def premade_gallery(request):
 
     return render(request, "gallery/premade_gallery.html", context)
 
-
+@login_required
 def premade_item_detail(request, item_id):
     """
     Detail view for a specific premade item
