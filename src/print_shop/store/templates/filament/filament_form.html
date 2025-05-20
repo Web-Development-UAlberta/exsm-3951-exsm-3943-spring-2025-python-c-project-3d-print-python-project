@@ -1,12 +1,23 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
 {% block content %}
-  <h1>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Filament</h1>
+  <h1>
+    {% if form.instance.pk %}
+      Edit
+    {% else %}
+      Add
+    {% endif %}
+    Filament
+  </h1>
   <form method="POST">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form|crispy }}
     <button type="submit">
-      {% if form.instance.pk %}Update{% else %}Create{% endif %}
+      {% if form.instance.pk %}
+        Update
+      {% else %}
+        Create
+      {% endif %}
     </button>
   </form>
-{% endblock %}
+{% endblock content %}
