@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
-from django.db import IntegrityError
+from django.contrib.auth import update_session_auth_hash, get_user_model
+from django.db import IntegrityError, transaction
 from store.forms.user_profile_form import UserProfileForm, UserRegistrationForm
 from store.forms.user_profile_admin_form import (
     UserProfileAdminForm,
@@ -91,7 +91,7 @@ def add_user_profile(request):
                     request,
                     f"User profile for {user_profile.user.username} was created successfully",
                 )
-                return redirect("user-profile-list")               
+                return redirect("user-profile-list")
             except IntegrityError as e:
                 if "username" in str(e):
                     messages.error(
@@ -161,9 +161,20 @@ def delete_user_profile(request, pk):
                 f"User {user.username} cannot be deleted as they have existing orders. Consider marking as inactive instead.",
             )
         else:
-            username = user.username
-            user.delete()
-            messages.success(request, f"User {username} was deleted successfully")
+            try:
+                username = user.username
+                user_id = user.pk
+                with transaction.atomic():
+                    profile_delete_count = UserProfiles.objects.filter(pk=pk).delete()[
+                        0
+                    ]
+                    User = get_user_model()
+                    user_delete_count = User.objects.filter(pk=user_id).delete()[0]
+                messages.success(request, f"User {username} was deleted successfully")
+            except Exception as error:
+                messages.error(
+                    request, f"An error occurred while deleting the user: {str(error)}"
+                )
         return redirect("user-profile-list")
 
     return render(

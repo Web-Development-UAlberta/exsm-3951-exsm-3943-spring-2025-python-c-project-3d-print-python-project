@@ -18,18 +18,31 @@ class UserProfileAdminForm(forms.ModelForm):
         label="Password",
         widget=forms.PasswordInput,
         required=False,
-        help_text="Leave blank to keep current password (for existing users)."
+        help_text="Leave blank to keep current password (for existing users).",
     )
     password2 = forms.CharField(
         label="Password confirmation",
         widget=forms.PasswordInput,
         required=False,
-        help_text="Enter the same password as above, for verification."
+        help_text="Enter the same password as above, for verification.",
     )
 
     class Meta:
         model = UserProfiles
         fields = ["Address", "Phone"]
+
+    field_order = [
+        "username",
+        "email",
+        "first_name",
+        "last_name",
+        "Address",
+        "Phone",
+        "password1",
+        "password2",
+        "is_staff",
+        "is_active",
+    ]
 
     def __init__(self, *args, **kwargs):
         super(UserProfileAdminForm, self).__init__(*args, **kwargs)
@@ -47,18 +60,16 @@ class UserProfileAdminForm(forms.ModelForm):
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
         is_new_user = not self.instance.pk
-        
+
         if password1 or password2:
             if password1 != password2:
                 raise ValidationError("The two password fields didn't match.")
         elif is_new_user:
             raise ValidationError("Password is required for new users.")
-            
-        return cleaned_data
-            
-    def save(self, commit=True):
-        profile = super(UserProfileAdminForm, self).save(commit=False)
 
+        return cleaned_data
+
+    def save(self, commit=True):
         if not self.instance.pk:
             user = User.objects.create_user(
                 username=self.cleaned_data["username"],
@@ -70,8 +81,15 @@ class UserProfileAdminForm(forms.ModelForm):
             user.is_staff = self.cleaned_data["is_staff"]
             user.is_active = self.cleaned_data["is_active"]
             user.save()
-            profile.user = user
+            profile = UserProfiles.objects.get(user=user)
+            profile.Address = self.cleaned_data["Address"]
+            profile.Phone = self.cleaned_data["Phone"]
+            if commit:
+                profile.save()
         else:
+            profile = self.instance
+            profile.Address = self.cleaned_data["Address"]
+            profile.Phone = self.cleaned_data["Phone"]
             profile.user.first_name = self.cleaned_data["first_name"]
             profile.user.last_name = self.cleaned_data["last_name"]
             profile.user.email = self.cleaned_data["email"]
@@ -81,8 +99,8 @@ class UserProfileAdminForm(forms.ModelForm):
                 profile.user.set_password(self.cleaned_data["password1"])
             profile.user.save()
 
-        if commit:
-            profile.save()
+            if commit:
+                profile.save()
 
         return profile
 
