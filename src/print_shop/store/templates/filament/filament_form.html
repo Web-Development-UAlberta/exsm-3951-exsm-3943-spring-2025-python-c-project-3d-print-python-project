@@ -1,23 +1,17 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-  <h1>
-    {% if form.instance.pk %}
-      Edit
-    {% else %}
-      Add
-    {% endif %}
-    Filament
-  </h1>
-  <form method="POST">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit">
-      {% if form.instance.pk %}
-        Update
-      {% else %}
-        Create
-      {% endif %}
-    </button>
-  </form>
+  <div class="max-w-md mx-auto my-12 p-8 bg-white rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold mb-6 text-center">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Filament</h1>
+    <form method="post" class="flex flex-col gap-6">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <div class="flex gap-3 justify-end">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-medium">
+          {% if form.instance.pk %}Update{% else %}Create{% endif %} Filament
+        </button>
+        <a href="{% url 'filament-list' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded font-medium border border-gray-300">Cancel</a>
+      </div>
+    </form>
+  </div>
 {% endblock content %}
