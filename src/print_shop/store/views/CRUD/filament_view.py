@@ -9,6 +9,7 @@ from store.models import Filament
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff)
 
+
 # List all filaments - accessible to all authenticated users
 @login_required
 def filament_list(request):
@@ -58,8 +59,11 @@ def delete_filament(request, pk):
     filament = get_object_or_404(Filament, pk=pk)
     if request.method == "POST":
         name = filament.Name
-        filament.delete()
-        messages.success(request, f"Filament {name} was deleted successfully")
+        try:
+            filament.delete()
+            messages.success(request, f"Filament {name} was deleted successfully")
+        except Exception as e:
+            messages.error(request, f"Failed to delete filament {name}: filament may be in use.")
         return redirect("filament-list")
     return render(
         request, "filament/filament_confirm_delete.html", {"filament": filament}

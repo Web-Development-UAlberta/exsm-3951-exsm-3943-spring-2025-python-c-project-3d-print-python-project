@@ -6,20 +6,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('store', '0007_alter_models_thumbnail'),
+        ("store", "0007_alter_models_thumbnail"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='models',
-            name='BaseInfill',
-            field=models.DecimalField(decimal_places=2, default=Decimal('0.3'), max_digits=3, validators=[django.core.validators.MinValueValidator(Decimal('0.00'))]),
+            model_name="models",
+            name="BaseInfill",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=Decimal("0.3"),
+                max_digits=3,
+                validators=[django.core.validators.MinValueValidator(Decimal("0.00"))],
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitems',
-            name='Markup',
-            field=models.DecimalField(decimal_places=2, default=Decimal('1.15'), max_digits=3, validators=[django.core.validators.MinValueValidator(Decimal('1.00'))]),
+            model_name="orderitems",
+            name="Markup",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=Decimal("1.15"),
+                max_digits=3,
+                validators=[django.core.validators.MinValueValidator(Decimal("1.00"))],
+            ),
         ),
     ]

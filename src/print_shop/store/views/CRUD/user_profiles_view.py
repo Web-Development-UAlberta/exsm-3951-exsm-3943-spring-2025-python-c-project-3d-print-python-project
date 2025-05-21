@@ -2,13 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import update_session_auth_hash, get_user_model
+from django.db import IntegrityError, transaction
 from store.forms.user_profile_form import UserProfileForm, UserRegistrationForm
 from store.forms.user_profile_admin_form import (
     UserProfileAdminForm,
     StaffUserCreationForm,
 )
-from store.models import UserProfiles
+from store.models import UserProfiles, Orders
 
 
 def is_staff(user):
@@ -79,39 +80,21 @@ def user_profile_detail(request, pk):
 
 
 @user_passes_test(is_staff)
-def add_user_profile(request):
-    """Add a new user profile (admin view)"""
-    if request.method == "POST":
-        form = UserProfileAdminForm(request.POST)
-        if form.is_valid():
-            user_profile = form.save()
-            messages.success(
-                request,
-                f"User profile for {user_profile.user.username} was created successfully",
-            )
-            return redirect("user-profile-list")
-    else:
-        form = UserProfileAdminForm()
-    return render(
-        request, "user/user_profile_form.html", {"form": form, "is_admin_view": True}
-    )
-
-
-@user_passes_test(is_staff)
-def add_staff_user(request):
-    """Add a new staff user (admin view)"""
+def add_user(request):
+    """Add a new user (admin/staff view)"""
     if request.method == "POST":
         form = StaffUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             messages.success(
-                request, f"Staff account for {user.username} was created successfully"
+                request, f"User account for {user.username} was created successfully"
             )
             return redirect("user-profile-list")
     else:
         form = StaffUserCreationForm()
-    return render(request, "user/staff_user_form.html", {"form": form})
-
+    return render(
+        request, "user/user_profile_form.html", {"form": form, "is_admin_view": True}
+    )
 
 @user_passes_test(is_staff)
 def edit_user_profile(request, pk):
@@ -138,13 +121,36 @@ def delete_user_profile(request, pk):
     """Delete a user profile (admin view)"""
     user_profile = get_object_or_404(UserProfiles, pk=pk)
     user = user_profile.user
+
+    has_orders = Orders.objects.filter(User=user).exists()
+
     if request.method == "POST":
-        username = user.username
-        user.delete()  # This will also delete the profile due to CASCADE
-        messages.success(request, f"User {username} was deleted successfully")
+        if has_orders:
+            messages.error(
+                request,
+                f"User {user.username} cannot be deleted as they have existing orders. Consider marking as inactive instead.",
+            )
+        else:
+            try:
+                username = user.username
+                user_id = user.pk
+                with transaction.atomic():
+                    profile_delete_count = UserProfiles.objects.filter(pk=pk).delete()[
+                        0
+                    ]
+                    User = get_user_model()
+                    user_delete_count = User.objects.filter(pk=user_id).delete()[0]
+                messages.success(request, f"User {username} was deleted successfully")
+            except Exception as error:
+                messages.error(
+                    request, f"An error occurred while deleting the user: {str(error)}"
+                )
         return redirect("user-profile-list")
+
     return render(
-        request, "user/user_profile_confirm_delete.html", {"user_profile": user_profile}
+        request,
+        "user/user_profile_confirm_delete.html",
+        {"user_profile": user_profile, "has_orders": has_orders},
     )
 
 
@@ -155,7 +161,7 @@ def change_password(request):
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # Important to keep user logged in
+            update_session_auth_hash(request, user)
             messages.success(request, "Your password was successfully updated!")
             return redirect("view-profile")
         else:

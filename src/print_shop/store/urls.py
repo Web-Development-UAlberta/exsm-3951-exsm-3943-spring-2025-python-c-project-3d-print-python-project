@@ -16,6 +16,8 @@ from store.views import product_admin_view
 from store.views import cart_checkout_view
 from store.views import home_page_view
 from store.views import order_tracking_view
+from store.views import admin_dashboard_view
+from store.views import logout_view
 
 urlpatterns = [
     # Home Page URL
@@ -77,6 +79,11 @@ urlpatterns = [
         raw_materials_view.delete_raw_material,
         name="delete-raw-material",
     ),
+    path(
+        "raw-materials/detail/<int:pk>/",
+        raw_materials_view.raw_material_detail,
+        name="raw-material-detail",
+    ),
     # Inventory URLs
     path(
         "inventory/current",
@@ -134,6 +141,11 @@ urlpatterns = [
         name="edit-fulfillment-status",
     ),
     path(
+        "fulfillment-status/edit-order-list/<int:pk>/",
+        fulfillment_status_view.edit_fulfillment_status_order_list,
+        name="edit-fulfillment-status-order-list",
+    ),
+    path(
         "fulfillment-status/delete/<int:pk>/",
         fulfillment_status_view.delete_fulfillment_status,
         name="delete-fulfillment-status",
@@ -144,12 +156,17 @@ urlpatterns = [
         auth_views.LoginView.as_view(template_name="auth/login.html"),
         name="login",
     ),
-    path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
+    # path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
+    path("logout/", logout_view.logout_view, name="logout"),
     path("register/", user_profiles_view.register, name="register"),
     # User Profile URLs - Customer views
     path("profile/", user_profiles_view.view_profile, name="view-profile"),
     path("profile/edit/", user_profiles_view.edit_profile, name="edit-profile"),
-    path("profile/change-password/", user_profiles_view.change_password, name="change-password"),
+    path(
+        "profile/change-password/",
+        user_profiles_view.change_password,
+        name="change-password",
+    ),
     # User Profile URLs - Admin views
     path(
         "user-profiles/", user_profiles_view.user_profile_list, name="user-profile-list"
@@ -161,14 +178,10 @@ urlpatterns = [
     ),
     path(
         "user-profiles/add/",
-        user_profiles_view.add_user_profile,
+        user_profiles_view.add_user,
         name="add-user-profile",
     ),
-    path(
-        "user-profiles/add-staff/",
-        user_profiles_view.add_staff_user,
-        name="add-staff-user",
-    ),
+
     path(
         "user-profiles/edit/<int:pk>/",
         user_profiles_view.edit_user_profile,
@@ -208,6 +221,17 @@ urlpatterns = [
         gallery_view.premade_item_detail,
         name="premade-item-detail",
     ),
+    # API URLs for the customized item to get available filaments for a material
+    path(
+        "store/api/model/<int:model_id>/material/<int:material_id>/filaments/",
+        gallery_view.get_filaments_for_material,
+        name="get-filaments-for-material",
+    ),
+    path(
+        "store/api/model/<int:model_id>/filament/<int:filament_id>/calculate-price/",
+        gallery_view.calculate_price,
+        name="calculate-price",
+    ),
     # Cart and Checkout URLs
     path("cart/", cart_checkout_view.cart_view, name="cart"),
     path(
@@ -233,7 +257,11 @@ urlpatterns = [
     ),
     # Order Tracking URLs
     path("orders/tracking/", order_tracking_view.order_tracking, name="order_tracking"),
-    path("orders/details/<int:order_id>/", order_tracking_view.order_details, name="order_details"),
+    path(
+        "orders/details/<int:order_id>/",
+        order_tracking_view.order_details,
+        name="order_details",
+    ),
     # Product Admin URLs (for store staff to manage premade items)
     path(
         "product-admin/premade/",
@@ -260,5 +288,29 @@ urlpatterns = [
         "product-admin/quote/generate/",
         product_admin_view.generate_quote,
         name="product-admin-generate-quote",
+    ),
+    # Admin Dashboard URLs
+    path(
+        "admin-dashboard/", admin_dashboard_view.admin_dashboard, name="admin_dashboard"
+    ),
+    path(
+        "inventory-management/",
+        admin_dashboard_view.inventory_management,
+        name="inventory_management",
+    ),
+    path(
+        "order-management/",
+        admin_dashboard_view.order_management,
+        name="order_management",
+    ),
+    path(
+        "order-management/delete/<int:pk>/",
+        orders_view.delete_order_dashboard,
+        name="delete-order-dashboard",
+    ),
+    path(
+        "order-management/details/<int:pk>/",
+        admin_dashboard_view.order_details,
+        name="order_details",
     ),
 ]

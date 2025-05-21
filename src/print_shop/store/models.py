@@ -12,7 +12,8 @@ from django.core.validators import (
     FileExtensionValidator,
 )
 from django.core.exceptions import ValidationError
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
+from django.utils import timezone
 
 
 class Materials(models.Model):
@@ -127,7 +128,7 @@ class InventoryChangeManager(models.Manager):
         Returns:
             InventoryChange object with enough material, or None if not found
         """
-        weight_with_margin = Decimal(str(required_weight)) * Decimal(str(safety_margin))
+        weight_with_margin = Decimal(required_weight) * Decimal(safety_margin)
         available_inventory = self.available()
 
         if raw_material:
@@ -157,9 +158,7 @@ class InventoryChange(models.Model):
         Check if current inventory level is below reorder threshold
         Threshold set to 20% of original amount
         """
-        threshold = Decimal(str(self.RawMaterial.MaterialWeightPurchased)) * Decimal(
-            "0.2"
-        )
+        threshold = Decimal(self.RawMaterial.MaterialWeightPurchased) * Decimal("0.2")
         return self.QuantityWeightAvailable < threshold
 
 
@@ -175,7 +174,7 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
         InventoryChange.objects.create(
             RawMaterial=instance,
             QuantityWeightAvailable=instance.MaterialWeightPurchased,
-            UnitCost=Decimal(str(instance.Cost)) / Decimal(str(instance.MaterialWeightPurchased)),
+            UnitCost=instance.Cost / Decimal(instance.MaterialWeightPurchased),
         )
     else:
         initial_inventory = (
@@ -194,7 +193,9 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
                 initial_inventory.QuantityWeightAvailable = (
                     instance.MaterialWeightPurchased
                 )
-                initial_inventory.UnitCost = Decimal(str(instance.Cost)) / Decimal(str(instance.MaterialWeightPurchased))
+                initial_inventory.UnitCost = instance.Cost / Decimal(
+                    instance.MaterialWeightPurchased
+                )
                 initial_inventory.save(
                     update_fields=["QuantityWeightAvailable", "UnitCost"]
                 )
@@ -283,21 +284,58 @@ class Orders(models.Model):
     def __str__(self):
         return f"{self.User.username} - {self.CreatedAt} - {self.TotalPrice}"
 
+    @property
+    def current_status(self):
+        """
+        Get the most recent status of this order.
+        Returns None if no status has been set.
+        """
+        latest_status = self.fulfillmentstatus_set.order_by("-StatusChangeDate").first()
+        return latest_status.OrderStatus if latest_status else None
+
+    def update_status(self, new_status, save=True):
+        """
+        Update the order status, creating a new FulfillmentStatus record.
+
+        Args:
+            new_status: The new status to set (from FulfillmentStatus.Status)
+            save: Whether to save the order after updating status (default: True)
+        """
+
+        FulfillmentStatus.objects.create(
+            Order=self, OrderStatus=new_status, StatusChangeDate=timezone.now()
+        )
+
+        if save:
+            self.save()
+
     def save(self, *args, **kwargs):
-        """Calculate total price before saving"""
+        """
+        Calculate total price before saving.
+        If this is a new order and doesn't have a status, set it to DRAFT.
+        """
+        is_new = self.pk is None
+
         if self.pk:
             order_items = self.orderitems_set.all()
-            items_total = sum(
-                item.ItemPrice * item.ItemQuantity for item in order_items
-            )
-            shipping_cost = self.Shipping.Rate
-            items_total = sum(Decimal(str(item.ItemPrice)) * item.ItemQuantity for item in order_items)
-            shipping_cost = Decimal(str(self.Shipping.Rate))
-            self.TotalPrice = items_total + shipping_cost
-            if self.ExpeditedService:
-                self.TotalPrice = self.TotalPrice * Decimal("1.5")
+            if order_items.exists():
+                items_total = sum(
+                    item.ItemPrice * item.ItemQuantity for item in order_items
+                )
+                shipping_cost = self.Shipping.Rate if self.Shipping else Decimal("0")
+                self.TotalPrice = items_total + shipping_cost
+
+                if self.ExpeditedService:
+                    self.TotalPrice = self.TotalPrice * Decimal("1.5")
 
         super().save(*args, **kwargs)
+
+        if is_new and not self.fulfillmentstatus_set.exists():
+            FulfillmentStatus.objects.create(
+                Order=self,
+                OrderStatus=FulfillmentStatus.Status.DRAFT,
+                StatusChangeDate=timezone.now(),
+            )
 
 
 class OrderItems(models.Model):
@@ -341,37 +379,91 @@ class OrderItems(models.Model):
     def __str__(self):
         return f"{self.Model.Name} - {self.ItemQuantity}"
 
+    def calculate_infill_multiplier(self, infill_percentage=None):
+        """
+        Calculate the infill multiplier based on the given infill percentage.
+        If no percentage is provided, use the model's base infill.
+        """
+        if infill_percentage is None:
+            return Decimal("1.0")
+
+        try:
+            base_infill = self.Model.BaseInfill * 100
+            if base_infill == 0:
+                base_infill = Decimal("20")
+
+            return (Decimal(infill_percentage) / base_infill).quantize(
+                Decimal("0.0001"), rounding=ROUND_HALF_UP
+            )
+        except (AttributeError, InvalidOperation, TypeError):
+            return Decimal("1.0")
+
     def calculate_required_weight(self):
         """
         Calculate the required weight for the order item based on model, infill, and quantity.
         This is used for inventory validation before saving.
         Returns the total weight required for this order item in grams
         """
-        density = self.InventoryChange.RawMaterial.MaterialDensity
-        volume_cm3 = (
-            self.Model.EstimatedPrintVolume
-            * self.Model.BaseInfill
-            * self.InfillMultiplier
+        if not hasattr(self, "InventoryChange") or not self.InventoryChange:
+            return 0
+
+        try:
+            density = self.InventoryChange.RawMaterial.MaterialDensity
+            infill_multiplier = self.InfillMultiplier  # Decimal
+            quantity = self.ItemQuantity  # int
+            estimated_print_volume = self.Model.EstimatedPrintVolume  # Decimal
+            base_infill = self.Model.BaseInfill
+            volume_cm3 = estimated_print_volume * base_infill * infill_multiplier
+            weight = volume_cm3 * density * quantity
+            return max(1, int(weight.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
+
+        except (AttributeError, TypeError, InvalidOperation) as e:
+            print(f"Error in calculate_required_weight: {e}")
+            return 0
+
+    def calculate_price_components(self):
+        """
+        Calculate and return all price components as a dictionary.
+        This ensures consistent price calculation across the application.
+        Returns:
+            dict: Contains 'weight', 'material_cost', 'fixed_cost', 'cost_of_goods', 'price'
+        """
+        weight = Decimal(self.calculate_required_weight())
+        cost_per_gram = self.InventoryChange.UnitCost
+        wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
+        fixed_cost = self.Model.FixedCost * self.ItemQuantity
+        markup = self.Markup
+        material_cost = (weight * cost_per_gram * wear_tear).quantize(
+            Decimal("0.0001"), rounding=ROUND_HALF_UP
         )
-        return int(volume_cm3 * density) * self.ItemQuantity
+        cost_of_goods = (fixed_cost + material_cost).quantize(
+            Decimal("0.0001"), rounding=ROUND_HALF_UP
+        )
+        price = (cost_of_goods * markup).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+
+        return {
+            "weight": weight,
+            "material_cost": material_cost,
+            "fixed_cost": fixed_cost,
+            "cost_of_goods": cost_of_goods,
+            "price": price,
+        }
 
     def save(self, *args, **kwargs):
         """
-        Override save to calculate costs before saving.
-        Cost of goods sold is calculated as:
-        TotalWeight = Volume * Base infill * Infill multiplier * Material density * Quantity
-        MaterialCost = TotalWeight * cost per gram * wear and tear
-        CostOfGoodsSold = Fixed cost + material cost
-        Item price = Cost of goods sold * markup
+        Override save to calculate costs before saving using the shared calculation method.
         """
         self.TotalWeight = self.calculate_required_weight()
-        cost_per_gram = Decimal(str(self.InventoryChange.UnitCost))
-        wear_tear = Decimal(str(self.InventoryChange.RawMaterial.WearAndTearMultiplier))
-        material_cost = Decimal(str(self.TotalWeight)) * cost_per_gram * wear_tear
-        self.CostOfGoodsSold = Decimal(str(self.Model.FixedCost)) + material_cost
-        self.ItemPrice = self.CostOfGoodsSold * Decimal(str(self.Markup))
-
-        super().save(*args, **kwargs)
+        try:
+            price_components = self.calculate_price_components()
+            self.CostOfGoodsSold = price_components["cost_of_goods"]
+            self.ItemPrice = price_components["price"]
+            super().save(*args, **kwargs)
+        except (AttributeError, TypeError) as e:
+            print(f"Error in OrderItems.save(): {e}")
+            raise
 
 
 @receiver(post_save, sender=OrderItems)
