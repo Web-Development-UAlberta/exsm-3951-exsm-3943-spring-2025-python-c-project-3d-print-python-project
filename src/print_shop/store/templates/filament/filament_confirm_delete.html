@@ -1,37 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-  <div style="max-width: 400px;
-              margin: 3rem auto;
-              padding: 2rem 2.5rem;
-              background: #fff;
-              border-radius: 10px;
-              box-shadow: 0 2px 12px;
-              text-align: center">
-    <h1 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem;">Delete Filament</h1>
-    <p style="margin-bottom: 2rem;">
+  <div class="max-w-md mx-auto my-12 p-8 bg-white rounded-lg shadow-lg text-center">
+    <h1 class="text-2xl font-bold mb-6">Delete Filament</h1>
+    <p class="mb-8">
       Are you sure you want to delete <strong>{{ filament.Name }}</strong>?
     </p>
-    <form method="post"
-          style="display: flex;
-                 justify-content: center;
-                 gap: 1rem">
+    <form method="post" class="flex justify-center gap-4">
       {% csrf_token %}
       <button type="submit"
-              style="background: #ef4444;
-                     color: #fff;
-                     border: none;
-                     padding: 0.5rem 1.25rem;
-                     border-radius: 5px;
-                     font-weight: 500;
-                     cursor: pointer">Delete</button>
+              class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded font-medium">Delete</button>
       <a href="{% url 'filament-list' %}"
-         style="background: #f3f4f6;
-                color: #374151;
-                border: none;
-                padding: 0.5rem 1.25rem;
-                border-radius: 5px;
-                font-weight: 500;
-                text-decoration: none">Cancel</a>
+         class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded font-medium border border-gray-300">Cancel</a>
     </form>
   </div>
 {% endblock content %}

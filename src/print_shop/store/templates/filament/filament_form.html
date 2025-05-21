@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-  <div style="max-width: 400px; margin: 3rem auto; padding: 2rem 2.5rem; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-    <h1 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; text-align: center;">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Filament</h1>
-    <form method="post" style="display: flex; flex-direction: column; gap: 1.2rem;">
+  <div class="max-w-md mx-auto my-12 p-8 bg-white rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold mb-6 text-center">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Filament</h1>
+    <form method="post" class="flex flex-col gap-6">
       {% csrf_token %}
       {{ form|crispy }}
-      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-        <button type="submit" style="background: #2563eb; color: #fff; border: none; padding: 0.5rem 1.25rem; border-radius: 5px; font-weight: 500; cursor: pointer;">{% if form.instance.pk %}Update{% else %}Create{% endif %} Filament</button>
-        <a href="{% url 'filament-list' %}" style="background: #f3f4f6; color: #374151; border: none; padding: 0.5rem 1.25rem; border-radius: 5px; font-weight: 500; text-decoration: none;">Cancel</a>
+      <div class="flex gap-3 justify-end">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-medium">
+          {% if form.instance.pk %}Update{% else %}Create{% endif %} Filament
+        </button>
+        <a href="{% url 'filament-list' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded font-medium border border-gray-300">Cancel</a>
       </div>
     </form>
   </div>
