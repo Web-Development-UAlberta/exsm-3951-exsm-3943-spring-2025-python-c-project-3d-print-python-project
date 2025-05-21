@@ -1,19 +1,19 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
 {% block content %}
   <h1>
     {% if form.instance.pk %}
       Edit
     {% else %}
       Add
-    {% endif %}Inventory Change Record
+    {% endif %}
+    Inventory Change Record
   </h1>
   <p>Inventory Change Records are created automatically, please be careful when creating or editing them.</p>
-
   <h2>Inventory Change Form</h2>
   <form method="POST">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form|crispy }}
     <button type="submit">
       {% if form.instance.pk %}
         Update

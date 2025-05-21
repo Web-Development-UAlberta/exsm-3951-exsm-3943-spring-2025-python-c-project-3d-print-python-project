@@ -1,60 +1,69 @@
 {% extends "base.html" %}
 {% load static %}
-
-{% block title %}Login{% endblock %}
-
+{% load tailwind_filters %}
+{% block title %}
+  Login
+{% endblock title %}
 {% block content %}
-<style>
-  html, body {
-      height: 100%;
-      margin: 0;
-  }
-  .container.mx-auto.px-4.py-8 {
-      padding: 0 !important;
-      max-width: none !important;
-      margin: 0 !important;
-      width: 100% !important;
-  }
-  .fade-in {
-      animation: fadeIn 1.2s ease-out forwards;
-  }
-  @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-  }
-</style>
+  <style>
+      html,
+      body {
+          height: 100%;
+          margin: 0;
+      }
 
-<div class="relative min-h-screen overflow-hidden">
-  <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl z-0"></div>
-  <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply z-0"></div>
+      .container.mx-auto.px-4.py-8 {
+          padding: 0 !important;
+          max-width: none !important;
+          margin: 0 !important;
+          width: 100% !important;
+      }
 
-  <section class="py-16 relative z-10">
-    <div class="container mx-auto mt-32 px-4 fade-in">
-      <div class="max-w-md mx-auto p-8 bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Welcome Back</h1>
+      .fade-in {
+          animation: fadeIn 1.2s ease-out forwards;
+      }
 
-        <form method="post" class="space-y-6">
-          {% csrf_token %}
+      @keyframes fadeIn {
+          from {
+              opacity: 0;
+              transform: translateY(30px);
+          }
 
-          <fieldset>
-            <legend class="sr-only">Login Information</legend>
-            {{ form.as_p }}
-          </fieldset>
-
-          <div>
-            <button type="submit"
-              class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 transition duration-300">
-              Sign In
-            </button>
-          </div>
-        </form>
-
-        <p class="mt-6 text-center text-sm text-gray-700">
-          Don't have an account?
-          <a href="{% url 'register' %}" class="text-blue-600 font-medium hover:underline">Register here</a>
-        </p>
-      </div>
+          to {
+              opacity: 1;
+              transform: translateY(0);
+          }
+      }
+  </style>
+  <div class="relative min-h-screen overflow-hidden">
+    <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl z-0">
     </div>
-  </section>
-</div>
-{% endblock %}
+    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply z-0">
+    </div>
+    <section class="py-16 relative z-10">
+      <div class="container mx-auto mt-32 px-4 fade-in">
+        <div class="max-w-md mx-auto p-8 bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl">
+          <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Welcome Back</h1>
+          <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <fieldset>
+              <legend class="sr-only">Login Information</legend>
+              {{ form|crispy }}
+            </fieldset>
+            <div>
+              <button type="submit"
+                      class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 transition duration-300">
+                Sign In
+              </button>
+            </div>
+          </form>
+          <p class="mt-6 text-center text-sm text-gray-700">
+            Don't have an account?
+            <a href="{% url 'register' %}"
+               class="text-blue-600 font-medium hover:underline">Register here</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock content %}
