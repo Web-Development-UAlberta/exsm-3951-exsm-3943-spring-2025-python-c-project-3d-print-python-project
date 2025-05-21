@@ -9,7 +9,7 @@ from store.forms.user_profile_admin_form import (
     UserProfileAdminForm,
     StaffUserCreationForm,
 )
-from store.models import UserProfiles
+from store.models import UserProfiles, Orders
 
 
 def is_staff(user):
@@ -151,13 +151,25 @@ def delete_user_profile(request, pk):
     """Delete a user profile (admin view)"""
     user_profile = get_object_or_404(UserProfiles, pk=pk)
     user = user_profile.user
+
+    has_orders = Orders.objects.filter(User=user).exists()
+
     if request.method == "POST":
-        username = user.username
-        user.delete()  # This will also delete the profile due to CASCADE
-        messages.success(request, f"User {username} was deleted successfully")
+        if has_orders:
+            messages.error(
+                request,
+                f"User {user.username} cannot be deleted as they have existing orders. Consider marking as inactive instead.",
+            )
+        else:
+            username = user.username
+            user.delete()
+            messages.success(request, f"User {username} was deleted successfully")
         return redirect("user-profile-list")
+
     return render(
-        request, "user/user_profile_confirm_delete.html", {"user_profile": user_profile}
+        request,
+        "user/user_profile_confirm_delete.html",
+        {"user_profile": user_profile, "has_orders": has_orders},
     )
 
 
@@ -168,7 +180,7 @@ def change_password(request):
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # Important to keep user logged in
+            update_session_auth_hash(request, user)
             messages.success(request, "Your password was successfully updated!")
             return redirect("view-profile")
         else:
