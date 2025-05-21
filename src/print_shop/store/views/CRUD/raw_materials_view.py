@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from store.forms.raw_materials_form import RawMaterialsForm
-from store.models import RawMaterials
+from store.models import RawMaterials, InventoryChange
 
 
 # Check if user is an admin (staff or superuser)
@@ -33,7 +33,7 @@ def add_raw_material(request):
             messages.success(
                 request, f"Raw Material {material_name} was created successfully"
             )
-            return redirect("raw-materials-list")
+            return redirect("current-inventory")
     else:
         form = RawMaterialsForm()
     return render(request, "raw_materials/raw_material_form.html", {"form": form})
@@ -52,7 +52,7 @@ def edit_raw_material(request, pk):
             messages.success(
                 request, f"Raw Material {material_name} was updated successfully"
             )
-            return redirect("raw-materials-list")
+            return redirect("current-inventory")
     else:
         form = RawMaterialsForm(instance=raw_material)
     return render(
@@ -62,6 +62,34 @@ def edit_raw_material(request, pk):
             "form": form,
         },
     )
+
+
+# View details of a raw material - accessible to admin users
+@login_required
+@user_passes_test(is_admin)
+def raw_material_detail(request, pk):
+    raw_material = get_object_or_404(RawMaterials, pk=pk)
+    inventory_changes = InventoryChange.objects.filter(RawMaterial=raw_material).order_by('-InventoryChangeDate')
+    inventory_count = inventory_changes.count()
+    has_orders = False
+    if inventory_count > 0:
+        from store.models import OrderItems
+        has_orders = OrderItems.objects.filter(InventoryChange__RawMaterial=raw_material).exists()
+    can_edit = inventory_count <= 1 and not has_orders
+    cost_per_gram = 0
+    if raw_material.MaterialWeightPurchased > 0:
+        cost_per_gram = raw_material.Cost / raw_material.MaterialWeightPurchased
+    
+    context = {
+        'raw_material': raw_material,
+        'inventory_changes': inventory_changes,
+        'can_edit': can_edit,
+        'inventory_count': inventory_count,
+        'has_orders': has_orders,
+        'cost_per_gram': cost_per_gram
+    }
+    
+    return render(request, 'raw_materials/raw_material_detail.html', context)
 
 
 # Delete a raw material - only accessible to admin users
@@ -75,7 +103,7 @@ def delete_raw_material(request, pk):
         messages.success(
             request, f"Raw Material {material_name} was deleted successfully"
         )
-        return redirect("raw-materials-list")
+        return redirect("current-inventory")
     return render(
         request,
         "raw_materials/raw_material_confirm_delete.html",

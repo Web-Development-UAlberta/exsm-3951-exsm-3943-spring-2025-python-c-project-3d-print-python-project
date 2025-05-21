@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}
+  Raw Material Details
+{% endblock title %}
+{% block content %}
+  <section class="container mx-auto px-4 py-8">
+    <div class="mb-6 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Raw Material Details</h1>
+      <a href="{% url 'current-inventory' %}"
+         class="text-blue-600 hover:underline">← Back to Current Inventory</a>
+    </div>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6 p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 class="text-xl font-semibold mb-4 border-b pb-2">Material Information</h2>
+          <div class="space-y-3">
+            <p>
+              <span class="font-medium">Material Type:</span> {{ raw_material.Filament.Material.Name }}
+            </p>
+            <p class="flex items-center">
+              <span class="font-medium mr-2">Filament Color:</span>
+              <span class="w-4 h-4 rounded-full mr-2"
+                    style="background-color: #{{ raw_material.Filament.ColorHexCode }}"></span>
+              {{ raw_material.Filament.Name }}
+            </p>
+            <p>
+              <span class="font-medium">Brand Name:</span> {{ raw_material.BrandName|default:"Not specified" }}
+            </p>
+            <p>
+              <span class="font-medium">Material Density:</span> {{ raw_material.MaterialDensity }} g/cm³
+            </p>
+            <p>
+              <span class="font-medium">Wear and Tear Multiplier:</span> {{ raw_material.WearAndTearMultiplier }}
+            </p>
+          </div>
+        </div>
+        <div>
+          <h2 class="text-xl font-semibold mb-4 border-b pb-2">Purchase Information</h2>
+          <div class="space-y-3">
+            <p>
+              <span class="font-medium">Supplier:</span> {{ raw_material.Supplier.Name }}
+            </p>
+            <p>
+              <span class="font-medium">Purchase Date:</span> {{ raw_material.PurchasedDate|date:"F j, Y" }}
+            </p>
+            <p>
+              <span class="font-medium">Original Weight:</span> {{ raw_material.MaterialWeightPurchased }}g
+            </p>
+            <p>
+              <span class="font-medium">Cost:</span> ${{ raw_material.Cost }}
+            </p>
+            <p>
+              <span class="font-medium">Cost per Gram:</span> ${{ cost_per_gram|floatformat:4 }}
+            </p>
+            <p>
+              <span class="font-medium">Reorder Lead Time:</span> {{ raw_material.ReorderLeadTime }} days
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+      <h2 class="text-xl font-semibold p-6 border-b">Inventory History</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Available Weight
+              </th>
+              <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Cost</th>
+              <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for change in inventory_changes %}
+              <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ change.InventoryChangeDate|date:"F j, Y g:i A" }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ change.QuantityWeightAvailable }}g</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ change.UnitCost|floatformat:4 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  {% if change.needs_reorder %}
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Reorder Needed</span>
+                  {% else %}
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">In Stock</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No inventory records found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="flex justify-between">
+      {% if can_edit %}
+        <a href="{% url 'edit-raw-material' raw_material.id %}"
+           class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          Edit Raw Material
+        </a>
+      {% else %}
+        <div class="text-sm text-gray-500">
+          {% if inventory_count > 1 %}<p>Cannot edit: Multiple inventory records exist.</p>{% endif %}
+          {% if has_orders %}<p>Cannot edit: Material is used in orders.</p>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock content %}

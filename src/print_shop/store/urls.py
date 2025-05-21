@@ -79,6 +79,11 @@ urlpatterns = [
         raw_materials_view.delete_raw_material,
         name="delete-raw-material",
     ),
+    path(
+        "raw-materials/detail/<int:pk>/",
+        raw_materials_view.raw_material_detail,
+        name="raw-material-detail",
+    ),
     # Inventory URLs
     path(
         "inventory/current",
@@ -173,14 +178,10 @@ urlpatterns = [
     ),
     path(
         "user-profiles/add/",
-        user_profiles_view.add_user_profile,
+        user_profiles_view.add_user,
         name="add-user-profile",
     ),
-    path(
-        "user-profiles/add-staff/",
-        user_profiles_view.add_staff_user,
-        name="add-staff-user",
-    ),
+
     path(
         "user-profiles/edit/<int:pk>/",
         user_profiles_view.edit_user_profile,

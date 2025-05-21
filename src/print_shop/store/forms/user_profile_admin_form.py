@@ -14,18 +14,7 @@ class UserProfileAdminForm(forms.ModelForm):
     email = forms.EmailField(max_length=254, required=True)
     is_staff = forms.BooleanField(required=False, label="Staff status")
     is_active = forms.BooleanField(required=False, label="Active")
-    password1 = forms.CharField(
-        label="Password",
-        widget=forms.PasswordInput,
-        required=False,
-        help_text="Leave blank to keep current password (for existing users).",
-    )
-    password2 = forms.CharField(
-        label="Password confirmation",
-        widget=forms.PasswordInput,
-        required=False,
-        help_text="Enter the same password as above, for verification.",
-    )
+
 
     class Meta:
         model = UserProfiles
@@ -57,16 +46,6 @@ class UserProfileAdminForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
-        is_new_user = not self.instance.pk
-
-        if password1 or password2:
-            if password1 != password2:
-                raise ValidationError("The two password fields didn't match.")
-        elif is_new_user:
-            raise ValidationError("Password is required for new users.")
-
         return cleaned_data
 
     def save(self, commit=True):
@@ -86,6 +65,7 @@ class UserProfileAdminForm(forms.ModelForm):
             profile.Phone = self.cleaned_data["Phone"]
             if commit:
                 profile.save()
+            return profile
         else:
             profile = self.instance
             profile.Address = self.cleaned_data["Address"]
@@ -95,9 +75,13 @@ class UserProfileAdminForm(forms.ModelForm):
             profile.user.email = self.cleaned_data["email"]
             profile.user.is_staff = self.cleaned_data["is_staff"]
             profile.user.is_active = self.cleaned_data["is_active"]
-            if self.cleaned_data.get("password1"):
-                profile.user.set_password(self.cleaned_data["password1"])
+            password1 = self.cleaned_data.get("password1")
+            if password1 and password1.strip():
+                profile.user.set_password(password1)
             profile.user.save()
+            if commit:
+                profile.save()
+            return profile
 
             if commit:
                 profile.save()
@@ -106,14 +90,28 @@ class UserProfileAdminForm(forms.ModelForm):
 
 
 class StaffUserCreationForm(UserCreationForm):
-    """Form for creating staff users with profile information"""
+    """Form for creating users (staff or regular) with profile information"""
 
     email = forms.EmailField(max_length=254, required=True)
     first_name = forms.CharField(max_length=30, required=False)
     last_name = forms.CharField(max_length=30, required=False)
     address = forms.CharField(max_length=255, required=True)
     phone = forms.CharField(max_length=25, required=True)
-    is_staff = forms.BooleanField(required=False, initial=True, label="Staff status")
+    is_staff = forms.BooleanField(required=False, initial=False, label="Staff status")
+    is_active = forms.BooleanField(required=False, initial=True, label="Active")
+
+    field_order = [
+        "username",
+        "email",
+        "first_name",
+        "last_name",
+        "address",
+        "phone",
+        "password1",
+        "password2",
+        "is_staff",
+        "is_active",
+    ]
 
     class Meta:
         model = User
@@ -125,6 +123,7 @@ class StaffUserCreationForm(UserCreationForm):
             "password1",
             "password2",
             "is_staff",
+            "is_active",
         ]
 
     def save(self, commit=True):
@@ -133,6 +132,7 @@ class StaffUserCreationForm(UserCreationForm):
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
         user.is_staff = self.cleaned_data["is_staff"]
+        user.is_active = self.cleaned_data["is_active"]
 
         if commit:
             user.save()
