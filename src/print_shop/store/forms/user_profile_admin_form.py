@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
 from ..models import UserProfiles
 
 
@@ -13,6 +14,18 @@ class UserProfileAdminForm(forms.ModelForm):
     email = forms.EmailField(max_length=254, required=True)
     is_staff = forms.BooleanField(required=False, label="Staff status")
     is_active = forms.BooleanField(required=False, label="Active")
+    password1 = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput,
+        required=False,
+        help_text="Leave blank to keep current password (for existing users)."
+    )
+    password2 = forms.CharField(
+        label="Password confirmation",
+        widget=forms.PasswordInput,
+        required=False,
+        help_text="Enter the same password as above, for verification."
+    )
 
     class Meta:
         model = UserProfiles
@@ -29,10 +42,23 @@ class UserProfileAdminForm(forms.ModelForm):
             self.fields["is_active"].initial = self.instance.user.is_active
             self.fields["username"].widget.attrs["readonly"] = True
 
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        is_new_user = not self.instance.pk
+        
+        if password1 or password2:
+            if password1 != password2:
+                raise ValidationError("The two password fields didn't match.")
+        elif is_new_user:
+            raise ValidationError("Password is required for new users.")
+            
+        return cleaned_data
+            
     def save(self, commit=True):
         profile = super(UserProfileAdminForm, self).save(commit=False)
 
-        # Update the associated user model fields
         if not self.instance.pk:
             user = User.objects.create_user(
                 username=self.cleaned_data["username"],
@@ -40,6 +66,7 @@ class UserProfileAdminForm(forms.ModelForm):
                 first_name=self.cleaned_data["first_name"],
                 last_name=self.cleaned_data["last_name"],
             )
+            user.set_password(self.cleaned_data["password1"])
             user.is_staff = self.cleaned_data["is_staff"]
             user.is_active = self.cleaned_data["is_active"]
             user.save()
@@ -50,6 +77,8 @@ class UserProfileAdminForm(forms.ModelForm):
             profile.user.email = self.cleaned_data["email"]
             profile.user.is_staff = self.cleaned_data["is_staff"]
             profile.user.is_active = self.cleaned_data["is_active"]
+            if self.cleaned_data.get("password1"):
+                profile.user.set_password(self.cleaned_data["password1"])
             profile.user.save()
 
         if commit:
