@@ -290,47 +290,40 @@ class SignupPageTests(TestCase):
        
 
 
-# class HomePageTests(TestCase):
-#     """Tests for the home page functionality"""
+class HomePageTests(TestCase):
+    """Tests for the home page functionality"""
 
-#     def setUp(self):
-#         # Create client for testing
-#         self.client = Client()
-#         self.home_url = reverse("home")
+    def setUp(self):
+        # Create client for testing
+        self.client = Client()
+        self.home_url = reverse("home")
 
-#         self.product = Models.objects.create(
-#             Name="Test Product",
-#             Description="Test Description",
-#             FixedCost=10.00,
-#             EstimatedPrintVolume=100,
-#             BaseInfill=0.2,
-#         )
+        self.product = Models.objects.create(
+            Name="Test Product",
+            Description="Test Description",
+            FixedCost=10.00,
+            EstimatedPrintVolume=100,
+            BaseInfill=0.2,
+        )
 
-#     def test_home_page_load(self):
-#         """Test Home page loads successfully"""
-#         response = self.client.get(self.home_url)
+    def test_home_page_load(self):
+        """Test Home page loads successfully"""
+        response = self.client.get(self.home_url)
 
-#         self.assertEqual(response.status_code, 200)
-#         self.assertTemplateUsed(response, "home.html")
-#         self.assertContains(response, "hero banner")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "customer_facing_pages/home.html")
 
-#     def test_navigation_links(self):
-#         """Test Navigation links on the home page"""
-#         response = self.client.get(self.home_url)
+    def test_navigation_links(self):
+        """Test Navigation links on the home page"""
+        response = self.client.get(self.home_url)
 
-#         self.assertContains(response, reverse("view-profile"))
-#         self.assertContains(response, reverse("cart"))
-#         self.assertContains(response, reverse("catalog"))
-#         self.assertContains(response, reverse("custom-gallery"))
-#         self.assertContains(response, reverse("orders-list"))
-#         self.assertContains(response, reverse("shop"))
+        self.assertContains(response, reverse("home"))
+        self.assertContains(response, reverse("register"))
+        self.assertContains(response, reverse("login"))
+        self.assertContains(response, reverse("custom-gallery"))
+       
 
-#     def test_search_functionality(self):
-#         """Test Search functionality on the home page"""
-#         response = self.client.get(self.home_url, {"search": "Test"})
 
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, 'Search results for "Test"')
 
 
 # class CatalogPageTests(TestCase):
