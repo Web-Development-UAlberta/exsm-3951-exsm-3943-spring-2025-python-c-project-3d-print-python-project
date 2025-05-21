@@ -106,5 +106,10 @@ def order_management(request):
         elif priority.lower() == "normal":
             orders = orders.filter(ExpeditedService=False)
 
-    context = {"orders": orders}
+    status_choices = FulfillmentStatus.Status.choices
+    
+    context = {
+        "orders": orders,
+        "status_choices": status_choices
+    }
     return render(request, "admin_dashboard/order_management.html", context)

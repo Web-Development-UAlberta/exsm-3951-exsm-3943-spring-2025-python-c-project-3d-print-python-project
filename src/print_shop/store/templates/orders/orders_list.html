@@ -48,10 +48,10 @@
                 </div>
             {% else %}
                 <a href="{% url 'custom-gallery' %}"
-                   class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Continue Shopping</a>
+                   class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300 mb-6">Continue Shopping</a>
             {% endif %}
             {% if orders %}
-                <table class="w-full table-auto border-collapse border border-gray-600 text-white text-sm md:text-base">
+                <table class="w-full table-auto mt-6 border-collapse border border-gray-600 text-white text-sm md:text-base">
                     <thead>
                         <tr class="bg-gradient-to-r from-purple-700 via-pink-700 to-blue-700 sticky top-0 z-10">
                             <th class="border border-gray-600 px-3 py-2 text-left">Order ID</th>
@@ -59,7 +59,7 @@
                             <th class="border border-gray-600 px-3 py-2 text-left">Date</th>
                             <th class="border border-gray-600 px-3 py-2 text-left">Status</th>
                             <th class="border border-gray-600 px-3 py-2 text-left">Items</th>
-                            <th class="border border-gray-600 px-3 py-2 text-center">Actions</th>
+                            {% if user.is_staff %}<th class="border border-gray-600 px-3 py-2 text-center">Actions</th>{% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -69,10 +69,32 @@
                                 <td class="border border-gray-600 px-3 py-1">{{ order.User.username }}</td>
                                 <td class="border border-gray-600 px-3 py-1">{{ order.OrderDate }}</td>
                                 <td class="border border-gray-600 px-3 py-1">
-                                    {% if order.fulfillmentstatus_set.first %}
-                                        {{ order.fulfillmentstatus_set.first.get_OrderStatus_display }}
+                                    {% if user.is_staff %}
+                                        <form method="post"
+                                              action="{% url 'edit-fulfillment-status-order-list' order.id %}"
+                                              class="flex items-center space-x-2">
+                                            {% csrf_token %}
+                                            <select name="OrderStatus"
+                                                    class="bg-transparent text-white text-sm border border-gray-500 rounded px-2 py-1"
+                                                    required>
+                                                {% for value, label in status_choices %}
+                                                    <option value="{{ value }}"
+                                                            {% if value == order.current_status %}selected{% endif %}>
+                                                        {{ label }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit"
+                                                    class="bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700">
+                                                Update
+                                            </button>
+                                        </form>
                                     {% else %}
-                                        N/A
+                                        {% if order.current_status %}
+                                            <span class="text-white">{{ order.current_status }}</span>
+                                        {% else %}
+                                            <span class="text-gray-400">N/A</span>
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                                 <td class="border border-gray-600 px-3 py-1">
@@ -87,12 +109,12 @@
                                         {% endfor %}
                                     </ul>
                                 </td>
-                                <td class="border border-gray-600 px-3 py-1 text-center space-x-2">
-                                    <a href="{% url 'edit-order' order.id %}"
-                                       class="text-green-400 hover:text-green-600 font-semibold">Edit</a>
-                                    <a href="{% url 'delete-order' order.id %}"
-                                       class="text-red-400 hover:text-red-600 font-semibold">Delete</a>
-                                </td>
+                                {% if user.is_staff %}
+                                    <td class="border border-gray-600 px-3 py-1 text-center space-x-2">
+                                        <a href="{% url 'delete-order' order.id %}"
+                                           class="text-red-400 hover:text-red-600 font-semibold">Delete</a>
+                                    </td>
+                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>

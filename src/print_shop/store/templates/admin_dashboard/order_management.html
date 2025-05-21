@@ -1,91 +1,121 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block content %}
-<div class="flex min-h-screen bg-gray-100">
-
-  <aside class="w-64 bg-white shadow-md p-6">
-    <h2 class="text-xl font-bold mb-4">Filter</h2>
-    <form method="get" class="space-y-4">
-      <div>
-        <label for="material" class="block font-semibold">Material</label>
-        <input type="text" name="material" id="material" value="{{ request.GET.material }}" class="w-full mt-1 border border-gray-300 rounded px-3 py-2">
-      </div>
-
-      <div>
-        <label for="status" class="block font-semibold">Status</label>
-        <input type="text" name="status" id="status" value="{{ request.GET.status }}" class="w-full mt-1 border border-gray-300 rounded px-3 py-2">
-      </div>
-
-      <div>
-        <label for="priority" class="block font-semibold">Priority</label>
-        <input type="text" name="priority" id="priority" value="{{ request.GET.priority }}" class="w-full mt-1 border border-gray-300 rounded px-3 py-2">
-      </div>
-
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Apply</button>
-    </form>
-  </aside>
-
-  <main class="flex-1 p-8">
-
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Order Management</h1>
-      <form method="get" class="flex gap-2">
-        <input type="text" name="search" placeholder="Search" value="{{ request.GET.search }}" class="border border-gray-300 rounded px-3 py-2">
-        <button type="submit" class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition">🔍</button>
+  <section class="flex min-h-screen bg-gray-100">
+    <aside class="w-64 bg-white shadow-md p-6">
+      <h2 class="text-xl font-bold mb-4">Filter</h2>
+      <form method="get" class="space-y-4">
+        <div>
+          <label for="material" class="block font-semibold">Material</label>
+          <input type="text"
+                 name="material"
+                 id="material"
+                 value="{{ request.GET.material }}"
+                 class="w-full mt-1 border border-gray-300 rounded px-3 py-2">
+        </div>
+        <div>
+          <label for="status" class="block font-semibold">Status</label>
+          <input type="text"
+                 name="status"
+                 id="status"
+                 value="{{ request.GET.status }}"
+                 class="w-full mt-1 border border-gray-300 rounded px-3 py-2">
+        </div>
+        <div>
+          <label for="priority" class="block font-semibold">Priority</label>
+          <input type="text"
+                 name="priority"
+                 id="priority"
+                 value="{{ request.GET.priority }}"
+                 class="w-full mt-1 border border-gray-300 rounded px-3 py-2">
+        </div>
+        <button type="submit"
+                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Apply</button>
       </form>
-    </div>
-    <div class="overflow-x-auto bg-white rounded shadow">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Order ID</th>
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Model Name</th>
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Material</th>
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Qty</th>
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Status</th>
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Priority</th>
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-          {% for order in orders %}
-            {% for item in order.orderitems_set.all %}
+    </aside>
+    <main class="flex-1 p-8">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Order Management</h1>
+        <form method="get" class="flex gap-2">
+          <input type="text"
+                 name="search"
+                 placeholder="Search"
+                 value="{{ request.GET.search }}"
+                 class="border border-gray-300 rounded px-3 py-2">
+          <button type="submit"
+                  class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition">🔍</button>
+        </form>
+      </div>
+      <div class="overflow-x-auto bg-white rounded shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Order ID</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Model Name</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Material</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Qty</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Status</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Priority</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for order in orders %}
+              {% for item in order.orderitems_set.all %}
+                <tr>
+                  <td class="px-4 py-2">{{ order.id }}</td>
+                  <td class="px-4 py-2">{{ item.Model.Name }}</td>
+                  <td class="px-4 py-2">{{ item.InventoryChange.RawMaterial.Filament.Material.Name }}</td>
+                  <td class="px-4 py-2">{{ item.ItemQuantity }}</td>
+                  <td class="px-4 py-2">
+                    <form method="POST"
+                          action="{% url 'edit-fulfillment-status' order.id %}"
+                          class="flex items-center space-x-2">
+                      {% csrf_token %}
+                      <select name="OrderStatus"
+                              class="text-sm border border-gray-300 rounded px-2 py-1"
+                              required>
+                        {% for value, label in status_choices %}
+                          <option value="{{ value }}"
+                                  {% if value == order.current_status %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                      <button type="submit"
+                              class="bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700">
+                        Update
+                      </button>
+                    </form>
+                  </td>
+                  <td class="px-4 py-2">
+                    {% if order.ExpeditedService %}
+                      <span class="text-red-600 font-semibold">High</span>
+                    {% else %}
+                      Normal
+                    {% endif %}
+                  </td>
+                  <td class="px-4 py-2">
+                    <a href="{% url 'delete-order-dashboard' order.id %}"
+                       class="text-red-600 hover:underline font-semibold">Delete</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% empty %}
               <tr>
-                <td class="px-4 py-2">{{ order.id }}</td>
-                <td class="px-4 py-2">{{ item.Model.Name }}</td>
-                <td class="px-4 py-2">{{ item.InventoryChange.RawMaterial.Filament.Material.Name }}</td>
-                <td class="px-4 py-2">{{ item.ItemQuantity }}</td>
-                <td class="px-4 py-2">{{ order.current_status }}</td>
-                <td class="px-4 py-2">
-                  {% if order.ExpeditedService %}
-                    <span class="text-red-600 font-semibold">High</span>
-                  {% else %}
-                    Normal
-                  {% endif %}
-                </td>
-                <td class="px-4 py-2">
-                  <a href="{% url 'edit-order' order.id %}" class="text-blue-600 hover:underline">Edit</a> |
-                  <a href="{% url 'delete-order' order.id %}" class="text-red-600 hover:underline">Delete</a>
-                </td>
+                <td colspan="7" class="px-4 py-6 text-center text-gray-500">No orders found.</td>
               </tr>
             {% endfor %}
-          {% empty %}
-            <tr>
-              <td colspan="7" class="px-4 py-6 text-center text-gray-500">No orders found.</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="text-center mt-10">
-      <a href="{% url 'add-order' %}" class="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition">
-        Create New Order
-      </a>
-      <div class="mt-4">
-        {% comment %} <a href="{% url 'admin_dashboard' %}" class="text-blue-600 hover:underline">Admin Dashboard</a> {% endcomment %}
-        <a href="{% url 'admin_dashboard' %}" class="text-indigo-700 hover:underline font-semibold">← Back to Admin Dashboard</a>
+          </tbody>
+        </table>
       </div>
-    </div>
-  </main>
-</div>
-{% endblock %}
+      <div class="text-center mt-10">
+        <a href="{% url 'product-admin-generate-quote' %}"
+           class="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition">
+          Create New Order
+        </a>
+        <div class="mt-4">
+          <a href="{% url 'admin_dashboard' %}"
+             class="text-indigo-700 hover:underline font-semibold">← Back to Admin Dashboard</a>
+        </div>
+      </div>
+    </main>
+  </section>
+{% endblock content %}

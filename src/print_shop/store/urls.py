@@ -136,6 +136,11 @@ urlpatterns = [
         name="edit-fulfillment-status",
     ),
     path(
+        "fulfillment-status/edit-order-list/<int:pk>/",
+        fulfillment_status_view.edit_fulfillment_status_order_list,
+        name="edit-fulfillment-status-order-list",
+    ),
+    path(
         "fulfillment-status/delete/<int:pk>/",
         fulfillment_status_view.delete_fulfillment_status,
         name="delete-fulfillment-status",
@@ -283,6 +288,7 @@ urlpatterns = [
         product_admin_view.generate_quote,
         name="product-admin-generate-quote",
     ),
+    # Admin Dashboard URLs
     path(
         "admin-dashboard/", admin_dashboard_view.admin_dashboard, name="admin_dashboard"
     ),
@@ -295,5 +301,10 @@ urlpatterns = [
         "order-management/",
         admin_dashboard_view.order_management,
         name="order_management",
+    ),
+    path(
+        "order-management/delete/<int:pk>/",
+        orders_view.delete_order_dashboard,
+        name="delete-order-dashboard",
     ),
 ]
