@@ -80,51 +80,21 @@ def user_profile_detail(request, pk):
 
 
 @user_passes_test(is_staff)
-def add_user_profile(request):
-    """Add a new user profile (admin view)"""
-    if request.method == "POST":
-        form = UserProfileAdminForm(request.POST)
-        if form.is_valid():
-            try:
-                user_profile = form.save()
-                messages.success(
-                    request,
-                    f"User profile for {user_profile.user.username} was created successfully",
-                )
-                return redirect("user-profile-list")
-            except IntegrityError as e:
-                if "username" in str(e):
-                    messages.error(
-                        request,
-                        f"Username '{form.cleaned_data.get('username')}' is already taken. Please choose a different username.",
-                    )
-                else:
-                    messages.error(
-                        request,
-                        f"An error occurred while creating the user: {str(e)}",
-                    )
-    else:
-        form = UserProfileAdminForm()
-    return render(
-        request, "user/user_profile_form.html", {"form": form, "is_admin_view": True}
-    )
-
-
-@user_passes_test(is_staff)
-def add_staff_user(request):
-    """Add a new staff user (admin view)"""
+def add_user(request):
+    """Add a new user (admin/staff view)"""
     if request.method == "POST":
         form = StaffUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             messages.success(
-                request, f"Staff account for {user.username} was created successfully"
+                request, f"User account for {user.username} was created successfully"
             )
             return redirect("user-profile-list")
     else:
         form = StaffUserCreationForm()
-    return render(request, "user/staff_user_form.html", {"form": form})
-
+    return render(
+        request, "user/user_profile_form.html", {"form": form, "is_admin_view": True}
+    )
 
 @user_passes_test(is_staff)
 def edit_user_profile(request, pk):
