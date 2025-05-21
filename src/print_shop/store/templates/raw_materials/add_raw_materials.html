@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    <label>Supplier:</label>
+    <select name="supplier">
+        {% for supplier in suppliers %}
+        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+        {% endfor %}
+    </select><br>
+{% csrf_token %}
+        {{ form.as_p }}
+
+    <button type="submit">Add Raw Material</button>
+</form>
+{% endblock %}

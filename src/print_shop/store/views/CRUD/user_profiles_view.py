@@ -35,7 +35,7 @@ def edit_profile(request):
         if form.is_valid():
             user_profile = form.save()
             messages.success(request, "Your profile was updated successfully")
-            return redirect("view-profile")
+            return redirect("user_profile_list")
     else:
         form = UserProfileForm(instance=user_profile)
     return render(request, "user/user_profile_form.html", {"form": form})
@@ -176,3 +176,4 @@ def change_password(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, "user/change_password.html", {"form": form})
+

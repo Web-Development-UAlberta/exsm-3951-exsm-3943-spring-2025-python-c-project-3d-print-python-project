@@ -24,14 +24,17 @@ def orders_list(request):
         orders = Orders.objects.filter(User=request.user)
     return render(request, "orders/orders_list.html", {"orders": orders})
 
-
-# Create a new order - only accessible to all authenticated users
 @login_required
 def add_order(request):
     if request.method == "POST":
         form = OrdersForm(request.POST)
         if form.is_valid():
-            order = form.save()
+            order = form.save(commit=False)
+
+            # TEMP FIX: Prevent null TotalPrice
+            order.TotalPrice = 0  # Replace with real logic later
+
+            order.save()
             messages.success(
                 request, f"Order {order.User.username} was created successfully"
             )
@@ -39,6 +42,7 @@ def add_order(request):
     else:
         form = OrdersForm()
     return render(request, "orders/orders_form.html", {"form": form})
+
 
 
 # Edit an existing order - only accessible to admin users

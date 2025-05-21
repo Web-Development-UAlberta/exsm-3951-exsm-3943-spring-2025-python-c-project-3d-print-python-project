@@ -62,7 +62,7 @@
                     Edit Your Profile
                 {% endif %}
             </h1>
-            <form method="post" class="overflow-auto flex-grow">
+            <form method="post"  class="overflow-auto flex-grow">
                 {% csrf_token %}
                 <fieldset class="mb-6">
                     <legend class="text-xl font-semibold mb-4 text-white border-b border-gray-600 pb-2">User Information</legend>
@@ -104,10 +104,11 @@
                     </div>
                 </fieldset>
                 <div class="mt-6 flex space-x-4 border-t border-gray-600 pt-4">
-                    <button type="submit"
+                    <button type="submit" 
                             class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">
                         Save Profile
                     </button>
+        
                     {% if is_admin_view %}
                         <a href="{% url 'user-profile-list' %}"
                            class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Cancel</a>
