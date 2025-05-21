@@ -29,21 +29,23 @@
             </div>
             <div class="mb-6 p-4 bg-gray-50 rounded-lg">
               <h2 class="text-xl font-semibold mb-4">2. Select Model</h2>
-              <div class="mb-4">
-                <label for="model-select" class="block text-sm font-medium mb-1">Model</label>
-                <select id="model-select"
-                        name="model"
-                        class="w-full border rounded-md px-3 py-2">
-                  <option value="">Select a model</option>
-                  {% for model_item in all_models %}
-                    <option value="{{ model_item.id }}"
-                            data-base-infill="{{ model_item.BaseInfill }}"
-                            data-thumbnail="{{ model_item.Thumbnail.url }}"
-                            {% if selected_model == model_item.id|stringformat:'s' %}selected{% endif %}>
-                      {{ model_item.Name }}
-                    </option>
-                  {% endfor %}
-                </select>
+              <div class="flex gap-12 mb-4">
+                <div>
+                  <label for="model-select" class="block text-sm font-medium mb-1">Model</label>
+                  <select id="model-select"
+                          name="model"
+                          class="w-full border rounded-md px-3 py-2">
+                    <option value="">Select a model</option>
+                    {% for model_item in all_models %}
+                      <option value="{{ model_item.id }}"
+                              data-base-infill="{{ model_item.BaseInfill }}"
+                              data-thumbnail="{{ model_item.Thumbnail.url }}"
+                              {% if selected_model == model_item.id|stringformat:'s' %}selected{% endif %}>
+                        {{ model_item.Name }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
               </div>
               <div id="model-thumbnail-container" class="mt-4 hidden">
                 <img id="model-thumbnail"
