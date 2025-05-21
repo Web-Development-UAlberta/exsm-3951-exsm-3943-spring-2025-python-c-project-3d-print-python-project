@@ -287,8 +287,6 @@ class SignupPageTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         
-       
-
 
 class HomePageTests(TestCase):
     """Tests for the home page functionality"""
@@ -324,192 +322,176 @@ class HomePageTests(TestCase):
        
 
 
+class CatalogPageTests(TestCase):
+    """Tests for the catalog page functionality"""
+
+    def setUp(self):
+        # Create client for testing
+        self.client = Client()
+        self.catalog_url = reverse("custom-gallery")
+
+        self.product = Models.objects.create(
+            Name="Test Product",
+            Description="Test Description",
+            FixedCost=10.00,
+            EstimatedPrintVolume=100,
+            BaseInfill=0.2,
+        )
+
+        self.material = Materials.objects.create(Name="PLA")
+        self.filament = Filament.objects.create(
+            Name="PLA Filament", Material=self.material, ColorHexCode="FF0000"
+        )
+
+    def test_catalog_page_load(self):
+        """Test Catalog page loads successfully"""
+        response = self.client.get(self.catalog_url)
+
+        self.assertEqual(response.status_code, 200)
+        
+
+    def test_product_display(self):
+        """Test Product display on the catalog page"""
+        response = self.client.get(self.catalog_url)
+
+        self.assertContains(response, self.product.Name)
+    
+
+    def test_add_to_cart_functionality(self):
+        """Test Add to Cart functionality on the catalog page"""
+        add_to_cart_url = reverse("update-cart-item", args=[self.product.id])
+        response = self.client.post(add_to_cart_url, {"quantity": 1})
+
+        self.assertEqual(response.status_code, 302)
+       
 
 
-# class CatalogPageTests(TestCase):
-#     """Tests for the catalog page functionality"""
+class CartPageTests(TestCase):
+    """Tests for the cart page functionality"""
 
-#     def setUp(self):
-#         # Create client for testing
-#         self.client = Client()
-#         self.catalog_url = reverse("catalog")
+    def setUp(self):
+        # Create client for testing
+        self.client = Client()
+        self.cart_url = reverse("cart")
+        self.user = User.objects.create_user(
+            username="test@example.com",
+            email="test@example.com",
+            password="password123",
+        )
+        self.client.login(username="test@example.com", password="password123")
 
-#         self.product = Models.objects.create(
-#             Name="Test Product",
-#             Description="Test Description",
-#             FixedCost=10.00,
-#             EstimatedPrintVolume=100,
-#             BaseInfill=0.2,
-#         )
+        self.shipping = Shipping.objects.create(
+            Name="Standard Shipping",
+            Rate=5.00,
+            ShipTime=7,
+        )
+        self.order = Orders.objects.create(
+            User=self.user,
+            Shipping=self.shipping,
+            TotalPrice=100.00,
+            EstimatedShipDate=None,
+            ExpeditedService=False,
+        )
+        self.material = Materials.objects.create(Name="PLA")
+        self.supplier = Suppliers.objects.create(
+            Name="Supplier A",
+            Address="123 Supplier St.",
+            Phone="123-456-7890",
+            Email="supplier@supplier.com",
+        )
+        self.filament = Filament.objects.create(
+            Name="PLA Filament", Material=self.material, ColorHexCode="FF0000"
+        )
+        self.raw_material = RawMaterials.objects.create(
+            Supplier=self.supplier,
+            Filament=self.filament,
+            BrandName="Brand A",
+            Cost=20.00,
+            MaterialWeightPurchased=1000,
+            MaterialDensity=1.25,
+            ReorderLeadTime=7,
+            WearAndTearMultiplier=1.00,
+        )
+        self.inventory_change = InventoryChange.objects.create(
+            RawMaterial=self.raw_material,
+            QuantityWeightAvailable=500,
+            UnitCost=20.00,
+        )
 
-#         self.material = Materials.objects.create(Name="PLA")
-#         self.filament = Filament.objects.create(
-#             Name="PLA Filament", Material=self.material, ColorHexCode="FF0000"
-#         )
+        self.order_item = OrderItems.objects.create(
+            InventoryChange=self.inventory_change,
+            Order=self.order,
+            Model="Test Product",
+            InfillMultiplier=1.5,
+            TotalWeight=100,
+            CostOfGoodsSold=30.00,
+            Markup=1.5,
+            ItemPrice=45.00,
+            ItemQuantity=2,
+            IsCustom=False,
+        )
 
-#     def test_catalog_page_load(self):
-#         """Test Catalog page loads successfully"""
-#         response = self.client.get(self.catalog_url)
+    def test_cart_page_load_with_items(self):
+        """Test Cart page loads successfully with items"""
+        response = self.client.get(self.cart_url)
 
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, "Catalog")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Your Cart")
+        self.assertContains(response, self.order_item.Model)
+        self.assertContains(response, self.order_item.ItemQuantity)
+        self.assertContains(response, self.order_item.ItemPrice)
+        self.assertContains(response, self.order_item.CostOfGoodsSold)
 
-#     def test_product_display(self):
-#         """Test Product display on the catalog page"""
-#         response = self.client.get(self.catalog_url)
+    def test_increase_item_quantity(self):
+        """Test Increase item quantity in the cart"""
+        response = self.client.post(
+            reverse("update_cart_item", args=[self.order_item.id]),
+            {"quantity": 3},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.cart_url)
 
-#         self.assertContains(response, self.product.Name)
-#         self.assertContains(response, self.product.Description)
-#         self.assertContains(response, self.product.FixedCost)
-#         self.assertContains(response, self.product.EstimatedPrintVolume)
-#         self.assertContains(response, self.product.BaseInfill)
+        # Check that the item quantity was updated
+        self.order_item.refresh_from_db()
+        self.assertEqual(self.order_item.ItemQuantity, 3)
 
-#     def test_customization_options(self):
-#         """Test Customization options on the catalog page"""
-#         product_details_url = reverse("product_details", args=[self.product.id])
-#         response = self.client.get(product_details_url)
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, "PLA Filament")
-#         self.assertContains(response, "PLA")
-#         self.assertContains(response, "FF0000")
-#         self.assertContains(response, "Add to Cart")
+    def test_decrease_item_quantity(self):
+        """Test Decrease item quantity in the cart"""
+        response = self.client.post(
+            reverse("remove-from-cart", args=[self.order_item.id]),
+            {"quantity": 1},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.cart_url)
 
-#     def test_add_to_cart_functionality(self):
-#         """Test Add to Cart functionality on the catalog page"""
-#         add_to_cart_url = reverse("add_to_cart", args=[self.product.id])
-#         response = self.client.post(add_to_cart_url, {"quantity": 1})
+        # Check that the item quantity was updated
+        self.order_item.refresh_from_db()
+        self.assertEqual(self.order_item.ItemQuantity, 1)
 
-#         self.assertEqual(response.status_code, 302)
-#         self.assertRedirects(response, reverse("cart"))
-#         self.assertContains(response, "Product added to cart")
+    def test_reduce_item_quantity_less_than_one(self):
+        """Test Reduce item quantity to less than one"""
+        response = self.client.post(
+            reverse("remove-from-cart", args=[self.order_item.id]),
+            {"quantity": 0},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.cart_url)
 
+        # Check that the item was removed from the cart
+        with self.assertRaises(OrderItems.DoesNotExist):
+            OrderItems.objects.get(id=self.order_item.id)
+        self.assertContains(response, "Item removed from cart")
 
-# class CartPageTests(TestCase):
-#     """Tests for the cart page functionality"""
-
-#     def setUp(self):
-#         # Create client for testing
-#         self.client = Client()
-#         self.cart_url = reverse("cart")
-#         self.user = User.objects.create_user(
-#             username="test@example.com",
-#             email="test@example.com",
-#             password="password123",
-#         )
-#         self.client.login(username="test@example.com", password="password123")
-
-#         self.shipping = Shipping.objects.create(
-#             Name="Standard Shipping",
-#             Rate=5.00,
-#             ShipTime=7,
-#         )
-#         self.order = Orders.objects.create(
-#             User=self.user,
-#             Shipping=self.shipping,
-#             TotalPrice=100.00,
-#             EstimatedShipDate=None,
-#             ExpeditedService=False,
-#         )
-#         self.material = Materials.objects.create(Name="PLA")
-#         self.supplier = Suppliers.objects.create(
-#             Name="Supplier A",
-#             Address="123 Supplier St.",
-#             Phone="123-456-7890",
-#             Email="supplier@supplier.com",
-#         )
-#         self.filament = Filament.objects.create(
-#             Name="PLA Filament", Material=self.material, ColorHexCode="FF0000"
-#         )
-#         self.raw_material = RawMaterials.objects.create(
-#             Supplier=self.supplier,
-#             Filament=self.filament,
-#             BrandName="Brand A",
-#             Cost=20.00,
-#             MaterialWeightPurchased=1000,
-#             MaterialDensity=1.25,
-#             ReorderLeadTime=7,
-#             WearAndTearMultiplier=1.00,
-#         )
-#         self.inventory_change = InventoryChange.objects.create(
-#             RawMaterial=self.raw_material,
-#             QuantityWeightAvailable=500,
-#             UnitCost=20.00,
-#         )
-
-#         self.order_item = OrderItems.objects.create(
-#             InventoryChange=self.inventory_change,
-#             Order=self.order,
-#             Model="Test Product",
-#             InfillMultiplier=1.5,
-#             TotalWeight=100,
-#             CostOfGoodsSold=30.00,
-#             Markup=1.5,
-#             ItemPrice=45.00,
-#             ItemQuantity=2,
-#             IsCustom=False,
-#         )
-
-#     def test_cart_page_load_with_items(self):
-#         """Test Cart page loads successfully with items"""
-#         response = self.client.get(self.cart_url)
-
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, "Your Cart")
-#         self.assertContains(response, self.order_item.Model)
-#         self.assertContains(response, self.order_item.ItemQuantity)
-#         self.assertContains(response, self.order_item.ItemPrice)
-#         self.assertContains(response, self.order_item.CostOfGoodsSold)
-
-#     def test_increase_item_quantity(self):
-#         """Test Increase item quantity in the cart"""
-#         response = self.client.post(
-#             reverse("update_cart_item", args=[self.order_item.id]),
-#             {"quantity": 3},
-#             follow=True,
-#         )
-#         self.assertEqual(response.status_code, 302)
-#         self.assertRedirects(response, self.cart_url)
-
-#         # Check that the item quantity was updated
-#         self.order_item.refresh_from_db()
-#         self.assertEqual(self.order_item.ItemQuantity, 3)
-
-#     def test_decrease_item_quantity(self):
-#         """Test Decrease item quantity in the cart"""
-#         response = self.client.post(
-#             reverse("remove-from-cart", args=[self.order_item.id]),
-#             {"quantity": 1},
-#             follow=True,
-#         )
-#         self.assertEqual(response.status_code, 302)
-#         self.assertRedirects(response, self.cart_url)
-
-#         # Check that the item quantity was updated
-#         self.order_item.refresh_from_db()
-#         self.assertEqual(self.order_item.ItemQuantity, 1)
-
-#     def test_reduce_item_quantity_less_than_one(self):
-#         """Test Reduce item quantity to less than one"""
-#         response = self.client.post(
-#             reverse("remove-from-cart", args=[self.order_item.id]),
-#             {"quantity": 0},
-#             follow=True,
-#         )
-#         self.assertEqual(response.status_code, 302)
-#         self.assertRedirects(response, self.cart_url)
-
-#         # Check that the item was removed from the cart
-#         with self.assertRaises(OrderItems.DoesNotExist):
-#             OrderItems.objects.get(id=self.order_item.id)
-#         self.assertContains(response, "Item removed from cart")
-
-#     def test_checkout_with_max_quantity(self):
-#         """Test Checkout with maximum quantity"""
-#         self.order_item.ItemQuantity = 10
-#         self.order_item.save()
-#         checkout_url = reverse("checkout")
-#         response = self.client.get(checkout_url)
-#         self.assertIn(response.status_code, [200, 302])
+    def test_checkout_with_max_quantity(self):
+        """Test Checkout with maximum quantity"""
+        self.order_item.ItemQuantity = 10
+        self.order_item.save()
+        checkout_url = reverse("checkout")
+        response = self.client.get(checkout_url)
+        self.assertIn(response.status_code, [200, 302])
 
 
 # class ProfileOrdersPageTests(TestCase):
