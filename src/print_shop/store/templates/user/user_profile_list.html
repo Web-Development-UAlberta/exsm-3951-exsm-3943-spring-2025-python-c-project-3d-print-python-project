@@ -1,77 +1,87 @@
 {% extends 'base.html' %}
-
 {% block title %}User Profiles{% endblock %}
-
 {% block content %}
-  <style>
-        html, body {
+    <style>
+        html,
+        body {
             height: 100%;
             margin: 0;
         }
+
         .container.mx-auto.px-4.py-8 {
             padding: 0 !important;
             max-width: none !important;
             margin: 0 !important;
             width: 100% !important;
         }
+
         .fade-in {
             animation: fadeIn 1.2s ease-out forwards;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
     <div class="relative h-auto min-h-[calc(100vh-100px)] flex items-center justify-center px-4 py-8 overflow-hidden">
-    <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply"></div>
-    <div class="relative z-10 w-full max-w-5xl p-6 rounded-3xl bg-gradient-to-br from-black/80 to-black/70 backdrop-blur-xl text-white shadow-lg border border-white/20 flex flex-col -mt-16"
-         style="max-height: 85vh;">
-        
-        <h1 class="text-3xl font-bold mb-6 border-b border-gray-200 pb-4">Manage Users</h1>
-        
-        <div class="flex space-x-4 mb-4">
-            <a href="{% url 'add-user-profile' %}" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Add New User</a>
-            <a href="{% url 'add-staff-user' %}" class="bg-pink-600 hover:bg-pink-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Add New Staff</a>
+        <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl">
         </div>
-
-        {% if user_profiles %}
-        <div class="overflow-auto flex-grow border border-gray-600 rounded-lg">
-            <table class="w-full table-auto border-collapse border border-gray-600 text-white">
-                <thead>
-                    <tr class="bg-gradient-to-r from-purple-700 via-pink-700 to-blue-700 sticky top-0">
-                        <th class="border border-gray-600 px-3 py-2 text-left text-sm md:text-base">Username</th>
-                        <th class="border border-gray-600 px-3 py-2 text-left text-sm md:text-base">Name</th>
-                        <th class="border border-gray-600 px-3 py-2 text-left text-sm md:text-base">Email</th>
-                        <th class="border border-gray-600 px-3 py-2 text-left text-sm md:text-base">Phone</th>
-                        <th class="border border-gray-600 px-3 py-2 text-center text-sm md:text-base">Staff</th>
-                        <th class="border border-gray-600 px-3 py-2 text-center text-sm md:text-base">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for profile in user_profiles %}
-                    <tr class="odd:bg-black/40 even:bg-black/20 hover:bg-blue-900/50 transition text-sm md:text-base">
-                        <td class="border border-gray-600 px-3 py-1">{{ profile.user.username }}</td>
-                        <td class="border border-gray-600 px-3 py-1">{{ profile.user.get_full_name }}</td>
-                        <td class="border border-gray-600 px-3 py-1">{{ profile.user.email }}</td>
-                        <td class="border border-gray-600 px-3 py-1">{{ profile.Phone }}</td>
-                        <td class="border border-gray-600 px-3 py-1 text-center">{{ profile.user.is_staff|yesno:"Yes,No" }}</td>
-                        <td class="border border-gray-600 px-3 py-1 text-center space-x-2">
-                            <a href="{% url 'user-profile-detail' profile.id %}" class="text-blue-400 hover:text-blue-600 font-semibold">View</a>
-                            <a href="{% url 'edit-user-profile' profile.id %}" class="text-green-400 hover:text-green-600 font-semibold">Edit</a>
-                            <a href="{% url 'delete-user-profile' profile.id %}" class="text-red-400 hover:text-red-600 font-semibold">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            
+        <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply">
         </div>
-        <a href="{% url 'admin_dashboard' %}" class="text-indigo-700 hover:underline font-semibold">← Back to Admin Dashboard</a>
-        {% else %}
-            <p class="text-center text-gray-300 italic mt-6">No user profiles found.</p>
-        {% endif %}
+        <div class="relative z-10 w-full max-w-5xl p-6 rounded-3xl bg-gradient-to-br from-black/80 to-black/70 backdrop-blur-xl text-white shadow-lg border border-white/20 flex flex-col -mt-16"
+             style="max-height: 85vh">
+            <h1 class="text-3xl font-bold mb-6 border-b border-gray-200 pb-4">Manage Users</h1>
+            <div class="flex space-x-4 mb-4">
+                <a href="{% url 'add-user-profile' %}"
+                   class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">Add New User</a>
+            </div>
+            {% if user_profiles %}
+                <div class="overflow-auto flex-grow border border-gray-600 rounded-lg">
+                    <table class="w-full table-auto border-collapse border border-gray-600 text-white">
+                        <thead>
+                            <tr class="bg-gradient-to-r from-purple-700 via-pink-700 to-blue-700 sticky top-0">
+                                <th class="border border-gray-600 px-3 py-2 text-left text-sm md:text-base">Username</th>
+                                <th class="border border-gray-600 px-3 py-2 text-left text-sm md:text-base">Name</th>
+                                <th class="border border-gray-600 px-3 py-2 text-left text-sm md:text-base">Email</th>
+                                <th class="border border-gray-600 px-3 py-2 text-left text-sm md:text-base">Phone</th>
+                                <th class="border border-gray-600 px-3 py-2 text-center text-sm md:text-base">Staff</th>
+                                <th class="border border-gray-600 px-3 py-2 text-center text-sm md:text-base">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for profile in user_profiles %}
+                                <tr class="odd:bg-black/40 even:bg-black/20 hover:bg-blue-900/50 transition text-sm md:text-base">
+                                    <td class="border border-gray-600 px-3 py-1">{{ profile.user.username }}</td>
+                                    <td class="border border-gray-600 px-3 py-1">{{ profile.user.get_full_name }}</td>
+                                    <td class="border border-gray-600 px-3 py-1">{{ profile.user.email }}</td>
+                                    <td class="border border-gray-600 px-3 py-1">{{ profile.Phone }}</td>
+                                    <td class="border border-gray-600 px-3 py-1 text-center">{{ profile.user.is_staff|yesno:"Yes,No" }}</td>
+                                    <td class="border border-gray-600 px-3 py-1 text-center space-x-2">
+                                        <a href="{% url 'user-profile-detail' profile.id %}"
+                                           class="text-blue-400 hover:text-blue-600 font-semibold">View</a>
+                                        <a href="{% url 'edit-user-profile' profile.id %}"
+                                           class="text-green-400 hover:text-green-600 font-semibold">Edit</a>
+                                        <a href="{% url 'delete-user-profile' profile.id %}"
+                                           class="text-red-400 hover:text-red-600 font-semibold">Delete</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{% url 'admin_dashboard' %}"
+                   class="bg-indigo-700 hover:bg-indigo-800 text-white px-5 py-2 rounded-full shadow-md transition duration-300 w-fit mt-6">← Back to Admin Dashboard</a>
+            {% else %}
+                <p class="text-center text-gray-300 italic mt-6">No user profiles found.</p>
+            {% endif %}
+        </div>
     </div>
-</div>
 {% endblock %}
