@@ -307,4 +307,9 @@ urlpatterns = [
         orders_view.delete_order_dashboard,
         name="delete-order-dashboard",
     ),
+    path(
+        "order-management/details/<int:pk>/",
+        admin_dashboard_view.order_details,
+        name="order_details",
+    ),
 ]

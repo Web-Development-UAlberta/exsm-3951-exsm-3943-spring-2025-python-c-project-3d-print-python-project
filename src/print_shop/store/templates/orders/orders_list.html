@@ -67,7 +67,8 @@
                             <tr class="odd:bg-black/40 even:bg-black/20 hover:bg-blue-900/50 transition">
                                 <td class="border border-gray-600 px-3 py-1">{{ order.id }}</td>
                                 <td class="border border-gray-600 px-3 py-1">{{ order.User.username }}</td>
-                                <td class="border border-gray-600 px-3 py-1">{{ order.OrderDate }}</td>
+                                {% load tz %}
+                                <td class="border border-gray-600 px-3 py-1">{{ order.CreatedAt|date:"F j, Y g:i A" }} (UTC)</td>
                                 <td class="border border-gray-600 px-3 py-1">
                                     {% if user.is_staff %}
                                         <form method="post"

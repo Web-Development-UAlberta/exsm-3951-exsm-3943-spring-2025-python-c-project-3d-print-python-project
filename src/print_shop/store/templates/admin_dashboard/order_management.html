@@ -62,7 +62,10 @@
             {% for order in orders %}
               {% for item in order.orderitems_set.all %}
                 <tr>
-                  <td class="px-4 py-2">{{ order.id }}</td>
+                  <td class="px-4 py-2">
+                    <a href="{% url 'order_details' order.id %}"
+                       class="text-blue-600 hover:underline font-medium">{{ order.id }}</a>
+                  </td>
                   <td class="px-4 py-2">{{ item.Model.Name }}</td>
                   <td class="px-4 py-2">{{ item.InventoryChange.RawMaterial.Filament.Material.Name }}</td>
                   <td class="px-4 py-2">{{ item.ItemQuantity }}</td>
