@@ -1,54 +1,66 @@
 {% extends 'base.html' %}
-
-{% block title %}Delete User Profile{% endblock %}
-
+{% block title %}
+    Delete User Profile
+{% endblock title %}
 {% block content %}
-<style>
-    html, body {
-        height: 100%;
-        margin: 0;
-        overflow: hidden;
-    }
-    .container.mx-auto.px-4.py-8 {
-        padding: 0 !important;
-        max-width: none !important;
-        margin: 0 !important;
-        width: 100% !important;
-    }
-    .fade-in {
-        animation: fadeIn 1.2s ease-out forwards;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
 
-<div class="relative h-auto min-h-[calc(100vh-100px)] flex items-center justify-center px-4 py-8 overflow-hidden">
-    <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply"></div>
-    
-    <div class="relative z-10 w-full max-w-5xl p-6 rounded-3xl bg-gradient-to-br from-black/80 to-black/70 backdrop-blur-xl text-white shadow-lg border border-white/20 flex flex-col -mt-16"
-         style="max-height: 85vh;">
-        
-        <h1 class="text-3xl font-bold mb-6 border-b border-gray-200 pb-4">Delete User Profile</h1>
-        
-        <div class="mb-6 space-y-4">
-            <p class="text-lg">Are you sure you want to delete the user profile for <strong class="text-red-400">{{ user_profile.user.username }}</strong>?</p>
-            <p class="text-red-300">This will delete the user account and all associated data. This action cannot be undone.</p>
+        .container.mx-auto.px-4.py-8 {
+            padding: 0 !important;
+            max-width: none !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 1.2s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+    <div class="relative h-auto min-h-[calc(100vh-100px)] flex items-center justify-center px-4 py-8 overflow-hidden">
+        <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl">
         </div>
-        
-        <form method="post" class="mt-auto border-t border-gray-600 pt-4">
-            {% csrf_token %}
-            <div class="flex space-x-4">
-                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">
-                    Yes, Delete Permanently
-                </button>
-                <a href="{% url 'user-profile-list' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">
-                    Cancel
-                </a>
+        <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply">
+        </div>
+        <div class="relative z-10 w-full max-w-5xl p-6 rounded-3xl bg-gradient-to-br from-black/80 to-black/70 backdrop-blur-xl text-white shadow-lg border border-white/20 flex flex-col -mt-16"
+             style="max-height: 85vh">
+            <h1 class="text-3xl font-bold mb-6 border-b border-gray-200 pb-4">Delete User Profile</h1>
+            <div class="mb-6 space-y-4">
+                <p class="text-lg">
+                    Are you sure you want to delete the user profile for <strong class="text-red-400">{{ user_profile.user.username }}</strong>?
+                </p>
+                <p class="text-red-300">This will delete the user account and all associated data. This action cannot be undone.</p>
             </div>
-        </form>
+            <form method="post" class="mt-auto border-t border-gray-600 pt-4">
+                {% csrf_token %}
+                <div class="flex space-x-4">
+                    <button type="submit"
+                            class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">
+                        Yes, Delete Permanently
+                    </button>
+                    <a href="{% url 'user-profile-list' %}"
+                       class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-full shadow-md transition duration-300">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-{% endblock %}
+{% endblock content %}

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from store.models import Orders, FulfillmentStatus, Models, InventoryChange
 from django.db.models import Q
@@ -106,5 +106,32 @@ def order_management(request):
         elif priority.lower() == "normal":
             orders = orders.filter(ExpeditedService=False)
 
-    context = {"orders": orders}
+    status_choices = FulfillmentStatus.Status.choices
+    
+    context = {
+        "orders": orders,
+        "status_choices": status_choices
+    }
     return render(request, "admin_dashboard/order_management.html", context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def order_details(request, pk):
+    """View for showing detailed information about a specific order"""
+    order = get_object_or_404(Orders, pk=pk)
+    order_items = order.orderitems_set.all()
+    for item in order_items:
+        item.InfillPercentage = int(item.Model.BaseInfill * item.InfillMultiplier * 100)
+    fulfillment_statuses = FulfillmentStatus.objects.filter(Order=order).order_by('-StatusChangeDate')
+    order_total = sum(item.ItemPrice * item.ItemQuantity for item in order_items)
+    
+    context = {
+        "order": order,
+        "order_items": order_items,
+        "fulfillment_statuses": fulfillment_statuses,
+        "order_total": order_total,
+        "status_choices": FulfillmentStatus.Status.choices
+    }
+    
+    return render(request, "admin_dashboard/order_details.html", context)

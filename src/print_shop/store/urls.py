@@ -79,6 +79,11 @@ urlpatterns = [
         raw_materials_view.delete_raw_material,
         name="delete-raw-material",
     ),
+    path(
+        "raw-materials/detail/<int:pk>/",
+        raw_materials_view.raw_material_detail,
+        name="raw-material-detail",
+    ),
     # Inventory URLs
     path(
         "inventory/current",
@@ -136,6 +141,11 @@ urlpatterns = [
         name="edit-fulfillment-status",
     ),
     path(
+        "fulfillment-status/edit-order-list/<int:pk>/",
+        fulfillment_status_view.edit_fulfillment_status_order_list,
+        name="edit-fulfillment-status-order-list",
+    ),
+    path(
         "fulfillment-status/delete/<int:pk>/",
         fulfillment_status_view.delete_fulfillment_status,
         name="delete-fulfillment-status",
@@ -168,14 +178,10 @@ urlpatterns = [
     ),
     path(
         "user-profiles/add/",
-        user_profiles_view.add_user_profile,
+        user_profiles_view.add_user,
         name="add-user-profile",
     ),
-    path(
-        "user-profiles/add-staff/",
-        user_profiles_view.add_staff_user,
-        name="add-staff-user",
-    ),
+
     path(
         "user-profiles/edit/<int:pk>/",
         user_profiles_view.edit_user_profile,
@@ -283,6 +289,7 @@ urlpatterns = [
         product_admin_view.generate_quote,
         name="product-admin-generate-quote",
     ),
+    # Admin Dashboard URLs
     path(
         "admin-dashboard/", admin_dashboard_view.admin_dashboard, name="admin_dashboard"
     ),
@@ -295,5 +302,15 @@ urlpatterns = [
         "order-management/",
         admin_dashboard_view.order_management,
         name="order_management",
+    ),
+    path(
+        "order-management/delete/<int:pk>/",
+        orders_view.delete_order_dashboard,
+        name="delete-order-dashboard",
+    ),
+    path(
+        "order-management/details/<int:pk>/",
+        admin_dashboard_view.order_details,
+        name="order_details",
     ),
 ]
