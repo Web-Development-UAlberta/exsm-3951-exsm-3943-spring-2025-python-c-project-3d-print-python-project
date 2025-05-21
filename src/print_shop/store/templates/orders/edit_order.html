@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section>
+        <h1>Edit Order</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit">Update Order</button>
+        </form>
+        <a href="{% url 'orders-list' %}">Back to Orders</a>
+    </section>
+{% endblock content %}

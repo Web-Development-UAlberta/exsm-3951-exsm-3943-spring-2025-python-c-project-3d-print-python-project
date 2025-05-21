@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home | 3D Print Store{% endblock %}
+
+{% block content %}
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
+    .container.mx-auto.px-4.py-8 {
+        padding: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .fade-in {
+        animation: fadeIn 1.2s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+<div id="hero-section" class="relative h-[calc(100vh-100px)] flex items-center justify-start pl-16 overflow-hidden">
+    <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-500/30 mix-blend-multiply"></div>
+
+    <div class="relative z-10 w-full max-w-md p-8 rounded-2xl bg-gradient-to-br from-white/10 via-white/5 to-white/0 backdrop-blur-xl text-white fade-in shadow-[0_8px_30px_rgba(0,0,0,0.3)] border border-white/20 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)] transition-transform duration-500">
+        <h1 class="text-4xl font-extrabold mb-6">Welcome to the 3D Print Store</h1>
+
+        <p class="text-base mb-6 leading-relaxed">
+            Browse our extensive collection of 3D models, easily customize them to fit your needs, and stay up to date on your order's progress. At our 3D Print Store, we combine innovation with convenience, delivering high-quality prints tailored just for you.
+        </p>
+
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'custom-gallery' %}" class="bg-black hover:bg-blue-500 hover:shadow-lg text-white px-5 py-2.5 rounded-full transition duration-300 ease-in-out shadow-md">
+                Custom 3D Printing
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

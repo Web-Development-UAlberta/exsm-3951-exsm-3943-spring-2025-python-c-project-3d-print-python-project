@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Inventory Change Details</h1>
+  <div>
+    <p>
+      <strong>Raw Material:</strong> {{ inventory_change.RawMaterial.Filament.Name }}
+    </p>
+    <p>
+      <strong>Color:</strong> {{ inventory_change.RawMaterial.Filament.ColorHexCode }}
+    </p>
+    <p>
+      <strong>Quantity Available:</strong> {{ inventory_change.QuantityWeightAvailable }}g
+    </p>
+    <p>
+      <strong>Unit Cost:</strong> ${{ inventory_change.UnitCost }}
+    </p>
+    <p>
+      <strong>Inventory Change Date:</strong> {{ inventory_change.InventoryChangeDate|date:'F d, Y H:i' }}
+    </p>
+    <p>
+      <strong>Reorder Needed:</strong> {{ inventory_change.needs_reorder|yesno:'Yes,No' }}
+    </p>
+  </div>
+  <a href="{% url 'inventory-change-list' %}">Back to Inventory Changes List</a>
+{% endblock %}

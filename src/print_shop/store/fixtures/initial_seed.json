@@ -1,0 +1,692 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "username": "admin",
+      "password": "admin",
+      "email": "admin@example.com",
+      "is_staff": true,
+      "is_superuser": true
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "username": "bob",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "bob@example.com",
+      "is_staff": true,
+      "is_superuser": false
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "username": "carol",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "carol@example.com",
+      "is_staff": false,
+      "is_superuser": false
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "username": "daniel",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "daniel@example.com",
+      "is_staff": false,
+      "is_superuser": false
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "username": "eve",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "eve@example.com",
+      "is_staff": false,
+      "is_superuser": false
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "username": "frank",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "frank@example.com",
+      "is_staff": false,
+      "is_superuser": false
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "username": "grace",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "grace@example.com",
+      "is_staff": false,
+      "is_superuser": false
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 8,
+    "fields": {
+      "username": "heidi",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "heidi@example.com",
+      "is_staff": false,
+      "is_superuser": false
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 9,
+    "fields": {
+      "username": "ivan",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "ivan@example.com",
+      "is_staff": false,
+      "is_superuser": false
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 10,
+    "fields": {
+      "username": "judy",
+      "password": "pbkdf2_sha256$260000$example$hash",
+      "email": "judy@example.com",
+      "is_staff": false,
+      "is_superuser": false
+    }
+  },
+
+  {
+    "model": "store.userprofiles",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "Address": "123 Maple St, Edmonton, AB",
+      "Phone": "780-555-0101"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "Address": "456 Oak Ave, Calgary, AB",
+      "Phone": "403-555-0102"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 3,
+    "fields": {
+      "user": 3,
+      "Address": "789 Pine Rd, Vancouver, BC",
+      "Phone": "604-555-0103"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 4,
+    "fields": {
+      "user": 4,
+      "Address": "321 Spruce Dr, Winnipeg, MB",
+      "Phone": "204-555-0104"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 5,
+    "fields": {
+      "user": 5,
+      "Address": "654 Cedar Pl, Toronto, ON",
+      "Phone": "416-555-0105"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 6,
+    "fields": {
+      "user": 6,
+      "Address": "987 Birch Ln, Ottawa, ON",
+      "Phone": "613-555-0106"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 7,
+    "fields": {
+      "user": 7,
+      "Address": "135 Willow Ct, Montreal, QC",
+      "Phone": "514-555-0107"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 8,
+    "fields": {
+      "user": 8,
+      "Address": "246 Poplar St, Halifax, NS",
+      "Phone": "902-555-0108"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 9,
+    "fields": {
+      "user": 9,
+      "Address": "357 Aspen Ave, St. John's, NL",
+      "Phone": "709-555-0109"
+    }
+  },
+  {
+    "model": "store.userprofiles",
+    "pk": 10,
+    "fields": {
+      "user": 10,
+      "Address": "468 Elm Blvd, Victoria, BC",
+      "Phone": "250-555-0110"
+    }
+  },
+
+  { "model": "store.materials", "pk": 1, "fields": { "Name": "PLA" } },
+  { "model": "store.materials", "pk": 2, "fields": { "Name": "ABS" } },
+  { "model": "store.materials", "pk": 3, "fields": { "Name": "PETG" } },
+  { "model": "store.materials", "pk": 4, "fields": { "Name": "TPU" } },
+  { "model": "store.materials", "pk": 5, "fields": { "Name": "Resin" } },
+
+  {
+    "model": "store.filament",
+    "pk": 1,
+    "fields": { "Name": "PLA White", "Material": 1, "ColorHexCode": "FFFFFF" }
+  },
+  {
+    "model": "store.filament",
+    "pk": 2,
+    "fields": { "Name": "PLA Black", "Material": 1, "ColorHexCode": "000000" }
+  },
+  {
+    "model": "store.filament",
+    "pk": 3,
+    "fields": { "Name": "ABS Red", "Material": 2, "ColorHexCode": "FF0000" }
+  },
+  {
+    "model": "store.filament",
+    "pk": 4,
+    "fields": { "Name": "PETG Blue", "Material": 3, "ColorHexCode": "0000FF" }
+  },
+  {
+    "model": "store.filament",
+    "pk": 5,
+    "fields": { "Name": "TPU Green", "Material": 4, "ColorHexCode": "00FF00" }
+  },
+  {
+    "model": "store.filament",
+    "pk": 6,
+    "fields": { "Name": "Resin Clear", "Material": 5, "ColorHexCode": "F5F5F5" }
+  },
+
+  {
+    "model": "store.suppliers",
+    "pk": 1,
+    "fields": {
+      "Name": "Prusa Polymers",
+      "Address": "Prague, Czech Republic",
+      "Phone": "+420-222-333-444",
+      "Email": "info@prusa3d.com"
+    }
+  },
+  {
+    "model": "store.suppliers",
+    "pk": 2,
+    "fields": {
+      "Name": "MatterHackers",
+      "Address": "Lake Forest, CA, USA",
+      "Phone": "+1-949-613-5838",
+      "Email": "support@matterhackers.com"
+    }
+  },
+  {
+    "model": "store.suppliers",
+    "pk": 3,
+    "fields": {
+      "Name": "Filaments.ca",
+      "Address": "Toronto, ON, Canada",
+      "Phone": "+1-416-479-3732",
+      "Email": "sales@filaments.ca"
+    }
+  },
+  {
+    "model": "store.suppliers",
+    "pk": 4,
+    "fields": {
+      "Name": "3DXTech",
+      "Address": "Grand Rapids, MI, USA",
+      "Phone": "+1-616-855-4464",
+      "Email": "info@3dxtech.com"
+    }
+  },
+
+  {
+    "model": "store.rawmaterials",
+    "pk": 1,
+    "fields": {
+      "Supplier": 1,
+      "Filament": 1,
+      "BrandName": "Prusament",
+      "Cost": "30.00",
+      "MaterialWeightPurchased": 1000,
+      "MaterialDensity": "1.24",
+      "ReorderLeadTime": 7,
+      "WearAndTearMultiplier": "1.00",
+      "PurchasedDate": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.rawmaterials",
+    "pk": 2,
+    "fields": {
+      "Supplier": 2,
+      "Filament": 2,
+      "BrandName": "MatterHackers Pro",
+      "Cost": "32.00",
+      "MaterialWeightPurchased": 1000,
+      "MaterialDensity": "1.25",
+      "ReorderLeadTime": 10,
+      "WearAndTearMultiplier": "1.00",
+      "PurchasedDate": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.rawmaterials",
+    "pk": 3,
+    "fields": {
+      "Supplier": 3,
+      "Filament": 3,
+      "BrandName": "Filaments.ca ABS",
+      "Cost": "28.00",
+      "MaterialWeightPurchased": 1000,
+      "MaterialDensity": "1.04",
+      "ReorderLeadTime": 12,
+      "WearAndTearMultiplier": "1.10",
+      "PurchasedDate": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.rawmaterials",
+    "pk": 4,
+    "fields": {
+      "Supplier": 4,
+      "Filament": 4,
+      "BrandName": "3DXTech PETG",
+      "Cost": "35.00",
+      "MaterialWeightPurchased": 1000,
+      "MaterialDensity": "1.27",
+      "ReorderLeadTime": 9,
+      "WearAndTearMultiplier": "1.00",
+      "PurchasedDate": "2025-05-13T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "store.inventorychange",
+    "pk": 1,
+    "fields": {
+      "RawMaterial": 1,
+      "QuantityWeightAvailable": 1000,
+      "UnitCost": "0.03",
+      "InventoryChangeDate": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.inventorychange",
+    "pk": 2,
+    "fields": {
+      "RawMaterial": 2,
+      "QuantityWeightAvailable": 1000,
+      "UnitCost": "0.032",
+      "InventoryChangeDate": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.inventorychange",
+    "pk": 3,
+    "fields": {
+      "RawMaterial": 3,
+      "QuantityWeightAvailable": 1000,
+      "UnitCost": "0.028",
+      "InventoryChangeDate": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.inventorychange",
+    "pk": 4,
+    "fields": {
+      "RawMaterial": 4,
+      "QuantityWeightAvailable": 1000,
+      "UnitCost": "0.035",
+      "InventoryChangeDate": "2025-05-13T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "store.shipping",
+    "pk": 1,
+    "fields": {
+      "Name": "Canada Post Flat Rate Box (Small)",
+      "Rate": "17.99",
+      "ShipTime": 2
+    }
+  },
+  {
+    "model": "store.shipping",
+    "pk": 2,
+    "fields": {
+      "Name": "Canada Post Flat Rate Box (Medium)",
+      "Rate": "22.99",
+      "ShipTime": 3
+    }
+  },
+  {
+    "model": "store.shipping",
+    "pk": 3,
+    "fields": {
+      "Name": "Canada Post Flat Rate Box (Large)",
+      "Rate": "29.99",
+      "ShipTime": 4
+    }
+  },
+
+  {
+    "model": "store.models",
+    "pk": 1,
+    "fields": {
+      "Name": "Calibration Cube",
+      "Description": "20mm calibration cube for printer testing.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "3.00",
+      "EstimatedPrintVolume": 8,
+      "BaseInfill": "0.20",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 2,
+    "fields": {
+      "Name": "Benchy",
+      "Description": "3D Benchy for benchmarking printers.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "4.00",
+      "EstimatedPrintVolume": 15,
+      "BaseInfill": "0.18",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 3,
+    "fields": {
+      "Name": "Gear Set",
+      "Description": "Set of printable gears.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "5.00",
+      "EstimatedPrintVolume": 22,
+      "BaseInfill": "0.25",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 4,
+    "fields": {
+      "Name": "Vase",
+      "Description": "Spiral vase mode print.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "3.50",
+      "EstimatedPrintVolume": 30,
+      "BaseInfill": "0.10",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 5,
+    "fields": {
+      "Name": "Phone Stand",
+      "Description": "Universal phone stand.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "4.50",
+      "EstimatedPrintVolume": 18,
+      "BaseInfill": "0.22",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 6,
+    "fields": {
+      "Name": "Chess Pawn",
+      "Description": "Standard chess pawn.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "2.00",
+      "EstimatedPrintVolume": 5,
+      "BaseInfill": "0.18",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 7,
+    "fields": {
+      "Name": "Chess Rook",
+      "Description": "Standard chess rook.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "2.50",
+      "EstimatedPrintVolume": 7,
+      "BaseInfill": "0.20",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 8,
+    "fields": {
+      "Name": "Keychain",
+      "Description": "Simple keychain with hole.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "1.50",
+      "EstimatedPrintVolume": 3,
+      "BaseInfill": "0.15",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 9,
+    "fields": {
+      "Name": "Bottle Opener",
+      "Description": "Durable bottle opener.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "2.25",
+      "EstimatedPrintVolume": 6,
+      "BaseInfill": "0.22",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 10,
+    "fields": {
+      "Name": "Cable Clip",
+      "Description": "Clip for cable management.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "1.75",
+      "EstimatedPrintVolume": 4,
+      "BaseInfill": "0.12",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 11,
+    "fields": {
+      "Name": "Plant Pot",
+      "Description": "Small plant pot.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "3.75",
+      "EstimatedPrintVolume": 25,
+      "BaseInfill": "0.16",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 12,
+    "fields": {
+      "Name": "Business Card Holder",
+      "Description": "Desk business card holder.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "4.25",
+      "EstimatedPrintVolume": 10,
+      "BaseInfill": "0.19",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 13,
+    "fields": {
+      "Name": "Infinity Cube",
+      "Description": "Fidget infinity cube.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "5.00",
+      "EstimatedPrintVolume": 20,
+      "BaseInfill": "0.25",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 14,
+    "fields": {
+      "Name": "Miniature Figure",
+      "Description": "Tabletop game miniature.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "2.75",
+      "EstimatedPrintVolume": 8,
+      "BaseInfill": "0.22",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 15,
+    "fields": {
+      "Name": "SD Card Holder",
+      "Description": "Organizer for SD cards.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "2.00",
+      "EstimatedPrintVolume": 5,
+      "BaseInfill": "0.13",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 16,
+    "fields": {
+      "Name": "Tool Holder",
+      "Description": "Wall-mount tool holder.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "3.25",
+      "EstimatedPrintVolume": 12,
+      "BaseInfill": "0.21",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 17,
+    "fields": {
+      "Name": "Pen Cup",
+      "Description": "Desk pen cup.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "2.80",
+      "EstimatedPrintVolume": 9,
+      "BaseInfill": "0.17",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 18,
+    "fields": {
+      "Name": "Coaster",
+      "Description": "Drink coaster.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "1.30",
+      "EstimatedPrintVolume": 3,
+      "BaseInfill": "0.14",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 19,
+    "fields": {
+      "Name": "Cookie Cutter",
+      "Description": "Star-shaped cookie cutter.",
+      "FilePath": "models/Infinity_cube_2.stl",
+      "Thumbnail": "thumbnails/infinity_cube.png",
+      "FixedCost": "1.60",
+      "EstimatedPrintVolume": 4,
+      "BaseInfill": "0.11",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.models",
+    "pk": 20,
+    "fields": {
+      "Name": "Ring",
+      "Description": "Printable ring.",
+      "FilePath": "models/3DBenchy.stl",
+      "Thumbnail": "thumbnails/benchy.png",
+      "FixedCost": "1.10",
+      "EstimatedPrintVolume": 1,
+      "BaseInfill": "0.09",
+      "CreatedAt": "2025-05-13T00:00:00Z"
+    }
+  }
+]

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Suppliers</h1>
+
+  <a href="{% url 'add-supplier' %}">Add New Supplier</a>
+
+  <ul>
+    {% for supplier in suppliers %}
+      <li>
+        {{ supplier.Name }} —
+        <a href="{% url 'edit-supplier' supplier.pk %}">Edit</a> |
+        <a href="{% url 'delete-supplier' supplier.pk %}">Delete</a>
+      </li>
+    {% empty %}
+      <li>No suppliers found.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

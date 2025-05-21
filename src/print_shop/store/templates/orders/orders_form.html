@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
+    .container.mx-auto.px-4.py-8 {
+        padding: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+</style>
+<div class="relative min-h-[calc(100vh-100px)] overflow-hidden">
+  <div class="absolute inset-0 bg-[url('/static/images/sebastian-svenson-hero-image-unsplash.jpg')] bg-cover bg-center filter blur-2xl z-0"></div>
+  <div class="absolute inset-0 bg-gradient-to-r from-pink-500/60 via-purple-500/40 to-blue-800/80 mix-blend-multiply z-0"></div>
+  <section class="relative z-10 max-w-xl mx-auto my-20 bg-white/90 backdrop-blur-md rounded-xl shadow-xl p-8 mt-32">
+    <h1 class="text-3xl font-bold mb-6">{% if form.instance.id %}Edit Order{% else %}Create Order{% endif %}</h1>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition-colors">
+        {% if form.instance.id %}Update{% else %}Create{% endif %}
+      </button>
+    </form>
+
+    <a href="{% url 'orders-list' %}" class="inline-block mt-6 text-blue-600 hover:text-blue-800 underline">
+      Back to Orders
+    </a>
+  </section>
+</div>
+{% endblock %}
