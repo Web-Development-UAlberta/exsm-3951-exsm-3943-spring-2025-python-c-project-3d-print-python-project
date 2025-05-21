@@ -1,23 +1,15 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-  <h1>
-    {% if form.instance.pk %}
-      Edit
-    {% else %}
-      Add
-    {% endif %}
-    Filament
-  </h1>
-  <form method="POST">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit">
-      {% if form.instance.pk %}
-        Update
-      {% else %}
-        Create
-      {% endif %}
-    </button>
-  </form>
+  <div style="max-width: 400px; margin: 3rem auto; padding: 2rem 2.5rem; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+    <h1 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; text-align: center;">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Filament</h1>
+    <form method="post" style="display: flex; flex-direction: column; gap: 1.2rem;">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button type="submit" style="background: #2563eb; color: #fff; border: none; padding: 0.5rem 1.25rem; border-radius: 5px; font-weight: 500; cursor: pointer;">{% if form.instance.pk %}Update{% else %}Create{% endif %} Filament</button>
+        <a href="{% url 'filament-list' %}" style="background: #f3f4f6; color: #374151; border: none; padding: 0.5rem 1.25rem; border-radius: 5px; font-weight: 500; text-decoration: none;">Cancel</a>
+      </div>
+    </form>
+  </div>
 {% endblock content %}
