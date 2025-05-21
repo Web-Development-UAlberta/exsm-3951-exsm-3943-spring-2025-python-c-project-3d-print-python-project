@@ -1,36 +1,36 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
-  <h1 class="text-2xl font-bold text-center text-gray-800 my-4">Admin Dashboard</h1>
-  <div class="flex min-h-screen bg-gray-100">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-md p-4 space-y-3 font-semibold text-gray-800">
-      <a href="{% url 'admin_dashboard' %}"
-         class="block hover:text-blue-600 transition">Dashboard</a>
-      <a href="{% url 'order_management' %}"
-         class="block hover:text-blue-600 transition">Order Management</a>
-      <a href="{% url 'current-inventory' %}"
-         class="block hover:text-blue-600 transition">Inventory Management</a>
-      <a href="{% url 'user-profile-list' %}"
-         class="block hover:text-blue-600 transition">User Management</a>
-      <a href="{% url 'product-admin-generate-quote' %}"
-         class="block hover:text-blue-600 transition">Generate Quote</a>
-      <a href="{% url 'product-admin-premade-items' %}"
-         class="block hover:text-blue-600 transition">Premade Items</a>
-    </aside>
-    <!-- Dashboard Content -->
-    <main class="flex-1 p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div class="bg-white shadow rounded-lg p-4 text-center">
-        <p class="text-base font-medium text-gray-700">Total Orders</p>
-        <h2 class="text-xl font-bold text-indigo-600 mt-1">{{ total_orders }}</h2>
-      </div>
-      <div class="bg-white shadow rounded-lg p-4 text-center">
-        <p class="text-base font-medium text-gray-700">Active Orders</p>
-        <h2 class="text-xl font-bold text-green-600 mt-1">{{ active_orders }}</h2>
-      </div>
-      <div class="bg-white shadow rounded-lg p-4 text-center">
-        <p class="text-base font-medium text-gray-700">Inventory Warnings</p>
-        <h2 class="text-xl font-bold text-red-600 mt-1">{{ inventory_warnings }}</h2>
-      </div>
-    </main>
-  </div>
-{% endblock %}
+  <section class="">
+    <h1 class="text-2xl font-bold text-center text-gray-800 my-4">Admin Dashboard</h1>
+    <div class="flex min-h-[calc(100vh/2)] bg-gray-100">
+      <aside class="w-64 bg-white shadow-md p-4 space-y-3 font-semibold text-gray-800">
+        <a href="{% url 'admin_dashboard' %}"
+           class="block hover:text-blue-600 transition">Dashboard</a>
+        <a href="{% url 'order_management' %}"
+           class="block hover:text-blue-600 transition">Order Management</a>
+        <a href="{% url 'current-inventory' %}"
+           class="block hover:text-blue-600 transition">Inventory Management</a>
+        <a href="{% url 'user-profile-list' %}"
+           class="block hover:text-blue-600 transition">User Management</a>
+        <a href="{% url 'product-admin-generate-quote' %}"
+           class="block hover:text-blue-600 transition">Generate Quote</a>
+        <a href="{% url 'product-admin-premade-items' %}"
+           class="block hover:text-blue-600 transition">Premade Items</a>
+      </aside>
+      <main class="flex-1 p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-white shadow rounded-lg p-4 text-center">
+          <p class="text-base font-medium text-gray-700">Total Orders</p>
+          <h2 class="text-xl font-bold text-indigo-600 mt-1">{{ total_orders }}</h2>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4 text-center">
+          <p class="text-base font-medium text-gray-700">Active Orders</p>
+          <h2 class="text-xl font-bold text-green-600 mt-1">{{ active_orders }}</h2>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4 text-center">
+          <p class="text-base font-medium text-gray-700">Inventory Warnings</p>
+          <h2 class="text-xl font-bold text-red-600 mt-1">{{ inventory_warnings }}</h2>
+        </div>
+      </main>
+    </div>
+  </section>
+{% endblock content %}
