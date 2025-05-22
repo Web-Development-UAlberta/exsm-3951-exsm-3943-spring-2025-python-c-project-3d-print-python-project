@@ -521,6 +521,9 @@ def premade_item_detail(request, item_id):
 
         try:
             quantity = int(request.POST.get("quantity", 1))
+            if quantity > available_quantity:
+                messages.error(request, f"Cannot add {quantity} items. Only {available_quantity} in stock.")
+                return redirect("premade-item-detail", item_id=item_id)
             quantity = max(1, min(quantity, available_quantity))
 
             draft_order = get_draft_order(request)

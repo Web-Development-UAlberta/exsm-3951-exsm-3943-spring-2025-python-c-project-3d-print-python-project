@@ -85,8 +85,13 @@ def remove_from_cart(request, item_id):
 
     if request.method == "POST":
         item_name = item.Model.Name
-        item.delete()
-        messages.success(request, f"{item_name} has been removed from your cart.")
+        if not item.IsCustom:
+            item.Order = None
+            item.save()
+            messages.success(request, f"{item_name} has been removed from your cart.")
+        else:
+            item.delete()
+            messages.success(request, f"{item_name} has been removed from your cart.")
 
     return redirect("cart")
 
