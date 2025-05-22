@@ -16,7 +16,7 @@ from store.models import (
 )
 from django.utils import timezone
 import datetime
-
+from decimal import Decimal
 
 class LoginPageTests(TestCase):
     """Tests for the login page functionality"""
@@ -406,7 +406,7 @@ class CartPageTests(TestCase):
             Supplier=self.supplier,
             Filament=self.filament,
             BrandName="Brand A",
-            Cost=20.00,
+            Cost=Decimal("20.00"),
             MaterialWeightPurchased=1000,
             MaterialDensity=1.25,
             ReorderLeadTime=7,
@@ -417,11 +417,17 @@ class CartPageTests(TestCase):
             QuantityWeightAvailable=500,
             UnitCost=20.00,
         )
-
+        self.model = Models.objects.create(
+            Name="Test Model",
+            Description="A test 3D model",
+            FixedCost=2.50,
+            EstimatedPrintVolume=100,
+            BaseInfill=0.20,
+        )
         self.order_item = OrderItems.objects.create(
             InventoryChange=self.inventory_change,
             Order=self.order,
-            Model="Test Product",
+            Model=self.model,
             InfillMultiplier=1.5,
             TotalWeight=100,
             CostOfGoodsSold=30.00,
