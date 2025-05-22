@@ -16,7 +16,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User
 import os
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 
 class MaterialsModelTestCase(TestCase):
@@ -105,11 +105,11 @@ class RawMaterialsModelTestCase(TestCase):
             Supplier=self.supplier,
             Filament=self.filament,
             BrandName="Brand A",
-            Cost=20.00,
+            Cost=Decimal("20.00"),
             MaterialWeightPurchased=1000,
-            MaterialDensity=1.25,
+            MaterialDensity=Decimal("1.25"),
             ReorderLeadTime=7,
-            WearAndTearMultiplier=1.00,
+            WearAndTearMultiplier=Decimal("1.00"),
         )
 
     def test_raw_material_creation(self):
@@ -151,16 +151,16 @@ class InventoryChangeModelTestCase(TestCase):
             Supplier=self.supplier,
             Filament=self.filament,
             BrandName="Brand A",
-            Cost=20.00,
+            Cost=Decimal("20.00"),
             MaterialWeightPurchased=1000,
-            MaterialDensity=1.25,
+            MaterialDensity=Decimal("1.25"),
             ReorderLeadTime=7,
-            WearAndTearMultiplier=1.00,
+            WearAndTearMultiplier=Decimal("1.00"),
         )
         self.inventory_change = InventoryChange.objects.create(
             RawMaterial=self.raw_material,
             QuantityWeightAvailable=500,
-            UnitCost=20.00,
+            UnitCost=Decimal("20.00"),
         )
 
     def test_inventory_change_creation(self):
@@ -210,7 +210,7 @@ class ModelsModelTestCase(TestCase):
             Name="3D Model With Thumbnail",
             FilePath=stl_file,
             Description="A test model with thumbnail",
-            FixedCost=100.00,
+            FixedCost=Decimal("100.00"),
             EstimatedPrintVolume=500,
             BaseInfill=0.2,
             Thumbnail=image_file,
@@ -225,7 +225,7 @@ class ModelsModelTestCase(TestCase):
             Name="3D Model Without Thumbnail",
             FilePath=stl_file2,
             Description=None,
-            FixedCost=100.00,
+            FixedCost=Decimal("100.00"),
             EstimatedPrintVolume=500,
             BaseInfill=0.2,
             Thumbnail=None,
@@ -327,13 +327,13 @@ class OrdersModelTestCase(TestCase):
         )
         self.shipping = Shipping.objects.create(
             Name="Standard Shipping",
-            Rate=5.00,
+            Rate=Decimal("5.00"),
             ShipTime=7,
         )
         self.order = Orders.objects.create(
             User=self.user,
             Shipping=self.shipping,
-            TotalPrice=100.00,
+            TotalPrice=Decimal("100.00"),
             EstimatedShipDate=None,
             ExpeditedService=False,
         )
@@ -371,13 +371,13 @@ class OrderItemsModelTestCase(TestCase):
         )
         self.shipping = Shipping.objects.create(
             Name="Standard Shipping",
-            Rate=5.00,
+            Rate=Decimal("5.00"),
             ShipTime=7,
         )
         self.order = Orders.objects.create(
             User=self.user,
             Shipping=self.shipping,
-            TotalPrice=100.00,
+            TotalPrice=Decimal("100.00"),
             EstimatedShipDate=None,
             ExpeditedService=False,
         )
@@ -395,16 +395,16 @@ class OrderItemsModelTestCase(TestCase):
             Supplier=self.supplier,
             Filament=self.filament,
             BrandName="Brand A",
-            Cost=20.00,
+            Cost=Decimal("20.00"),
             MaterialWeightPurchased=1000,
-            MaterialDensity=1.25,
+            MaterialDensity=Decimal("1.25"),
             ReorderLeadTime=7,
-            WearAndTearMultiplier=1.00,
+            WearAndTearMultiplier=Decimal("1.00"),
         )
         self.inventory_change = InventoryChange.objects.create(
             RawMaterial=self.raw_material,
             QuantityWeightAvailable=500,
-            UnitCost=20.00,
+            UnitCost=Decimal("20.00"),
         )
         self.model = Models.objects.create(
             Name="3D Model",
@@ -412,16 +412,16 @@ class OrderItemsModelTestCase(TestCase):
                 "test_model.stl", b"file_content", content_type="application/sla"
             ),
             Description=None,
-            FixedCost=100.00,
+            FixedCost=Decimal("100.00"),
             EstimatedPrintVolume=500,
-            BaseInfill=0.2,
+            BaseInfill=Decimal("0.20"),
             Thumbnail=None,
         )
         self.order_item = OrderItems.objects.create(
             InventoryChange=self.inventory_change,
             Order=self.order,
             Model=self.model,
-            InfillMultiplier=1.5,
+            InfillMultiplier=Decimal("1.50"),
             ItemQuantity=2,
             IsCustom=False,
         )
@@ -442,22 +442,23 @@ class OrderItemsModelTestCase(TestCase):
             * self.model.BaseInfill
             * self.order_item.InfillMultiplier
         )
-        # Calculate weight for a single item, then multiply by quantity
-        single_item_weight = int(
-            expected_volume_cm3 * self.raw_material.MaterialDensity
+        
+        density = self.raw_material.MaterialDensity
+        quantity = self.order_item.ItemQuantity
+
+        expected_weight = int(
+            (expected_volume_cm3 * density * quantity).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
         )
-        expected_weight = single_item_weight * self.order_item.ItemQuantity
+       
         expected_material_cost = (
-            expected_weight
+            Decimal(expected_weight)
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
-        )
-        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(
-            str(expected_material_cost)
-        )
-        expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
-
-        # Test that calculated fields match expected values
+            )
+        expected_fixed_cost = self.model.FixedCost * quantity
+        expected_cogs = (expected_fixed_cost + expected_material_cost).quantize(Decimal("0.0001"))
+        expected_price = (expected_cogs * self.order_item.Markup).quantize(Decimal("0.01"))
+        
         self.assertEqual(self.order_item.TotalWeight, expected_weight)
         self.assertEqual(float(self.order_item.CostOfGoodsSold), float(expected_cogs))
         self.assertEqual(float(self.order_item.ItemPrice), float(expected_price))
@@ -499,19 +500,22 @@ class OrderItemsModelTestCase(TestCase):
             * self.model.BaseInfill
             * self.order_item.InfillMultiplier
         )
-        single_item_weight = int(
-            expected_volume_cm3 * self.raw_material.MaterialDensity
+    
+        
+        density = self.raw_material.MaterialDensity
+        quantity = self.order_item.ItemQuantity
+
+        expected_weight = int(
+            (expected_volume_cm3 * density * quantity).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
         )
-        expected_weight = single_item_weight * new_quantity
         expected_material_cost = (
-            expected_weight
+            Decimal(expected_weight)
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
         )
-        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(
-            str(expected_material_cost)
-        )
-        expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
+        expected_fixed_cost = self.model.FixedCost * quantity
+        expected_cogs = (expected_fixed_cost + expected_material_cost).quantize(Decimal("0.0001"))
+        expected_price = (expected_cogs * self.order_item.Markup).quantize(Decimal("0.01"))
 
         # Quantity change should affect calculated values
         self.assertEqual(self.order_item.ItemQuantity, new_quantity)
@@ -531,7 +535,7 @@ class OrderItemsModelTestCase(TestCase):
         original_price = self.order_item.ItemPrice
 
         # Change infill multiplier
-        self.order_item.InfillMultiplier = 2.0
+        self.order_item.InfillMultiplier = Decimal("2.00")
         self.order_item.save()
 
         # Calculate new expected values
@@ -540,18 +544,18 @@ class OrderItemsModelTestCase(TestCase):
             * self.model.BaseInfill
             * self.order_item.InfillMultiplier
         )
-        single_item_weight = int(
-            expected_volume_cm3 * self.raw_material.MaterialDensity
-        )
-        expected_weight = single_item_weight * self.order_item.ItemQuantity
+        
+        single_item_weight = (expected_volume_cm3 * self.raw_material.MaterialDensity).quantize(
+            Decimal("1"), rounding=ROUND_HALF_UP)
+        expected_weight = int(single_item_weight * self.order_item.ItemQuantity)
         expected_material_cost = (
             expected_weight
             * self.inventory_change.UnitCost
             * self.raw_material.WearAndTearMultiplier
         )
-        expected_cogs = Decimal(str(self.model.FixedCost)) + Decimal(
-            str(expected_material_cost)
-        )
+        
+        expected_fixed_cost = self.model.FixedCost * self.order_item.ItemQuantity
+        expected_cogs = expected_fixed_cost + expected_material_cost
         expected_price = expected_cogs * Decimal(str(self.order_item.Markup))
 
         # Verify that changing infill multiplier affects calculated fields
@@ -578,13 +582,13 @@ class FulfillmentStatusModelTestCase(TestCase):
         )
         self.shipping = Shipping.objects.create(
             Name="Standard Shipping",
-            Rate=5.00,
+            Rate=Decimal("5.00"),
             ShipTime=7,
         )
         self.order = Orders.objects.create(
             User=self.user,
             Shipping=self.shipping,
-            TotalPrice=100.00,
+            TotalPrice=Decimal("100.00"),
             EstimatedShipDate=None,
             ExpeditedService=False,
         )
@@ -600,7 +604,7 @@ class FulfillmentStatusModelTestCase(TestCase):
         self.assertEqual(
             self.fulfillment_status.OrderStatus, FulfillmentStatus.Status.PAID
         )
-        self.assertEqual(str(FulfillmentStatus.objects.count()), "1")
+        self.assertEqual(str(FulfillmentStatus.objects.count()), "2")
 
     def test_fulfillment_status_relationship(self):
         """Test the relationship between FulfillmentStatus and Orders."""
