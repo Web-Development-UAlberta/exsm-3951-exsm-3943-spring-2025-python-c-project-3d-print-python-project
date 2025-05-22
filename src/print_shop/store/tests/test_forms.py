@@ -32,12 +32,12 @@ from store.models import (
     RawMaterials,
     InventoryChange,
     Models,
-    UserProfiles,
     Shipping,
     Orders,
     OrderItems,
     FulfillmentStatus,
 )
+from decimal import Decimal
 
 
 class TestFilamentForm(TestCase):
@@ -95,13 +95,13 @@ class TestFulfillmentStatusForm(TestCase):
         user = User.objects.create_user(username="testuser", password="password")
         shipping = Shipping.objects.create(
             Name="Test Shipping",
-            Rate=10.00,
+            Rate=Decimal("10.00"),
             ShipTime=5,
         )
         order = Orders.objects.create(
             User=user,
             Shipping=shipping,
-            TotalPrice=100.00,
+            TotalPrice=Decimal("100.00"),
             EstimatedShipDate="2025-07-01",
             ExpeditedService=False,
         )
@@ -136,7 +136,7 @@ class TestFulfillmentStatusForm(TestCase):
 
         fulfillment_status = FulfillmentStatus.objects.create(
             Order=order,
-            OrderStatus=FulfillmentStatus.Status.PAID,
+            OrderStatus="PAID",
         )
 
         form_data = {"Order": "", "OrderStatus": fulfillment_status.OrderStatus}
@@ -147,7 +147,7 @@ class TestFulfillmentStatusForm(TestCase):
         """Test that the FulfillmentStatusForm is invalid with non-existent order."""
         form_data = {
             "Order": 9999,
-            "OrderStatus": FulfillmentStatus.Status.PAID,
+            "OrderStatus": "PAID",
         }
         form = FulfillmentStatusForm(data=form_data)
         self.assertFalse(form.is_valid())
@@ -156,13 +156,13 @@ class TestFulfillmentStatusForm(TestCase):
         user = User.objects.create_user(username="testuser", password="password")
         shipping = Shipping.objects.create(
             Name="Test Shipping",
-            Rate=10.00,
+            Rate=Decimal("10.00"),
             ShipTime=5,
         )
         order = Orders.objects.create(
             User=user,
             Shipping=shipping,
-            TotalPrice=100.00,
+            TotalPrice=Decimal("100.00"),
             EstimatedShipDate="2025-07-01",
             ExpeditedService=False,
         )
@@ -197,11 +197,11 @@ class TestInventoryChangeForm(TestCase):
             Supplier=self.supplier,
             Filament=self.filament,
             BrandName="Brand A",
-            Cost=100.00,
+            Cost=Decimal("100.00"),
             MaterialWeightPurchased=1000,
-            MaterialDensity=1.25,
+            MaterialDensity=Decimal("1.25"),
             ReorderLeadTime=7,
-            WearAndTearMultiplier=1.00,
+            WearAndTearMultiplier=Decimal("1.00"),
         )
 
     def test_valid_inventory_change_form(self):
@@ -209,7 +209,7 @@ class TestInventoryChangeForm(TestCase):
         form_data = {
             "RawMaterial": self.raw_material.id,
             "QuantityWeightAvailable": 500,
-            "UnitCost": 0.10,
+            "UnitCost": Decimal("0.10"),
         }
         form = InventoryChangeForm(data=form_data)
         self.assertTrue(form.is_valid(), form.errors)
@@ -227,7 +227,7 @@ class TestInventoryChangeForm(TestCase):
         form_data = {
             "RawMaterial": self.raw_material.id,
             "QuantityWeightAvailable": "five hundred",
-            "UnitCost": 0.10,
+            "UnitCost": Decimal("0.10"),
         }
         form = InventoryChangeForm(data=form_data)
         self.assertFalse(form.is_valid())
@@ -238,7 +238,7 @@ class TestInventoryChangeForm(TestCase):
         form_data = {
             "RawMaterial": self.raw_material.id,
             "QuantityWeightAvailable": -100,
-            "UnitCost": 0.10,
+            "UnitCost": Decimal("0.10"),
         }
         form = InventoryChangeForm(data=form_data)
         self.assertFalse(form.is_valid())
@@ -279,9 +279,9 @@ class TestModelsForm(TestCase):
         form_data = {
             "Name": "Test Model",
             "Description": "This is a test 3D model.",
-            "FixedCost": "25.00",
+            "FixedCost": Decimal("25.00"),
             "EstimatedPrintVolume": "150",
-            "BaseInfill": "0.25",
+            "BaseInfill": Decimal("0.25"),
         }
         form_files = {"FilePath": self.valid_file}
         form = ModelsForm(data=form_data, files=form_files)
@@ -333,11 +333,11 @@ class TestRawMaterialsForm(TestCase):
             "Supplier": self.supplier.id,
             "Filament": self.filament.id,
             "BrandName": "Brand A",
-            "Cost": 100.00,
+            "Cost": Decimal("100.00"),
             "MaterialWeightPurchased": 1000,
-            "MaterialDensity": 1.25,
+            "MaterialDensity": Decimal("1.25"),
             "ReorderLeadTime": 7,
-            "WearAndTearMultiplier": 1.00,
+            "WearAndTearMultiplier": Decimal("1.00"),
         }
         form = RawMaterialsForm(data=form_data)
         self.assertTrue(form.is_valid(), form.errors)
@@ -359,11 +359,11 @@ class TestRawMaterialsForm(TestCase):
             "Supplier": self.supplier.id,
             "Filament": self.filament.id,
             "BrandName": "Brand A",
-            "Cost": 100.00,
+            "Cost": Decimal("100.00"),
             "MaterialWeightPurchased": 1000,
-            "MaterialDensity": 1.25,
+            "MaterialDensity": Decimal("1.25"),
             "ReorderLeadTime": 7,
-            "WearAndTearMultiplier": 0.95,
+            "WearAndTearMultiplier": Decimal("0.95"),
         }
         form = RawMaterialsForm(data=form_data)
         self.assertFalse(form.is_valid())
@@ -375,11 +375,11 @@ class TestRawMaterialsForm(TestCase):
             "Supplier": self.supplier.id,
             "Filament": self.filament.id,
             "BrandName": "Brand A",
-            "Cost": -10.00,
+            "Cost": Decimal("-10.00"),
             "MaterialWeightPurchased": 1000,
-            "MaterialDensity": 1.25,
+            "MaterialDensity": Decimal("1.25"),
             "ReorderLeadTime": 7,
-            "WearAndTearMultiplier": 1.00,
+            "WearAndTearMultiplier": Decimal("1.00"),
         }
         form = RawMaterialsForm(data=form_data)
         # This will currently pass unless MinValueValidator is added to Cost
@@ -475,10 +475,10 @@ class TestCheckoutForm(TestCase):
     def setUp(self):
         # Create shipping options to test against
         self.standard_shipping = Shipping.objects.create(
-            Name="Standard", Rate=10.00, ShipTime=5
+            Name="Standard", Rate=Decimal("10.00"), ShipTime=5
         )
         self.express_shipping = Shipping.objects.create(
-            Name="Express", Rate=20.00, ShipTime=2
+            Name="Express", Rate=Decimal("20.00"), ShipTime=2
         )
 
     def test_checkout_form_valid_data(self):
@@ -573,24 +573,24 @@ class TestOrderForm(TestCase):
             Supplier=self.supplier,
             Filament=self.filament,
             BrandName="Brand A",
-            MaterialDensity=1.25,
+            MaterialDensity=Decimal("1.25"),
             MaterialWeightPurchased=500,
             Cost=100,
             ReorderLeadTime=7,
-            WearAndTearMultiplier=1.1,
+            WearAndTearMultiplier=Decimal("1.10"),
         )
 
         self.inventory = InventoryChange.objects.create(
             RawMaterial=self.raw_material,
             QuantityWeightAvailable=500,
-            UnitCost=0.5,
+            UnitCost=Decimal("0.50"),
         )
 
         self.model = Models.objects.create(
             Name="Test Model",
             EstimatedPrintVolume=10,
-            BaseInfill=0.5,
-            FixedCost=5.00,
+            BaseInfill=Decimal("0.50"),
+            FixedCost=Decimal("5.00"),
         )
 
         self.order = Orders.objects.create(
@@ -629,31 +629,7 @@ class TestOrderForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("InventoryChange", form.errors)
 
-    # def test_admin_item_form(self):
-    #     form_data = {
-    #         'Model': self.model.id,
-    #         'InventoryChange': self.inventory.id,
-    #         'ItemQuantity': 1,
-    #         'IsCustom': False,
-
-    #     }
-    #     form = AdminItemForm(data=form_data)
-    #     self.assertTrue(form.is_valid())
-    #     item = form.save()
-    #     self.assertIsNone(item.Order)
-    #     self.assertFalse(item.IsCustom)
-
-    # def test_custom_order_item_form(self):
-    #     form_data = {
-    #         'Model': self.model.id,
-    #         'InventoryChange': self.inventory.id,
-    #         'ItemQuantity': 1,
-    #         'InfillMultiplier': 1.0,
-    #     }
-    #     form = CustomOrderItemForm(data=form_data)
-    #     self.assertTrue(form.is_valid())
-    #     item = form.save()
-    #     self.assertTrue(item.IsCustom)
+    
 
     def test_premade_item_cart_form(self):
         # Create a pre-made item
@@ -661,11 +637,11 @@ class TestOrderForm(TestCase):
             Model=self.model,
             InventoryChange=self.inventory,
             ItemQuantity=1,
-            InfillMultiplier=1.0,
+            InfillMultiplier=Decimal("1.00"),
             TotalWeight=100,
-            CostOfGoodsSold=10.00,
-            Markup=1.15,
-            ItemPrice=11.50,
+            CostOfGoodsSold=Decimal("10.00"),
+            Markup=Decimal("1.15"),
+            ItemPrice=Decimal("11.50"),
             IsCustom=False,
         )
 
@@ -674,104 +650,3 @@ class TestOrderForm(TestCase):
         self.assertTrue(form.is_valid())
 
 
-# class TestUserProfileForm(TestCase):
-#     def setUp(self):
-#         self.user = User.objects.create_user(
-#             username="johndoe",
-#             password="securepassword",
-#             first_name="John",
-#             last_name="Doe",
-#             email="john@example.com"
-#         )
-#         self.profile = self.user.user_profile
-#         self.profile.Address = "123 Main Street"
-#         self.profile.Phone = "123-456-7890"
-#         self.profile.save()
-
-#     def test_initial_data_loaded(self):
-#         form = UserProfileForm(instance=self.profile)
-#         self.assertEqual(form.initial["first_name"], "John")
-#         self.assertEqual(form.initial["last_name"], "Doe")
-#         self.assertEqual(form.initial["email"], "john@example.com")
-
-#     def test_valid_profile_update(self):
-#         form_data = {
-#             "first_name": "Jane",
-#             "last_name": "Smith",
-#             "email": "jane@example.com",
-#             "Address": "456 New Street",
-#             "Phone": "987-654-3210",
-#         }
-#         form = UserProfileForm(data=form_data, instance=self.profile)
-#         self.assertTrue(form.is_valid())
-#         updated_profile = form.save()
-
-#         self.user.refresh_from_db()
-#         self.assertEqual(self.user.first_name, "Jane")
-#         self.assertEqual(self.user.last_name, "Smith")
-#         self.assertEqual(self.user.email, "jane@example.com")
-#         self.assertEqual(updated_profile.Address, "456 New Street")
-#         self.assertEqual(updated_profile.Phone, "987-654-3210")
-
-#     def test_missing_required_email(self):
-#         form_data = {
-#             "first_name": "Jane",
-#             "last_name": "Smith",
-#             "email": "",  # Missing required email
-#             "Address": "456 New Street",
-#             "Phone": "987-654-3210",
-#         }
-#         form = UserProfileForm(data=form_data, instance=self.profile)
-#         self.assertFalse(form.is_valid())
-#         self.assertIn("email", form.errors)
-
-# class TestUserRegistrationForm(TestCase):
-#     def test_valid_user_registration(self):
-#         form_data = {
-#             "username": "janedoe",
-#             "password1": "strongpassword123",
-#             "password2": "strongpassword123",
-#             "email": "jane@example.com",
-#             "first_name": "Jane",
-#             "last_name": "Doe",
-#             "address": "789 Park Ave",
-#             "phone": "555-0000"
-#         }
-#         form = UserRegistrationForm(data=form_data)
-#         self.assertTrue(form.is_valid())
-#         user = form.save()
-
-#         self.assertEqual(user.email, "jane@example.com")
-#         self.assertEqual(user.first_name, "Jane")
-#         self.assertEqual(user.last_name, "Doe")
-#         profile = user.user_profile
-#         self.assertEqual(profile.Address, "789 Park Ave")
-#         self.assertEqual(profile.Phone, "555-0000")
-
-#     def test_password_mismatch(self):
-#         form_data = {
-#             "username": "janedoe",
-#             "password1": "password123",
-#             "password2": "mismatch",
-#             "email": "jane@example.com",
-#             "address": "789 Park Ave",
-#             "phone": "555-0000"
-#         }
-#         form = UserRegistrationForm(data=form_data)
-#         self.assertFalse(form.is_valid())
-#         self.assertIn("password2", form.errors)
-
-#     def test_missing_address_and_phone(self):
-#         form_data = {
-#             "username": "janedoe",
-#             "password1": "password123",
-#             "password2": "password123",
-#             "email": "jane@example.com",
-#             "first_name": "Jane",
-#             "last_name": "Doe",
-#             # missing address and phone
-#         }
-#         form = UserRegistrationForm(data=form_data)
-#         self.assertFalse(form.is_valid())
-#         self.assertIn("address", form.errors)
-#         self.assertIn("phone", form.errors)
