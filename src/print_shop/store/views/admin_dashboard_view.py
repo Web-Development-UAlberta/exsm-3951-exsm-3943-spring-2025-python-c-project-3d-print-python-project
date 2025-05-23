@@ -2,6 +2,10 @@ from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from store.models import Orders, FulfillmentStatus, Models, InventoryChange
 from django.db.models import Q
+from store.models import InventoryChange
+from store.forms.inventory_form import InventoryChangeForm
+
+
 
 
 
@@ -49,7 +53,6 @@ def inventory_management(request):
     query = request.GET.get("q", "")
     material = request.GET.get("material", "")
     quantity = request.GET.get("quantity", "")
-
     inventory = InventoryChange.objects.select_related(
         "RawMaterial__Filament__Material"
     ).all()
@@ -75,6 +78,23 @@ def inventory_management(request):
     return render(
         request, "admin_dashboard/inventory_management.html", {"inventory": inventory}
     )
+def inventory_edit(request, pk):
+    inventory = get_object_or_404(InventoryChange, pk=pk)
+    if request.method == 'POST':
+        form = InventoryChangeForm(request.POST, instance=inventory)
+        if form.is_valid():
+            form.save()
+            return redirect('inventory_management')
+    else:
+        form = InventoryChangeForm(instance=inventory)
+    return render(request, 'store/inventory_change_details.html', {'form': form, 'inventory_change': inventory})
+
+def inventory_delete(request, pk):
+    inventory = get_object_or_404(InventoryChange, pk=pk)
+    if request.method == 'POST':
+        inventory.delete()
+        return redirect('inventory_management')
+    return render(request, 'store/inventory_change_confirm_delete.html', {'inventory': inventory})
 
 
 @login_required

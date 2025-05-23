@@ -299,6 +299,17 @@ urlpatterns = [
         name="inventory_management",
     ),
     path(
+    "inventory-management/<int:pk>/edit/",
+    admin_dashboard_view.inventory_edit,
+    name="inventory_edit",
+    ),
+    path(
+    "inventory-management/<int:pk>/delete/",
+    admin_dashboard_view.inventory_delete,
+    name="inventory_delete",
+    ),
+
+    path(
         "order-management/",
         admin_dashboard_view.order_management,
         name="order_management",

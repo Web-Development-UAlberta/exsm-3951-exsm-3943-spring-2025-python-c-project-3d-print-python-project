@@ -1,10 +1,10 @@
-from django.contrib import admin
+from django.contrib import admin # type: ignore
 from store.models import (
     UserProfiles,
     Materials,
     Filament,
     Suppliers,
-    RawMaterials,
+    RawMaterials,   
     InventoryChange,
     Models,
     Shipping,
