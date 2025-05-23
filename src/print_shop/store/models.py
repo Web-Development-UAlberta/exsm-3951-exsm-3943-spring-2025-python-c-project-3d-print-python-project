@@ -3,7 +3,6 @@
 """
 
 from django.db import models
-from decimal import Decimal
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -13,7 +12,7 @@ from django.core.validators import (
     FileExtensionValidator,
 )
 from django.core.exceptions import ValidationError
-from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+from decimal import Decimal, ROUND_HALF_UP
 from django.utils import timezone
 
 
@@ -35,7 +34,7 @@ class Filament(models.Model):
     Name = models.CharField(max_length=255)
     Material = models.ForeignKey(Materials, on_delete=models.CASCADE)
     ColorHexCode = models.CharField(
-        max_length=7,
+        max_length=6,
         validators=[RegexValidator(r"^[0-9A-Fa-f]{6}$")],
     )
 
@@ -112,12 +111,8 @@ class InventoryChangeManager(models.Manager):
 
     def available(self):
         """Get all available inventory following FIFO principles"""
-
-        # FIX: Order by RawMaterial.PurchasedDate ascending (oldest first),
-        # then InventoryChangeDate ascending (oldest inventory changes first)
-        # Your original code had '-InventoryChangeDate' which reversed FIFO on inventory change date
         return self.filter(QuantityWeightAvailable__gt=0).order_by(
-            "RawMaterial__PurchasedDate", "InventoryChangeDate"
+            "RawMaterial__PurchasedDate", "-InventoryChangeDate"
         )
 
     def find_for_weight(
@@ -133,7 +128,7 @@ class InventoryChangeManager(models.Manager):
         Returns:
             InventoryChange object with enough material, or None if not found
         """
-        weight_with_margin = Decimal(required_weight) * Decimal(safety_margin)
+        weight_with_margin = Decimal(str(required_weight)) * Decimal(str(safety_margin))
         available_inventory = self.available()
 
         if raw_material:
@@ -163,7 +158,9 @@ class InventoryChange(models.Model):
         Check if current inventory level is below reorder threshold
         Threshold set to 20% of original amount
         """
-        threshold = Decimal(self.RawMaterial.MaterialWeightPurchased) * Decimal("0.2")
+        threshold = Decimal(str(self.RawMaterial.MaterialWeightPurchased)) * Decimal(
+            "0.2"
+        )
         return self.QuantityWeightAvailable < threshold
 
 
@@ -179,8 +176,8 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
         InventoryChange.objects.create(
             RawMaterial=instance,
             QuantityWeightAvailable=instance.MaterialWeightPurchased,
-            UnitCost=Decimal(str(instance.Cost)) / Decimal(str(instance.MaterialWeightPurchased)),
-            InventoryChangeDate=instance.PurchasedDate,
+            UnitCost=Decimal(str(instance.Cost))
+            / Decimal(str(instance.MaterialWeightPurchased)),
         )
     else:
         initial_inventory = (
@@ -199,8 +196,8 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
                 initial_inventory.QuantityWeightAvailable = (
                     instance.MaterialWeightPurchased
                 )
-                initial_inventory.UnitCost = instance.Cost / Decimal(
-                    instance.MaterialWeightPurchased
+                initial_inventory.UnitCost = Decimal(str(instance.Cost)) / Decimal(
+                    str(instance.MaterialWeightPurchased)
                 )
                 initial_inventory.save(
                     update_fields=["QuantityWeightAvailable", "UnitCost"]
@@ -326,9 +323,12 @@ class Orders(models.Model):
             order_items = self.orderitems_set.all()
             if order_items.exists():
                 items_total = sum(
-                    item.ItemPrice * item.ItemQuantity for item in order_items
+                    Decimal(str(item.ItemPrice)) * item.ItemQuantity
+                    for item in order_items
                 )
-                shipping_cost = self.Shipping.Rate if self.Shipping else Decimal("0")
+                shipping_cost = (
+                    Decimal(str(self.Shipping.Rate)) if self.Shipping else Decimal("0")
+                )
                 self.TotalPrice = items_total + shipping_cost
 
                 if self.ExpeditedService:
@@ -376,56 +376,130 @@ class OrderItems(models.Model):
         if self.ItemPrice is not None and self.CostOfGoodsSold is not None:
             if self.ItemPrice < self.CostOfGoodsSold:
                 raise ValidationError(
-                    "Item price cannot be less than cost of goods sold."
+                    {
+                        "ItemPrice": "Item price cannot be less than the cost of goods sold."
+                    }
                 )
+        super().clean()
 
     def __str__(self):
-        return f"{self.Model.Name} - {self.ItemPrice} x {self.ItemQuantity}"
+        return f"{self.Model.Name} - {self.ItemQuantity}"
+
+    def calculate_required_weight(self):
+        """
+        Calculate the required weight for the order item based on model, infill, and quantity.
+        This is used for inventory validation before saving.
+        Returns the total weight required for this order item in grams
+        """
+        if not hasattr(self, "InventoryChange") or not self.InventoryChange:
+            return 0
+
+        try:
+            density = self.InventoryChange.RawMaterial.MaterialDensity
+            volume_cm3 = (
+                self.Model.EstimatedPrintVolume
+                * self.Model.BaseInfill
+                * self.InfillMultiplier
+            )
+            return max(1, int(round(volume_cm3 * density * self.ItemQuantity)))
+        except (AttributeError, TypeError):
+            return 0
+
+    def calculate_price_components(self):
+        """
+        Calculate and return all price components as a dictionary.
+        This ensures consistent price calculation across the application.
+        Returns:
+            dict: Contains 'weight', 'material_cost', 'fixed_cost', 'cost_of_goods', 'price'
+        """
+        weight = Decimal(str(self.calculate_required_weight()))
+        cost_per_gram = Decimal(str(self.InventoryChange.UnitCost))
+        wear_tear = Decimal(str(self.InventoryChange.RawMaterial.WearAndTearMultiplier))
+        fixed_cost = Decimal(str(self.Model.FixedCost)) * self.ItemQuantity
+        markup = Decimal(str(self.Markup))
+        material_cost = (weight * cost_per_gram * wear_tear).quantize(
+            Decimal("0.0001"), rounding=ROUND_HALF_UP
+        )
+        cost_of_goods = (fixed_cost + material_cost).quantize(
+            Decimal("0.0001"), rounding=ROUND_HALF_UP
+        )
+        price = (cost_of_goods * markup).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+
+        return {
+            "weight": weight,
+            "material_cost": material_cost,
+            "fixed_cost": fixed_cost,
+            "cost_of_goods": cost_of_goods,
+            "price": price,
+        }
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to calculate costs before saving using the shared calculation method.
+        """
+        self.TotalWeight = self.calculate_required_weight()
+        try:
+            price_components = self.calculate_price_components()
+            self.CostOfGoodsSold = price_components["cost_of_goods"]
+            self.ItemPrice = price_components["price"]
+            super().save(*args, **kwargs)
+        except (AttributeError, TypeError) as e:
+            print(f"Error in OrderItems.save(): {e}")
+            raise
 
 
 @receiver(post_save, sender=OrderItems)
-def update_inventory_on_orderitem_create(sender, instance, created, **kwargs):
+def create_inventory_change(sender, instance, created, **kwargs):
     """
-    Adjust inventory when order item is created.
-    Instead of creating a new inventory record with reduced quantity,
-    update the original inventory record.
+    Create inventory change when order item is created
     """
     if created:
         inventory = instance.InventoryChange
-        # Reduce the available quantity by total weight used in this order item
-        inventory.QuantityWeightAvailable = max(
-            0, inventory.QuantityWeightAvailable - instance.TotalWeight
+        new_quantity = inventory.QuantityWeightAvailable - instance.TotalWeight
+        InventoryChange.objects.create(
+            RawMaterial=inventory.RawMaterial,
+            QuantityWeightAvailable=new_quantity,
+            UnitCost=inventory.UnitCost,
         )
-        inventory.save(update_fields=["QuantityWeightAvailable"])
 
 
 @receiver(post_delete, sender=OrderItems)
-def restore_inventory_on_orderitem_delete(sender, instance, **kwargs):
+def restore_inventory_on_delete(sender, instance, **kwargs):
     """
-    Restore inventory quantity when order item is deleted.
+    Restore inventory when order item is deleted
     """
     inventory = instance.InventoryChange
-    inventory.QuantityWeightAvailable += instance.TotalWeight
-    inventory.save(update_fields=["QuantityWeightAvailable"])
+    new_quantity = inventory.QuantityWeightAvailable + instance.TotalWeight
+    InventoryChange.objects.create(
+        RawMaterial=inventory.RawMaterial,
+        QuantityWeightAvailable=new_quantity,
+        UnitCost=inventory.UnitCost,
+    )
 
 
 class FulfillmentStatus(models.Model):
-    """Table to store all fulfillment status of orders"""
+    """Table to store all fulfillment status"""
 
     class Status(models.TextChoices):
-        DRAFT = "DRAFT", "Draft"
-        PROCESSING = "PROCESSING", "Processing"
-        PRINTING = "PRINTING", "Printing"   
-        PENDING_PAYMENT = "PENDING_PAYMENT", "Pending Payment" 
-        PAID = "PAID", "Paid" 
-        COMPLETED = "COMPLETED", "Completed"
-        CANCELLED = "CANCELLED", "Cancelled"
+        """Enum for order status"""
+
+        DRAFT = "Draft", "Draft"
+        PENDING_PAYMENT = "Pending", "Pending"
+        PAID = "Paid", "Paid"
+        PRINTING = "Printing", "Printing"
+        SHIPPED = "Shipped", "Shipped"
+        CANCELED = "Canceled", "Canceled"
+        REFUNDED = "Refunded", "Refunded"
 
     Order = models.ForeignKey(Orders, on_delete=models.CASCADE)
     OrderStatus = models.CharField(
-        max_length=15, choices=Status.choices, default=Status.DRAFT
+        max_length=20, choices=Status.choices, default=Status.DRAFT
     )
     StatusChangeDate = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.Order} - {self.OrderStatus} - {self.StatusChangeDate}"
+        return (
+            f"{self.Order.User.username} - {self.OrderStatus} - {self.StatusChangeDate}"
+        )
