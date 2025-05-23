@@ -4,6 +4,7 @@ from store.models import Orders, FulfillmentStatus, Models, InventoryChange
 from django.db.models import Q
 
 
+
 # Check if the user is admin (Staff or Superuser)
 def is_admin(user):
     return user.is_authenticated and (user.is_superuser or user.is_staff)
@@ -14,10 +15,16 @@ def is_admin(user):
 def admin_dashboard(request):
     total_orders = Orders.objects.count()
 
-    active_statuses = ["Draft", "Pending", "Paid", "Printing"]
-    active_orders = FulfillmentStatus.objects.filter(
-        OrderStatus__in=active_statuses
-    ).count()
+    
+    active_statuses = [
+        FulfillmentStatus.Status.DRAFT,
+        FulfillmentStatus.Status.PENDING_PAYMENT,
+        FulfillmentStatus.Status.PAID,
+        FulfillmentStatus.Status.PRINTING,
+    ]
+    all_orders = Orders.objects.all()
+   
+    active_orders = sum(1 for order in all_orders if order.current_status in active_statuses)
 
     pending_uploads = Models.objects.filter(FilePath__isnull=True).count()
 
@@ -26,7 +33,7 @@ def admin_dashboard(request):
         for inv in InventoryChange.objects.select_related("RawMaterial")
         if inv.needs_reorder
     )
-
+   
     context = {
         "total_orders": total_orders,
         "active_orders": active_orders,
