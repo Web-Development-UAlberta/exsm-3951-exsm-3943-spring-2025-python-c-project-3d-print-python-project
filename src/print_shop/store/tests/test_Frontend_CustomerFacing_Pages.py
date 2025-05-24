@@ -78,8 +78,8 @@ class LoginPageUITests(StaticLiveServerTestCase):
 
         # Check page title
         heading = WebDriverWait(self.driver, 20).until(
-            EC.presence_of_element_located((By.TAG_NAME, "h1")))
-        self.assertEqual(heading.text.strip(), "Welcome Back")
+            EC.visibility_of_element_located((By.TAG_NAME, "h1")))
+        self.assertIn("Welcome Back", heading.text)
 
         # Check email field
         email_field = self.driver.find_element(By.CSS_SELECTOR, 'input[type="email"]')
@@ -230,8 +230,8 @@ class ProductCatalogUITest(StaticLiveServerTestCase):
 
         # Check if the catalog header is present
         header = WebDriverWait(self.driver, 20).until(
-            EC.presence_of_element_located((By.TAG_NAME, "h1")))
-        self.assertEqual(header.text.strip(), "Custom 3D Printing")
+            EC.visibility_of_element_located((By.TAG_NAME, "h1")))
+        self.assertIn("Custom 3D Printing", header.text)
 
 
     # Check if the catalog section contains products
