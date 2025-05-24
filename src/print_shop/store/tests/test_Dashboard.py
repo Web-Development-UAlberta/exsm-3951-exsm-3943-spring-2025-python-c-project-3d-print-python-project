@@ -5,32 +5,30 @@ from django.utils import timezone
 from decimal import Decimal
 from datetime import timedelta
 from store.models import (
-    Orders, OrderItems, Shipping, Materials,
-    Models, InventoryChange, RawMaterials,
-    Suppliers, Filament
+    Orders,
+    OrderItems,
+    Shipping,
+    Materials,
+    Models,
+    InventoryChange,
+    RawMaterials,
+    Suppliers,
+    Filament,
 )
+
 
 class DashboardTests(TestCase):
     def setUp(self):
-        # Create a test user
         self.user = User.objects.create_user(
-            username="testuser",
-            password="testpass",
-            is_staff=True  # or whatever flags are appropriate
+            username="testuser", password="testpass", is_staff=True
         )
 
-        # Log in the user if your view requires authentication
         self.client.login(username="testuser", password="testpass")
 
-
-        # Create shipping method
         shipping = Shipping.objects.create(
-            Name="Standard Shipping",
-            Rate=5.99,
-            ShipTime=3
+            Name="Standard Shipping", Rate=5.99, ShipTime=3
         )
 
-        # Create orders
         order1 = Orders.objects.create(
             User=self.user,
             Shipping=shipping,
@@ -46,24 +44,23 @@ class DashboardTests(TestCase):
             ExpeditedService=False,
         )
 
-        # Create Materials first (required foreign key for Filament)
         material_pla = Materials.objects.create(Name="PLA")
         material_abs = Materials.objects.create(Name="ABS")
 
+        filament_pla = Filament.objects.create(
+            Name="PLA", ColorHexCode="FFFFFF", Material=material_pla
+        )
+        filament_abs = Filament.objects.create(
+            Name="ABS", ColorHexCode="000000", Material=material_abs
+        )
 
-        # Create filaments with required Material foreign key
-        filament_pla = Filament.objects.create(Name="PLA", ColorHexCode="#FFFFFF", Material=material_pla)
-        filament_abs = Filament.objects.create(Name="ABS", ColorHexCode="#000000", Material=material_abs)
-
-        # Create supplier
         supplier = Suppliers.objects.create(
             Name="Default Supplier",
             Address="123 Main St",
             Phone="1234567890",
-            Email="test@supplier.com"
+            Email="test@supplier.com",
         )
 
-        # Create raw materials
         raw_material_pla = RawMaterials.objects.create(
             Supplier=supplier,
             Filament=filament_pla,
@@ -72,7 +69,7 @@ class DashboardTests(TestCase):
             MaterialWeightPurchased=1000,
             MaterialDensity=Decimal("1.24"),
             ReorderLeadTime=5,
-            WearAndTearMultiplier=Decimal("1.05")
+            WearAndTearMultiplier=Decimal("1.05"),
         )
         raw_material_abs = RawMaterials.objects.create(
             Supplier=supplier,
@@ -82,22 +79,20 @@ class DashboardTests(TestCase):
             MaterialWeightPurchased=500,
             MaterialDensity=Decimal("1.04"),
             ReorderLeadTime=7,
-            WearAndTearMultiplier=Decimal("1.10")
+            WearAndTearMultiplier=Decimal("1.10"),
         )
 
-        # Create inventory changes
         inventory_change_pla = InventoryChange.objects.create(
             RawMaterial=raw_material_pla,
             UnitCost=Decimal("0.05"),
-            QuantityWeightAvailable=99, 
+            QuantityWeightAvailable=99,
         )
         inventory_change_abs = InventoryChange.objects.create(
             RawMaterial=raw_material_abs,
             UnitCost=Decimal("0.07"),
-            QuantityWeightAvailable=101, 
+            QuantityWeightAvailable=101,
         )
 
-        # Create models
         model_a = Models.objects.create(
             Name="Widget A",
             BaseInfill=Decimal("0.20"),
@@ -117,7 +112,6 @@ class DashboardTests(TestCase):
             EstimatedPrintVolume=Decimal("90.0"),
         )
 
-        # Create order items
         OrderItems.objects.create(
             InventoryChange=inventory_change_pla,
             Order=order1,
@@ -160,10 +154,6 @@ class DashboardTests(TestCase):
         print("Inventory warnings count:", response.context.get("inventory_warnings"))
         self.assertEqual(response.status_code, 200)
 
-        # Assumes your dashboard context includes these keys
         self.assertEqual(response.context["total_orders"], 2)
         self.assertEqual(response.context["active_orders"], 2)
         self.assertEqual(response.context["inventory_warnings"], 2)
-        
-        
-        

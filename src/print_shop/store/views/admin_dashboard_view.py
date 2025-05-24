@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from store.models import Orders, FulfillmentStatus, Models, InventoryChange
+from store.models import Orders, FulfillmentStatus, Models, InventoryChange, RawMaterials
 from django.db.models import Q
 
 
@@ -30,8 +30,8 @@ def admin_dashboard(request):
 
     inventory_warnings = sum(
         1
-        for inv in InventoryChange.objects.select_related("RawMaterial")
-        if inv.needs_reorder
+        for inv in RawMaterials.objects.all()
+        if inv.current_inventory and inv.current_inventory.needs_reorder
     )
    
     context = {
