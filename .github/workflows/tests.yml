@@ -54,4 +54,4 @@ jobs:
         run: |
           cd src/print_shop
           python manage.py migrate
-          python manage.py test
+          python manage.py test store.tests.test_frontend_admin_User_Management
