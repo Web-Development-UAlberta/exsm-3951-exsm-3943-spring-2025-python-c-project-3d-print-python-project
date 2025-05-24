@@ -1,5 +1,5 @@
 from django.test import TestCase
-
+from django.utils import timezone
 from store.forms.filament_form import FilamentForm
 from store.forms.fulfillment_status_form import FulfillmentStatusForm
 from store.forms.materials_form import MaterialsForm
@@ -102,7 +102,7 @@ class TestFulfillmentStatusForm(TestCase):
             User=user,
             Shipping=shipping,
             TotalPrice=Decimal("100.00"),
-            EstimatedShipDate="2025-07-01",
+            EstimatedShipDate=timezone.make_aware(timezone.datetime(2025, 7, 1)),
             ExpeditedService=False,
         )
 
@@ -130,7 +130,7 @@ class TestFulfillmentStatusForm(TestCase):
             User=user,
             Shipping=shipping,
             TotalPrice=100.00,
-            EstimatedShipDate="2025-07-01",
+            EstimatedShipDate=timezone.make_aware(timezone.datetime(2025, 7, 1)),
             ExpeditedService=False,
         )
 
@@ -163,7 +163,7 @@ class TestFulfillmentStatusForm(TestCase):
             User=user,
             Shipping=shipping,
             TotalPrice=Decimal("100.00"),
-            EstimatedShipDate="2025-07-01",
+            EstimatedShipDate=timezone.make_aware(timezone.datetime(2025, 7, 1)),
             ExpeditedService=False,
         )
 
