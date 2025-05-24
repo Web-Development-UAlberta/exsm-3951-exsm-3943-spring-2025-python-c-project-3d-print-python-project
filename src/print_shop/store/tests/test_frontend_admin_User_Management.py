@@ -3,6 +3,8 @@ from django.urls import reverse
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from django.contrib.auth.models import User
 from store.models import UserProfiles
 import time
@@ -60,6 +62,8 @@ class UserManagementFrontendTestCase(StaticLiveServerTestCase):
 
     def test_user_delete_view_redirects(self):
         self.browser.get(self.live_server_url + reverse("user-profile-list"))
+        header = WebDriverWait(self.browser, 20).until(
+            EC.visibility_of_element_located((By.TAG_NAME, "a")))
         delete_button = self.browser.find_element(By.LINK_TEXT, "Delete")
         delete_button.click()
         time.sleep(1)
