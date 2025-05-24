@@ -1,7 +1,7 @@
 # 🖨️ Python Project - 3D Print Store
 
 A full-featured Django application built to power a customizable 3D printing storefront.
-This platform enables seamless product management, dynamic order processing, and real-time customization for both customers and administrators. With a modern, responsive frontend styled using Tailwind CSS and a robust backend architecture, this application delivers a smooth and intuitive user experience.
+This platform enables seamless product management, dynamic order processing, and real-time customization for both customers and administrators. With a modern and responsive frontend styled using Tailwind CSS, and a robust backend architecture, this application delivers a smooth and intuitive user experience.
 
 ## ✨ Features
 
@@ -111,7 +111,7 @@ python manage.py tailwind install
 
 ### 🚀 Start Django Development Server
 
-To launch the server locally run these commands in your terminal:
+To launch the server locally, run these commands in your terminal:
 
 ```bash
 cd src/print_shop
