@@ -2,6 +2,7 @@
 3D Print Shop Models based on ERD
 """
 
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
@@ -12,7 +13,6 @@ from django.core.validators import (
     FileExtensionValidator,
 )
 from django.core.exceptions import ValidationError
-from decimal import Decimal, ROUND_HALF_UP
 from django.utils import timezone
 
 
@@ -174,7 +174,7 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
         InventoryChange.objects.create(
             RawMaterial=instance,
             QuantityWeightAvailable=instance.MaterialWeightPurchased,
-            UnitCost=instance.Cost / Decimal(instance.MaterialWeightPurchased),
+            UnitCost=Decimal(instance.Cost) / Decimal(instance.MaterialWeightPurchased),
         )
     else:
         initial_inventory = (
@@ -193,7 +193,7 @@ def create_or_update_initial_inventory(sender, instance, created, **kwargs):
                 initial_inventory.QuantityWeightAvailable = (
                     instance.MaterialWeightPurchased
                 )
-                initial_inventory.UnitCost = instance.Cost / Decimal(
+                initial_inventory.UnitCost = Decimal(instance.Cost) / Decimal(
                     instance.MaterialWeightPurchased
                 )
                 initial_inventory.save(
@@ -392,7 +392,7 @@ class OrderItems(models.Model):
             if base_infill == 0:
                 base_infill = Decimal("20")
 
-            return (Decimal(infill_percentage) / base_infill).quantize(
+            return (Decimal(infill_percentage) / Decimal(base_infill)).quantize(
                 Decimal("0.0001"), rounding=ROUND_HALF_UP
             )
         except (AttributeError, InvalidOperation, TypeError):
@@ -408,13 +408,17 @@ class OrderItems(models.Model):
             return 0
 
         try:
-            density = self.InventoryChange.RawMaterial.MaterialDensity
-            infill_multiplier = self.InfillMultiplier  # Decimal
-            quantity = self.ItemQuantity  # int
-            estimated_print_volume = self.Model.EstimatedPrintVolume  # Decimal
-            base_infill = self.Model.BaseInfill
-            volume_cm3 = estimated_print_volume * base_infill * infill_multiplier
-            weight = volume_cm3 * density * quantity
+            density = Decimal(self.InventoryChange.RawMaterial.MaterialDensity)
+            infill_multiplier = Decimal(self.InfillMultiplier)
+            quantity = Decimal(self.ItemQuantity)
+            estimated_print_volume = Decimal(self.Model.EstimatedPrintVolume)
+            base_infill = Decimal(self.Model.BaseInfill)
+            volume_cm3 = (
+                Decimal(estimated_print_volume)
+                * Decimal(base_infill)
+                * Decimal(infill_multiplier)
+            )
+            weight = Decimal(volume_cm3) * Decimal(density) * Decimal(quantity)
             return max(1, int(weight.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
 
         except (AttributeError, TypeError, InvalidOperation) as e:
@@ -429,17 +433,17 @@ class OrderItems(models.Model):
             dict: Contains 'weight', 'material_cost', 'fixed_cost', 'cost_of_goods', 'price'
         """
         weight = Decimal(self.calculate_required_weight())
-        cost_per_gram = self.InventoryChange.UnitCost
-        wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
-        fixed_cost = self.Model.FixedCost * self.ItemQuantity
-        markup = self.Markup
-        material_cost = (weight * cost_per_gram * wear_tear).quantize(
+        cost_per_gram = Decimal(self.InventoryChange.UnitCost)
+        wear_tear = Decimal(self.InventoryChange.RawMaterial.WearAndTearMultiplier)
+        fixed_cost = Decimal(self.Model.FixedCost) * Decimal(self.ItemQuantity)
+        markup = Decimal(self.Markup)
+        material_cost = (weight * Decimal(cost_per_gram) * Decimal(wear_tear)).quantize(
             Decimal("0.0001"), rounding=ROUND_HALF_UP
         )
-        cost_of_goods = (fixed_cost + material_cost).quantize(
+        cost_of_goods = (Decimal(fixed_cost) + Decimal(material_cost)).quantize(
             Decimal("0.0001"), rounding=ROUND_HALF_UP
         )
-        price = (cost_of_goods * markup).quantize(
+        price = (Decimal(cost_of_goods) * Decimal(markup)).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
 

@@ -1,7 +1,8 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from store.models import Orders, FulfillmentStatus, Models, InventoryChange
+from store.models import Orders, FulfillmentStatus, Models, InventoryChange, RawMaterials
 from django.db.models import Q
+
 
 
 # Check if the user is admin (Staff or Superuser)
@@ -14,19 +15,25 @@ def is_admin(user):
 def admin_dashboard(request):
     total_orders = Orders.objects.count()
 
-    active_statuses = ["Draft", "Pending", "Paid", "Printing"]
-    active_orders = FulfillmentStatus.objects.filter(
-        OrderStatus__in=active_statuses
-    ).count()
+    
+    active_statuses = [
+        FulfillmentStatus.Status.DRAFT,
+        FulfillmentStatus.Status.PENDING_PAYMENT,
+        FulfillmentStatus.Status.PAID,
+        FulfillmentStatus.Status.PRINTING,
+    ]
+    all_orders = Orders.objects.all()
+   
+    active_orders = sum(1 for order in all_orders if order.current_status in active_statuses)
 
     pending_uploads = Models.objects.filter(FilePath__isnull=True).count()
 
     inventory_warnings = sum(
         1
-        for inv in InventoryChange.objects.select_related("RawMaterial")
-        if inv.needs_reorder
+        for inv in RawMaterials.objects.all()
+        if inv.current_inventory and inv.current_inventory.needs_reorder
     )
-
+   
     context = {
         "total_orders": total_orders,
         "active_orders": active_orders,

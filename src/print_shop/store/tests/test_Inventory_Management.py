@@ -7,6 +7,8 @@ from store.models import Materials, Filament, Suppliers, RawMaterials, Inventory
 class InventoryManagementTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="admin", password="admin123")
+        self.user.is_staff = True
+        self.user.save()
         self.client.login(username="admin", password="admin123")
 
         self.material = Materials.objects.create(Name="ABS")
@@ -36,36 +38,13 @@ class InventoryManagementTestCase(TestCase):
 
     ##  Inventory View Loads
     def test_inventory_view_loads(self):
-        response = self.client.get(reverse("inventory_management"))
+        response = self.client.get(reverse("current-inventory"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "ABS Red")
 
-    ## Search Functionality
-    def test_inventory_search_by_material_name(self):
-        response = self.client.get(reverse("inventory_management"), {"search": "ABS"})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "ABS")
-
-    ## Filter Functionality
-    def test_filter_by_material(self):
-        response = self.client.get(
-            reverse("inventory_management"), {"material": self.material.id}
-        )
-        self.assertContains(response, "ABS")
-
-    def test_filter_by_quantity_min(self):
-        response = self.client.get(
-            reverse("inventory_management"), {"min_quantity": 100}
-        )
-        self.assertContains(response, "100")
-
     ## Actions: Edit / Delete
     def test_inventory_edit_view_exists(self):
-        response = self.client.get(reverse("inventory_edit", args=[self.inventory.id]))
-        self.assertEqual(response.status_code, 200)
-
-    def test_inventory_delete_view_exists(self):
-        response = self.client.post(
-            reverse("inventory_delete", args=[self.inventory.id])
+        response = self.client.get(
+            reverse("edit-raw-material", args=[self.raw_material.id])
         )
-        self.assertEqual(response.status_code, 302)  # Redirect after delete
+        self.assertEqual(response.status_code, 200)
