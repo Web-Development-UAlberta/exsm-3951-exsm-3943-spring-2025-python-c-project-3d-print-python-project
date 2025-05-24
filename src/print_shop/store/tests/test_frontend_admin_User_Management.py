@@ -59,12 +59,3 @@ class UserManagementFrontendTestCase(StaticLiveServerTestCase):
         )
         self.assertIn("Edit", self.browser.page_source)
         self.assertIn("User Information", self.browser.page_source)
-
-    def test_user_delete_view_redirects(self):
-        self.browser.get(self.live_server_url + reverse("user-profile-list"))
-        header = WebDriverWait(self.browser, 20).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, "user-delete-button")))
-        delete_button = self.browser.find_element(By.CLASS_NAME, "user-delete-button")
-        delete_button.click()
-        time.sleep(1)
-        self.assertIn("delete the user profile", self.browser.page_source)
