@@ -408,13 +408,17 @@ class OrderItems(models.Model):
             return 0
 
         try:
-            density = self.InventoryChange.RawMaterial.MaterialDensity
-            infill_multiplier = self.InfillMultiplier  # Decimal
-            quantity = self.ItemQuantity  # int
-            estimated_print_volume = self.Model.EstimatedPrintVolume  # Decimal
-            base_infill = self.Model.BaseInfill
-            volume_cm3 = estimated_print_volume * base_infill * infill_multiplier
-            weight = volume_cm3 * density * quantity
+            density = Decimal(self.InventoryChange.RawMaterial.MaterialDensity)
+            infill_multiplier = Decimal(self.InfillMultiplier)
+            quantity = Decimal(self.ItemQuantity)
+            estimated_print_volume = Decimal(self.Model.EstimatedPrintVolume)
+            base_infill = Decimal(self.Model.BaseInfill)
+            volume_cm3 = (
+                Decimal(estimated_print_volume)
+                * Decimal(base_infill)
+                * Decimal(infill_multiplier)
+            )
+            weight = Decimal(volume_cm3) * Decimal(density) * Decimal(quantity)
             return max(1, int(weight.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
 
         except (AttributeError, TypeError, InvalidOperation) as e:
@@ -429,17 +433,17 @@ class OrderItems(models.Model):
             dict: Contains 'weight', 'material_cost', 'fixed_cost', 'cost_of_goods', 'price'
         """
         weight = Decimal(self.calculate_required_weight())
-        cost_per_gram = self.InventoryChange.UnitCost
-        wear_tear = self.InventoryChange.RawMaterial.WearAndTearMultiplier
-        fixed_cost = self.Model.FixedCost * self.ItemQuantity
-        markup = self.Markup
+        cost_per_gram = Decimal(self.InventoryChange.UnitCost)
+        wear_tear = Decimal(self.InventoryChange.RawMaterial.WearAndTearMultiplier)
+        fixed_cost = Decimal(self.Model.FixedCost) * Decimal(self.ItemQuantity)
+        markup = Decimal(self.Markup)
         material_cost = (weight * Decimal(cost_per_gram) * Decimal(wear_tear)).quantize(
             Decimal("0.0001"), rounding=ROUND_HALF_UP
         )
         cost_of_goods = (Decimal(fixed_cost) + Decimal(material_cost)).quantize(
             Decimal("0.0001"), rounding=ROUND_HALF_UP
         )
-        price = (cost_of_goods * markup).quantize(
+        price = (Decimal(cost_of_goods) * Decimal(markup)).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
 
