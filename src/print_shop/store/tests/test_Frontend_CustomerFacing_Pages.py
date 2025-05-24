@@ -146,7 +146,7 @@ class SignUpPageUITests(StaticLiveServerTestCase):
 
         heading = WebDriverWait(self.driver, 20).until(
             EC.presence_of_element_located((By.TAG_NAME, "h1")))
-        self.assertEqual(heading.text.strip(), "Create Account")
+        self.assertEqual(heading.text.replace('\n', ' ').strip(), "Create Account")
 
         # Check First Name field
         first_name_field = self.driver.find_element(
