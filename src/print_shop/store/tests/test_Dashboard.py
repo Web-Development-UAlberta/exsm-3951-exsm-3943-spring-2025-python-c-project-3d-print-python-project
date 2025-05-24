@@ -151,7 +151,6 @@ class DashboardTests(TestCase):
 
     def test_dashboard_data(self):
         response = self.client.get(reverse("admin_dashboard"))
-        print("Inventory warnings count:", response.context.get("inventory_warnings"))
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(response.context["total_orders"], 2)
