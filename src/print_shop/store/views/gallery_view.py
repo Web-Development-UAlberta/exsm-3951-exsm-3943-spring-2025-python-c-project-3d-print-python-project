@@ -255,7 +255,6 @@ def model_detail(request, model_id):
 
         except Exception as e:
             error_msg = f"Error adding item to cart: {str(e)}"
-            print(f"Error: {error_msg}")
             return JsonResponse({"status": "error", "message": error_msg}, status=400)
 
     context = {
@@ -331,9 +330,6 @@ def get_filaments_for_material(request, model_id, material_id):
         )
 
     except Exception as e:
-        import traceback
-
-        traceback.print_exc()
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
@@ -436,9 +432,6 @@ def calculate_price(request, model_id, filament_id):
         return JsonResponse(response_data, json_dumps_params={"default": str})
 
     except Exception as e:
-        import traceback
-
-        traceback.print_exc()
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
