@@ -1,8 +1,42 @@
 /**
- * Pre-made item form JS to handle the dynamic inputs and displays for the user.
+ * Premade Item Form JS
+ * Handles the dynamic functionality for the admin premade item form
+ * Uses shared functionality from order_item.js
  */
 
-document.addEventListener("DOMContentLoaded", function () {
+/**
+ * Handle model selection change
+ */
+function handleModelChange(event) {
+  const modelSelect = event.target;
+  const modelId = modelSelect.value;
+  const materialSelect = document.getElementById("material-select");
+  const filamentSelect = document.getElementById("filament-select");
+
+  updateModelThumbnail();
+
+  if (materialSelect) {
+    materialSelect.value = "";
+    materialSelect.disabled = !modelId;
+  }
+
+  if (filamentSelect) {
+    filamentSelect.innerHTML =
+      '<option value="">Select a material first</option>';
+    filamentSelect.disabled = true;
+  }
+
+  updateInfillSlider(modelSelect);
+
+  updateFormState(modelId);
+
+  updatePriceDisplay(null);
+}
+
+/**
+ * Update form state based on selected value
+ */
+function updateFormState(selectedValue) {
   const modelSelect = document.getElementById("model-select");
   const materialSelect = document.getElementById("material-select");
   const filamentSelect = document.getElementById("filament-select");
@@ -10,154 +44,111 @@ document.addEventListener("DOMContentLoaded", function () {
     "filament-select-container"
   );
   const infillSlider = document.querySelector(".infill-range");
-  const infillValue = document.getElementById("infill-value");
-  const colorSwatch = document.getElementById("color-swatch");
-  const priceValue = document.getElementById("price-value");
-  const priceEstimate = document.getElementById("price-estimate");
   const priceError = document.getElementById("price-error");
   const submitButton = document.getElementById("submit-button");
-  const selectedFilamentInput = document.getElementById("selected-filament");
+  const formError = document.getElementById("form-error");
+
+  updateModelThumbnail();
+
+  if (selectedValue) {
+    if (materialSelect) materialSelect.disabled = false;
+    if (infillSlider) {
+      infillSlider.disabled = false;
+      updateInfillSlider(modelSelect);
+    }
+
+    if (filamentContainer && materialSelect?.value) {
+      filamentContainer.classList.remove("hidden");
+    }
+    if (filamentSelect) filamentSelect.required = true;
+    if (priceError) priceError.classList.add("hidden");
+
+    if (submitButton) {
+      const modelSelect = document.getElementById("model-select");
+      const materialSelect = document.getElementById("material-select");
+      const filamentSelect = document.getElementById("filament-select");
+
+      const isFormValid =
+        modelSelect?.value && materialSelect?.value && filamentSelect?.value;
+
+      submitButton.disabled = !isFormValid;
+
+      if (formError) {
+        formError.style.display = isFormValid ? "none" : "block";
+      }
+    }
+
+    if (modelSelect?.value && filamentSelect?.value) calculatePrice();
+  } else {
+    if (materialSelect) {
+      materialSelect.disabled = true;
+      materialSelect.value = "";
+    }
+    if (filamentSelect) {
+      filamentSelect.disabled = true;
+      filamentSelect.innerHTML =
+        '<option value="">Select a material first</option>';
+      filamentSelect.required = false;
+    }
+    if (filamentContainer) filamentContainer.classList.add("hidden");
+    if (infillSlider) infillSlider.disabled = true;
+    if (priceError) priceError.classList.add("hidden");
+    if (submitButton) {
+      submitButton.disabled = true;
+      if (formError) formError.style.display = "block";
+    }
+    updatePriceDisplay(null);
+  }
+}
+
+/**
+ * Update the model thumbnail and hidden model ID input
+ */
+function updateModelThumbnail() {
+  const modelSelect = document.getElementById("model-select");
   const modelIdInput = document.getElementById("model-id");
   const modelThumbnailContainer = document.getElementById(
     "model-thumbnail-container"
   );
   const modelThumbnail = document.getElementById("model-thumbnail");
 
-  function updateFormState() {
-    const modelId = modelSelect.value;
+  if (modelSelect && modelSelect.value) {
     const selectedOption = modelSelect.options[modelSelect.selectedIndex];
-    if (modelId && selectedOption.dataset.thumbnail) {
+    if (selectedOption.dataset.thumbnail) {
       modelThumbnail.src = selectedOption.dataset.thumbnail;
       modelThumbnailContainer.classList.remove("hidden");
-    } else {
-      modelThumbnailContainer.classList.add("hidden");
     }
-
-    modelIdInput.value = modelId;
-
-    if (!modelId) {
-      materialSelect.disabled = true;
-      materialSelect.value = "";
-      filamentSelect.disabled = true;
-      filamentSelect.innerHTML =
-        '<option value="">Select a material first</option>';
-      filamentContainer.classList.add("hidden");
-      infillSlider.disabled = true;
-      updatePriceDisplay(null);
-      updateSubmitButtonState();
-      return;
+    if (modelIdInput) {
+      modelIdInput.value = modelSelect.value;
     }
-    materialSelect.disabled = false;
-    if (materialSelect.value) {
-      updateFilaments(modelId, materialSelect.value);
-    } else {
-      filamentSelect.innerHTML =
-        '<option value="">Select a material first</option>';
-      filamentSelect.disabled = true;
-      filamentContainer.classList.add("hidden");
-      updatePriceDisplay(null);
-    }
-
-    const baseInfill =
-      parseInt(
-        modelSelect.options[modelSelect.selectedIndex].dataset.baseInfill * 100
-      ) || 30;
-
-    infillSlider.value = baseInfill;
-    infillValue.textContent = `${baseInfill}%`;
-    infillSlider.disabled = false;
-
-    if (filamentSelect.value) {
-      calculatePrice();
-    } else {
-      updatePriceDisplay(null);
-    }
+  } else if (modelThumbnailContainer) {
+    modelThumbnailContainer.classList.add("hidden");
   }
+}
 
-  /**
-   * Fetches and updates the filaments dropdown based on selected model and material.
-   * Takes in modelId and materialId.
-   * Uses the shared fetchFilaments function from order_item.js
-   */
-  async function updateFilaments(modelId, materialId) {
-    if (!materialId) {
-      filamentSelect.innerHTML =
-        '<option value="">Select a material first</option>';
-      filamentSelect.disabled = true;
-      filamentContainer.classList.add("hidden");
-      updateSubmitButtonState();
-      return;
-    }
-
-    try {
-      const data = await fetchFilaments(modelId, materialId);
-
-      filamentSelect.innerHTML = '<option value="">Select a color</option>';
-      data.filaments.forEach((filament) => {
-        const option = document.createElement("option");
-        option.value = filament.id;
-        option.textContent = `${filament.color_code} - ${filament.name}`;
-        option.dataset.color = filament.color_code;
-        filamentSelect.appendChild(option);
-      });
-
-      filamentSelect.disabled = false;
-      filamentContainer.classList.remove("hidden");
-
-      if (data.filaments.length === 1) {
-        filamentSelect.value = data.filaments[0].id;
-        updateColorSwatch(filamentSelect);
-        calculatePrice();
-      }
-
-      updateSubmitButtonState();
-    } catch (error) {
-      console.error("Error fetching filaments:", error);
-      filamentSelect.innerHTML =
-        '<option value="">Error loading filaments</option>';
-      filamentSelect.disabled = true;
-      updatePriceDisplay(null);
-    }
-  }
-
-  /**
-   * Updates the color swatch based on the selected filament.
-   * Uses the shared updateColorSwatch function from order_item.js
-   */
-  function updateColorSwatch(select) {
-    const colorSwatch = document.getElementById("color-swatch");
-    const selectedOption = select.options[select.selectedIndex];
-    if (selectedOption && selectedOption.dataset.color) {
-      colorSwatch.style.backgroundColor = selectedOption.dataset.color;
-    } else {
-      colorSwatch.style.backgroundColor = "transparent";
-    }
-
-    if (selectedOption && selectedOption.value) {
-      selectedFilamentInput.value = selectedOption.value;
-    } else {
-      selectedFilamentInput.value = "";
-    }
-    updateSubmitButtonState();
-  }
-
-  /**
-   * Calculates the price based on current selections by making an API call.
-   * Updates the UI with the calculated price or error message.
-   * Uses the shared calculateItemPrice function from order_item.js
-   */
-  async function calculatePrice() {
+/**
+ * Calculate the estimated price based on current selections
+ * Uses the shared calculateItemPrice function from order_item.js
+ */
+async function calculatePrice() {
+  try {
+    const modelSelect = document.getElementById("model-select");
+    const filamentSelect = document.getElementById("filament-select");
+    const infillRange = document.querySelector(".infill-range");
+    const priceError = document.getElementById("price-error");
     const modelId = modelSelect?.value;
     const filamentId = filamentSelect?.value;
-    const infillValueRaw = infillSlider?.value;
+    const infillValueRaw = infillRange?.value;
+    const quantity = "1";
+
     let infillValue;
+
     try {
       infillValue = new Decimal(infillValueRaw || "0");
     } catch (err) {
       updatePriceDisplay(null);
       return;
     }
-
     if (!modelId || !filamentId || infillValue.isZero()) {
       updatePriceDisplay(null);
       return;
@@ -170,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modelId,
         filamentId,
         infill: infillValue.toString(),
-        quantity: "1",
+        quantity,
       });
 
       if (data.status === "success") {
@@ -184,11 +175,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       } else {
         const errorMsg = data.message || "Error calculating price";
-        console.error("Error in response:", errorMsg);
         throw new Error(errorMsg);
       }
     } catch (error) {
-      console.error("Error calculating price:", error);
       updatePriceDisplay(null);
 
       if (priceError) {
@@ -196,68 +185,220 @@ document.addEventListener("DOMContentLoaded", function () {
         priceError.classList.remove("hidden");
       }
     }
+  } catch (error) {
+    updatePriceDisplay(null);
   }
-
-  /**
-   * Updates the submit button state based on form validity.
-   */
-  function updateSubmitButtonState() {
-    const isFormValid =
-      modelSelect.value &&
-      materialSelect.value &&
-      filamentSelect.value &&
-      infillSlider.value;
-
-    submitButton.disabled = !isFormValid;
-  }
-
-  const debouncedCalculatePrice = debounce(calculatePrice, 300);
-
-  modelSelect.addEventListener("change", updateFormState);
-
-  materialSelect.addEventListener("change", function () {
-    const modelId = modelSelect.value;
-    const materialId = this.value;
-    updateFilaments(modelId, materialId);
-  });
-
-  filamentSelect.addEventListener("change", function () {
-    updateColorSwatch(this);
-    calculatePrice();
-  });
-
-  if (infillSlider) {
-    infillSlider.addEventListener("input", function (e) {
-      const value = e.target.value;
-      if (infillValue) {
-        infillValue.textContent = `${value}%`;
-      }
-      if (modelSelect?.value && filamentSelect?.value) {
-        debouncedCalculatePrice();
-      }
-    });
-  }
-
-  updateFormState();
-  const form = document.getElementById("premade-item-form");
-
-  if (form) {
-    if (!form.action) {
-      const currentUrl = window.location.href;
-      form.action = currentUrl;
-    }
-
-    form.addEventListener("submit", handleFormSubmit);
-    const submitButton = document.querySelector("#submit-button");
-    if (submitButton) {
-      submitButton.addEventListener("click", function (event) {});
-    }
-  }
-});
+}
 
 /**
- * Handles the form submission via AJAX.
- * Prepares form data, sends it to the server, and handles the response.
+ * Debounced version of calculatePrice
+ */
+const debouncedCalculatePrice = debounce(calculatePrice, 300);
+window.debouncedCalculatePrice = debouncedCalculatePrice;
+
+/**
+ * Handle material selection change
+ * Fetches available filaments for the selected material and updates the UI
+ */
+async function handleMaterialChange(event) {
+  try {
+    const modelSelect = document.getElementById("model-select");
+    const filamentSelect = document.getElementById("filament-select");
+    const filamentContainer = document.getElementById(
+      "filament-select-container"
+    );
+
+    const modelId = modelSelect?.value;
+    const materialId = event.target.value;
+
+    if (!modelId || !materialId) {
+      if (filamentSelect) {
+        filamentSelect.innerHTML =
+          '<option value="">Select a material first</option>';
+        filamentSelect.disabled = true;
+      }
+      if (filamentContainer) {
+        filamentContainer.classList.add("hidden");
+      }
+      updateFormState(false);
+      return;
+    }
+
+    if (filamentSelect) {
+      filamentSelect.innerHTML = '<option value="">Loading colors...</option>';
+      filamentSelect.disabled = true;
+    }
+
+    const data = await fetchFilaments(modelId, materialId);
+    if (!filamentSelect) return;
+    filamentSelect.innerHTML = '<option value="">Select a color</option>';
+    if (
+      data.status === "success" &&
+      data.filaments &&
+      data.filaments.length > 0
+    ) {
+      data.filaments.forEach((filament) => {
+        const option = new Option(
+          `${filament.color_code} - ${filament.name}`,
+          filament.id,
+          false,
+          false
+        );
+        option.dataset.color = filament.color_code;
+        filamentSelect.add(option);
+      });
+      filamentSelect.disabled = false;
+      updateFormState(true);
+      updateColorSwatch(filamentSelect);
+      if (filamentContainer) {
+        filamentContainer.classList.remove("hidden");
+      }
+      if (filamentSelect.value) {
+        debouncedCalculatePrice();
+      }
+    } else {
+      throw new Error(
+        data.message || "No filaments available for the selected material"
+      );
+    }
+  } catch (error) {
+    const filamentSelect = document.getElementById("filament-select");
+    if (filamentSelect) {
+      filamentSelect.innerHTML =
+        '<option value="">Error loading colors</option>';
+      filamentSelect.disabled = false;
+    }
+    updateFormState(false);
+
+    const priceError = document.getElementById("price-error");
+    if (priceError) {
+      priceError.textContent =
+        error.message || "Error loading filament options";
+      priceError.classList.remove("hidden");
+    }
+  }
+}
+
+/**
+ * Update the visibility of the filament error message
+ */
+function updateFilamentErrorVisibility() {
+  const errorMessage = document.getElementById("filament-error");
+  const filamentSelect = document.getElementById("filament-select");
+  if (!errorMessage) return;
+  const hasSelection = filamentSelect && filamentSelect.value;
+  if (hasSelection) {
+    errorMessage.classList.add("hidden");
+  } else {
+    errorMessage.classList.remove("hidden");
+  }
+}
+
+/**
+ * Handle filament selection change
+ */
+function handleFilamentChange(event) {
+  const selectedFilamentInput = document.getElementById("selected-filament");
+  const filamentSelect = event.target;
+  const modelSelect = document.getElementById("model-select");
+
+  updateColorSwatch(filamentSelect);
+  updateFilamentErrorVisibility();
+
+  if (selectedFilamentInput && filamentSelect.value) {
+    selectedFilamentInput.value = filamentSelect.value;
+  }
+
+  updateFormState(modelSelect?.value);
+  debouncedCalculatePrice();
+}
+
+/**
+ * Initialize the page when DOM is fully loaded
+ */
+function initializePage() {
+  const modelSelect = document.getElementById("model-select");
+  const materialSelect = document.getElementById("material-select");
+  const filamentSelect = document.getElementById("filament-select");
+  const infillSlider = document.querySelector(".infill-range");
+  const form = document.getElementById("premade-item-form");
+
+  if (!modelSelect || !materialSelect || !filamentSelect) {
+    alert("Required elements not found");
+    return;
+  }
+
+  updateFormState(modelSelect.value !== "" && filamentSelect.value !== "");
+
+  const handleInfillChange = (e) => {
+    updateInfillDisplay(e.target.value);
+    if (modelSelect?.value && filamentSelect?.value) {
+      debouncedCalculatePrice();
+    }
+  };
+
+  try {
+    if (modelSelect) {
+      modelSelect.addEventListener("change", handleModelChange);
+    }
+
+    if (materialSelect) {
+      materialSelect.addEventListener("change", handleMaterialChange);
+    }
+
+    if (filamentSelect) {
+      filamentSelect.addEventListener("change", handleFilamentChange);
+    }
+
+    if (infillSlider) {
+      infillSlider.addEventListener("input", handleInfillChange);
+    }
+
+    if (form) {
+      if (!form.action) {
+        const currentUrl = window.location.href;
+        form.action = currentUrl;
+      }
+      form.addEventListener("submit", handleFormSubmit);
+    }
+  } catch (error) {
+    alert("An error occurred while loading the page");
+  }
+
+  window._premadeItemEventHandlers = {
+    modelSelect: { element: modelSelect, handler: handleModelChange },
+    materialSelect: { element: materialSelect, handler: handleMaterialChange },
+    filamentSelect: { element: filamentSelect, handler: handleFilamentChange },
+    infillSlider: { element: infillSlider, handler: handleInfillChange },
+  };
+
+  if (modelSelect.value) {
+    handleModelChange({ target: modelSelect });
+  }
+
+  if (materialSelect.value) {
+    handleMaterialChange({ target: materialSelect });
+  }
+
+  if (modelSelect.value && filamentSelect.value) {
+    debouncedCalculatePrice();
+  }
+
+  return () => {
+    Object.values(window._premadeItemEventHandlers || {}).forEach(
+      ({ element, handler }) => {
+        if (element && handler) {
+          element.removeEventListener("input", handler);
+          element.removeEventListener("change", handler);
+        }
+      }
+    );
+    delete window._premadeItemEventHandlers;
+  };
+}
+
+/**
+ * Handle form submission via AJAX
  */
 async function handleFormSubmit(event) {
   event.preventDefault();
@@ -265,47 +406,53 @@ async function handleFormSubmit(event) {
   const form = event.target;
   const formData = new FormData(form);
   const submitButton = form.querySelector('button[type="submit"]');
-  const buttonText = submitButton?.querySelector(".button-text");
-  const loadingText = submitButton?.querySelector(".loading-text");
-  const priceError = document.getElementById("price-error");
-  const modelSelect = document.getElementById("model-select");
-  const filamentSelect = document.getElementById("filament-select");
-  const infillSlider = document.querySelector(".infill-range");
-
-  if (priceError) {
-    priceError.classList.add("hidden");
+  const originalButtonText = submitButton?.textContent || "Create Premade Item";
+  const existingError = form.querySelector(".form-error");
+  if (existingError) {
+    existingError.remove();
   }
+  const priceElement = document.getElementById("price-value");
+  if (priceElement && priceElement.textContent !== "--") {
+    formData.append("calculated_price", priceElement.textContent);
+  }
+
+  const modelSelect = document.getElementById("model-select");
+  const inventoryIdInput = document.getElementById("inventory-id");
 
   if (modelSelect?.value) {
     formData.set("Model", modelSelect.value);
   }
 
-  if (filamentSelect?.value) {
-    formData.set("InventoryChange", filamentSelect.value);
+  if (inventoryIdInput?.value) {
+    formData.set("InventoryChange", inventoryIdInput.value);
+  }
+
+  const infillSlider = document.querySelector(".infill-range");
+  if (
+    infillSlider?.value &&
+    modelSelect?.selectedOptions[0]?.dataset?.baseInfill
+  ) {
+    const baseInfill = Decimal(
+      modelSelect.selectedOptions[0].dataset.baseInfill || "0.3"
+    );
+    const infillPercentage = Decimal(infillSlider.value);
+    const infillMultiplier = infillPercentage / (baseInfill * 100);
+    formData.set("InfillMultiplier", infillMultiplier.toFixed(2));
   }
 
   formData.set("ItemQuantity", "1");
   formData.set("IsCustom", "False");
 
-  if (
-    infillSlider?.value &&
-    modelSelect?.selectedOptions[0]?.dataset?.baseInfill
-  ) {
-    const baseInfill = parseFloat(
-      modelSelect.selectedOptions[0].dataset.baseInfill || "0.3"
-    );
-    const infillPercentage = parseFloat(infillSlider.value);
-    const infillMultiplier = infillPercentage / (baseInfill * 100);
-    formData.set("InfillMultiplier", infillMultiplier.toFixed(2));
-  }
-
-  if (submitButton) {
-    submitButton.disabled = true;
-    if (buttonText) buttonText.classList.add("hidden");
-    if (loadingText) loadingText.classList.remove("hidden");
+  if (submitButton?.disabled) {
+    return;
   }
 
   try {
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "Creating Premade Item...";
+    }
+
     const response = await fetch(form.action, {
       method: "POST",
       body: formData,
@@ -319,46 +466,30 @@ async function handleFormSubmit(event) {
       return;
     }
 
-    const responseText = await response.text();
-    const data = responseText ? JSON.parse(responseText) : {};
-    if (data.redirect_url) {
-      window.location.href = data.redirect_url;
-    } else if (data.success) {
-      window.location.href =
-        data.redirect || "{{ url 'product-admin-premade-items' }}";
+    const data = await response.json();
+
+    if (data.status === "success" || data.success) {
+      window.location.href = data.redirect_url || "/store/admin/premade-items/";
     } else {
-      showFormErrors(form, data.errors || {});
+      const errorDiv = document.createElement("div");
+      errorDiv.className = "text-red-500 text-sm mt-2 form-error";
+      errorDiv.textContent = data.message || "Error creating premade item";
+      form.appendChild(errorDiv);
     }
   } catch (error) {
-    const errorMessage =
-      document.getElementById("error-message") || document.createElement("div");
-    errorMessage.className = "text-red-500 text-sm mt-2";
-    errorMessage.textContent = "An error occurred while saving the item.";
-    if (!errorMessage.parentNode) {
-      form.appendChild(errorMessage);
-    }
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "text-red-500 text-sm mt-2 form-error";
+    errorDiv.textContent =
+      error.message ||
+      "An error occurred while creating the premade item. Please try again.";
+
+    form.appendChild(errorDiv);
   } finally {
     if (submitButton) {
       submitButton.disabled = false;
-      if (buttonText) buttonText.classList.remove("hidden");
-      if (loadingText) loadingText.classList.add("hidden");
+      submitButton.textContent = originalButtonText;
     }
   }
 }
 
-/**
- * Display form errors
- */
-function showFormErrors(form, errors) {
-  const errorElements = form.querySelectorAll(".error-message");
-  errorElements.forEach((el) => el.remove());
-  for (const [field, messages] of Object.entries(errors)) {
-    const input = form.querySelector(`[name="${field}"]`);
-    if (input) {
-      const errorDiv = document.createElement("div");
-      errorDiv.className = "text-red-500 text-sm mt-1 error-message";
-      errorDiv.textContent = Array.isArray(messages) ? messages[0] : messages;
-      input.parentNode.insertBefore(errorDiv, input.nextSibling);
-    }
-  }
-}
+document.addEventListener("DOMContentLoaded", initializePage);
