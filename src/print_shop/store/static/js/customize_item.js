@@ -57,41 +57,6 @@ function updateFilamentErrorVisibility() {
 }
 
 /**
- * Update the price display with smooth transitions
- */
-function updatePriceDisplay(price) {
-  const priceElement = document.getElementById("price-value");
-  const priceContainer = document.getElementById("price-estimate");
-  const errorMessage = document.getElementById("price-error");
-
-  if (!priceElement || !priceContainer) return;
-  priceContainer.style.opacity = "0.5";
-  priceContainer.style.transition = "opacity 150ms ease-in-out";
-  if (errorMessage) {
-    errorMessage.classList.add("hidden");
-  }
-  setTimeout(() => {
-    if (price === null) {
-      priceElement.textContent = "--";
-      priceContainer.classList.remove("text-green-600", "font-bold");
-    } else if (price === "loading") {
-      priceElement.textContent = "Calculating...";
-      priceContainer.classList.remove("text-green-600", "font-bold");
-    } else {
-      try {
-        const formattedPrice = new Decimal(price).toFixed(2);
-        priceElement.textContent = formattedPrice;
-        priceContainer.classList.add("text-green-600", "font-bold");
-      } catch (err) {
-        priceElement.textContent = price;
-        priceContainer.classList.remove("text-green-600", "font-bold");
-      }
-    }
-    priceContainer.style.opacity = "1";
-  }, 150);
-}
-
-/**
  * Calculate the estimated price based on current selections
  * Uses the shared calculateItemPrice function from order_item.js
  */
