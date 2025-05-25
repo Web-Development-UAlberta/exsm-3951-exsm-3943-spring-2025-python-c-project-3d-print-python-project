@@ -91,6 +91,34 @@ function handleInfillChange(e) {
 }
 
 /**
+ * Update the infill slider based on model selection
+ */
+function updateInfillSlider(modelSelect) {
+  if (!modelSelect) return;
+
+  const infillRange =
+    document.querySelector(".infill-range") ||
+    document.getElementById("infill-percentage");
+  if (!infillRange) return;
+
+  const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+  if (selectedOption && selectedOption.dataset.baseInfill) {
+    try {
+      const baseInfillDecimal = new Decimal(selectedOption.dataset.baseInfill);
+      const baseInfill = baseInfillDecimal.times(100).round().toNumber() || 30;
+      infillRange.value = baseInfill;
+      updateInfillDisplay(baseInfill);
+      infillRange.disabled = false;
+    } catch (err) {
+      console.error("Error calculating infill percentage:", err);
+      infillRange.value = 30;
+      updateInfillDisplay(30);
+      infillRange.disabled = false;
+    }
+  }
+}
+
+/**
  * Fetches filaments for a given model and material
  * from the custom API endpoint
  */

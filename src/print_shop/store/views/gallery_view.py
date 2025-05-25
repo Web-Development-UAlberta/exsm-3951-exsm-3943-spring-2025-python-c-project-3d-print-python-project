@@ -247,7 +247,7 @@ def model_detail(request, model_id):
 
             return JsonResponse(
                 {
-                    "success": True,
+                    "status": "success",
                     "message": f"{model.Name} has been added to your cart.",
                     "redirect_url": reverse("cart"),
                 }
@@ -256,7 +256,7 @@ def model_detail(request, model_id):
         except Exception as e:
             error_msg = f"Error adding item to cart: {str(e)}"
             print(f"Error: {error_msg}")
-            return JsonResponse({"success": False, "message": error_msg}, status=400)
+            return JsonResponse({"status": "error", "message": error_msg}, status=400)
 
     context = {
         "model": model,

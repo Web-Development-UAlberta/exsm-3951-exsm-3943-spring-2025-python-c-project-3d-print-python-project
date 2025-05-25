@@ -1,4 +1,10 @@
 /**
+ * Customize Item JS
+ * Handles the dynamic functionality for the custom item form
+ * Uses shared functionality from order_item.js
+ */
+
+/**
  * Update form based on selected value.
  */
 function updateFormState(selectedValue) {
@@ -39,21 +45,6 @@ function updateFormState(selectedValue) {
     updatePriceDisplay(null);
   }
   updateFilamentErrorVisibility();
-}
-
-/**
- * Update the visibility of the filament error message
- */
-function updateFilamentErrorVisibility() {
-  const errorMessage = document.getElementById("filament-error");
-  const filamentSelect = document.getElementById("filament-select");
-  if (!errorMessage) return;
-  const hasSelection = filamentSelect && filamentSelect.value;
-  if (hasSelection) {
-    errorMessage.classList.add("hidden");
-  } else {
-    errorMessage.classList.remove("hidden");
-  }
 }
 
 /**
@@ -156,16 +147,8 @@ async function handleMaterialChange(event) {
       filamentSelect.innerHTML = '<option value="">Loading colors...</option>';
       filamentSelect.disabled = true;
     }
-    const response = await fetch(
-      `/store/api/model/${modelId}/material/${materialId}/filaments/`
-    );
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `HTTP error! status: ${response.status}`
-      );
-    }
-    const data = await response.json();
+
+    const data = await fetchFilaments(modelId, materialId);
     if (!filamentSelect) return;
     filamentSelect.innerHTML = '<option value="">Select a color</option>';
     if (
@@ -183,6 +166,7 @@ async function handleMaterialChange(event) {
         option.dataset.color = filament.color_code;
         filamentSelect.add(option);
       });
+
       filamentSelect.disabled = false;
       updateFormState(true);
       updateColorSwatch(filamentSelect);
@@ -210,6 +194,21 @@ async function handleMaterialChange(event) {
         error.message || "Error loading material options";
       errorMessage.classList.remove("hidden");
     }
+  }
+}
+
+/**
+ * Update the visibility of the filament error message
+ */
+function updateFilamentErrorVisibility() {
+  const errorMessage = document.getElementById("filament-error");
+  const filamentSelect = document.getElementById("filament-select");
+  if (!errorMessage) return;
+  const hasSelection = filamentSelect && filamentSelect.value;
+  if (hasSelection) {
+    errorMessage.classList.add("hidden");
+  } else {
+    errorMessage.classList.remove("hidden");
   }
 }
 
@@ -339,7 +338,7 @@ async function handleFormSubmit(event) {
       window.location.href = response.url;
     } else {
       const data = await response.json();
-      if (data.success) {
+      if (data.status === "success") {
         window.location.href = data.redirect_url || "/cart/";
       } else {
         const errorDiv = document.createElement("div");
