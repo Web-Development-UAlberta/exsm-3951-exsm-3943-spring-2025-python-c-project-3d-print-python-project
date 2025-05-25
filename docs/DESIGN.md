@@ -71,7 +71,6 @@ Refer /docs/ERD.drawio for detailed ERD diagram with relationship
 + Quote calculation
   
 ### 4.3 Inventory Management
-+ CSV upload for materials and 3D objects
 + Automatic inventory deduction on order approval
 + Low-stock notifications
 + Reorder recommendations
@@ -103,8 +102,7 @@ Refer /docs/ERD.drawio for detailed ERD diagram with relationship
 + Order Management
 + Inventory Management
 + User Management
-+ CSV Upload Interface
-
+  
 
 ## 6. Testing Strategy
 
