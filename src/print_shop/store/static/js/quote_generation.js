@@ -124,11 +124,9 @@ async function calculatePrice() {
         }
       } else {
         const errorMsg = data.message || "Error calculating price";
-        console.error("Error in response:", errorMsg);
         throw new Error(errorMsg);
       }
     } catch (error) {
-      console.error("Error calculating price:", error);
       updatePriceDisplay(null);
 
       if (priceError) {
@@ -137,7 +135,6 @@ async function calculatePrice() {
       }
     }
   } catch (error) {
-    console.error("Error in calculatePrice:", error);
     updatePriceDisplay(null);
   }
 }
@@ -214,7 +211,6 @@ async function handleMaterialChange(event) {
       );
     }
   } catch (error) {
-    console.error("Error in handleMaterialChange:", error);
     const filamentSelect = document.getElementById("filament-select");
     if (filamentSelect) {
       filamentSelect.innerHTML =
@@ -351,9 +347,7 @@ function initializePage() {
   const quoteForm = document.getElementById("quote-form");
 
   if (!modelSelect || !materialSelect || !filamentSelect) {
-    console.error(
-      "Required elements (modelSelect, materialSelect, or filamentSelect) not found"
-    );
+    alert("Required elements not found");
     return;
   }
 
@@ -398,7 +392,7 @@ function initializePage() {
       quoteForm.addEventListener("submit", handleFormSubmit);
     }
   } catch (error) {
-    console.error("Error adding event listeners:", error);
+    alert("Error loading page");
   }
 
   window._quoteEventHandlers = {
@@ -489,8 +483,6 @@ async function handleFormSubmit(event) {
       }
     }
   } catch (error) {
-    console.error("Error submitting form:", error);
-
     const errorDiv = document.createElement("div");
     errorDiv.className = "text-red-500 text-sm mt-2 form-error";
     errorDiv.textContent =

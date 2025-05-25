@@ -28,7 +28,7 @@ function updatePriceDisplay(price) {
   const priceError = document.getElementById("price-error");
 
   if (!priceValue || !priceEstimate) {
-    console.error("Required price display elements not found");
+    alert("Error loading page");
     return;
   }
 
@@ -109,8 +109,7 @@ function updateInfillSlider(modelSelect) {
       infillRange.value = baseInfill;
       updateInfillDisplay(baseInfill);
       infillRange.disabled = false;
-    } catch (err) {
-      console.error("Error calculating infill percentage:", err);
+    } catch (error) {
       infillRange.value = 30;
       updateInfillDisplay(30);
       infillRange.disabled = false;
@@ -171,7 +170,7 @@ async function calculateItemPrice(config) {
     try {
       errorData = JSON.parse(errorText);
     } catch (e) {
-      console.error("Failed to parse error response as JSON");
+      alert("Failed to fetch price");
     }
     const errorMessage =
       errorData.message || `HTTP error! status: ${response.status}`;

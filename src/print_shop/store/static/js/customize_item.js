@@ -104,11 +104,9 @@ async function calculatePrice() {
         }
       } else {
         const errorMsg = data.message || "Error calculating price";
-        console.error("Error in response:", errorMsg);
         throw new Error(errorMsg);
       }
     } catch (error) {
-      console.error("Error calculating price:", error);
       updatePriceDisplay(null);
 
       if (errorMessage) {
@@ -117,7 +115,6 @@ async function calculatePrice() {
       }
     }
   } catch (error) {
-    console.error("Error in calculatePrice:", error);
     updatePriceDisplay(null);
   }
 }
@@ -179,7 +176,6 @@ async function handleMaterialChange(event) {
       );
     }
   } catch (error) {
-    console.error("Error in handleMaterialChange:", error);
     const filamentSelect = document.getElementById("filament-select");
     if (filamentSelect) {
       filamentSelect.innerHTML =
@@ -222,13 +218,6 @@ function initializePage() {
   const infillValue = document.getElementById("infill-value");
   const quantityInput = document.querySelector(".quantity-input");
   const form = document.querySelector("form");
-
-  if (!materialSelect || !filamentSelect) {
-    console.error(
-      "Required elements (materialSelect or filamentSelect) not found"
-    );
-    return;
-  }
 
   updateFormState(materialSelect.value !== "");
 
@@ -275,7 +264,7 @@ function initializePage() {
       form.addEventListener("submit", handleFormSubmit);
     }
   } catch (error) {
-    console.error("Error adding event listeners:", error);
+    alert("An error occurred while initializing the page.");
   }
 
   window._eventHandlers = {
@@ -353,7 +342,6 @@ async function handleFormSubmit(event) {
       }
     }
   } catch (error) {
-    console.error("Error:", error);
     alert("An error occurred while adding the item to your cart.");
   } finally {
     submitButton.disabled = false;
