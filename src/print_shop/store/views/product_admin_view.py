@@ -33,12 +33,14 @@ def premade_items_list(request):
     """
     List all premade items (admin view)
     """
-    premade_items = OrderItems.objects.filter(
-        Order__isnull=True, IsCustom=False
-    ).select_related("Model", "InventoryChange__RawMaterial__Filament__Material").order_by(
-        "Model__Name",
-        "InventoryChange__RawMaterial__Filament__Material__Name",
-        "InventoryChange__RawMaterial__Filament__Name"
+    premade_items = (
+        OrderItems.objects.filter(Order__isnull=True, IsCustom=False)
+        .select_related("Model", "InventoryChange__RawMaterial__Filament__Material")
+        .order_by(
+            "Model__Name",
+            "InventoryChange__RawMaterial__Filament__Material__Name",
+            "InventoryChange__RawMaterial__Filament__Name",
+        )
     )
 
     context = {"premade_items": premade_items}
@@ -236,33 +238,52 @@ def generate_quote(request):
     Because of how we create carts, we need to temporarily set the request.user to the customer.
     """
     quantity = 1
-    infill_percentage = 30
+    infill_percentage = int(request.GET.get("infill", 30))
+    selected_model = request.GET.get("model")
+    selected_material = request.GET.get("material")
+    selected_filament = request.GET.get("filament")
+
     all_models = Models.objects.order_by("Name")
     customer_form = CustomerSelectionForm()
+
     available_items = []
     available_materials = []
     available_filaments = []
-    model = None
-    form = None
 
-    current_inventory = InventoryChange.objects.available().select_related(
-        "RawMaterial__Filament__Material"
-    )
-    
-    available_materials = (
-        Materials.objects.filter(
-            filament__rawmaterials__inventorychange__in=current_inventory
+    if selected_model:
+        model = get_object_or_404(Models, pk=selected_model)
+        available_items = get_available_inventory_items(
+            model=model,
+            selected_filament=selected_filament,
+            quantity=quantity,
+            infill_percentage=infill_percentage,
         )
-        .distinct()
-        .order_by("Name")
-    )
-    
-    context = {
-        "all_models": all_models,
-        "customer_form": customer_form,
-        "available_materials": available_materials,
-        "default_infill": 30,
-    }
+
+        available_materials = list(
+            {item["material"] for item in available_items if item["material"]}
+        )
+        available_filaments = list(
+            {item["filament"] for item in available_items if item["filament"]}
+        )
+
+        if selected_material:
+            available_filaments = [
+                f
+                for f in available_filaments
+                if str(f.Material_id) == str(selected_material)
+            ]
+    else:
+        current_inventory = InventoryChange.objects.available().select_related(
+            "RawMaterial__Filament__Material"
+        )
+        available_materials = (
+            Materials.objects.filter(
+                filament__rawmaterials__inventorychange__in=current_inventory
+            )
+            .distinct()
+            .order_by("Name")
+        )
+
     if (
         request.method == "GET"
         and request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -278,48 +299,33 @@ def generate_quote(request):
             customer_id = request.POST.get("customer_id")
             if not customer_id:
                 return JsonResponse(
-                    {"success": False, "message": "Please select a customer"},
+                    {"status": "error", "message": "Please select a customer"},
                     status=400,
                 )
 
             customer = get_object_or_404(User, pk=customer_id)
-
             model_id = request.POST.get("model_id")
             if not model_id:
                 return JsonResponse(
-                    {"success": False, "message": "Please select a model"},
+                    {"status": "error", "message": "Please select a model"},
                     status=400,
                 )
 
             model = get_object_or_404(Models, pk=model_id)
 
             inventory_id = request.POST.get("inventory_id")
-            quantity = int(request.POST.get("ItemQuantity", 1))
+            quantity = 1
             infill_percentage = Decimal(
                 request.POST.get("infill_percentage", model.BaseInfill * 100)
             )
-
-            selected_inventory = None
-            if inventory_id:
-                try:
-                    selected_inventory = InventoryChange.objects.get(id=inventory_id)
-                except InventoryChange.DoesNotExist:
-                    return JsonResponse(
-                        {
-                            "success": False,
-                            "message": "Selected inventory not found",
-                        },
-                        status=400,
-                    )
-
             available_items = get_available_inventory_items(
                 model=model,
                 quantity=quantity,
                 infill_percentage=int(infill_percentage),
             )
-
             selected_item = None
-            if selected_inventory:
+
+            if inventory_id:
                 selected_item = next(
                     (
                         item
@@ -331,17 +337,17 @@ def generate_quote(request):
 
             if not selected_item and available_items:
                 selected_item = available_items[0]
-                selected_inventory = selected_item["inventory"]
 
-            if not selected_item or not selected_inventory:
+            if not selected_item:
                 return JsonResponse(
                     {
-                        "success": False,
+                        "status": "error",
                         "message": "No inventory available for the selected options",
                     },
                     status=400,
                 )
 
+            selected_inventory = selected_item["inventory"]
             temp_order_item = OrderItems(
                 Model=model,
                 InventoryChange=selected_inventory,
@@ -361,12 +367,11 @@ def generate_quote(request):
             ):
                 return JsonResponse(
                     {
-                        "success": False,
+                        "status": "error",
                         "message": "Insufficient inventory available for the selected options",
                     },
                     status=400,
                 )
-
             original_user = request.user
             request.user = customer
 
@@ -376,9 +381,10 @@ def generate_quote(request):
                 ExpeditedService=False,
                 Shipping=None,
             )
-
             if original_user:
                 request.user = original_user
+
+            calculated_price = request.POST.get("calculated_price")
 
             price_components = temp_order_item.calculate_price_components()
 
@@ -394,10 +400,9 @@ def generate_quote(request):
                 ItemPrice=price_components["price"],
             )
             order_item.save()
-
             return JsonResponse(
                 {
-                    "success": True,
+                    "status": "success",
                     "message": f"Quote for {model.Name} has been created for {customer.username}.",
                     "redirect_url": reverse("orders-list"),
                 }
@@ -405,7 +410,23 @@ def generate_quote(request):
 
         except Exception as e:
             error_msg = f"Error creating quote: {str(e)}"
-            print(f"Error: {error_msg}")
-            return JsonResponse({"success": False, "message": error_msg}, status=400)
+            return JsonResponse({"status": "error", "message": error_msg}, status=400)
+
+    context = {
+        "all_models": all_models,
+        "customer_form": customer_form,
+        "available_materials": available_materials,
+        "available_filaments": available_filaments,
+        "selected_model": selected_model,
+        "selected_material": selected_material,
+        "selected_filament": selected_filament,
+        "quantity": quantity,
+        "default_infill": int(model.BaseInfill * 100)
+        if selected_model
+        else infill_percentage,
+    }
+    if selected_model:
+        model = get_object_or_404(Models, pk=selected_model)
+        context["model"] = model
 
     return render(request, "admin/quote_form.html", context)
