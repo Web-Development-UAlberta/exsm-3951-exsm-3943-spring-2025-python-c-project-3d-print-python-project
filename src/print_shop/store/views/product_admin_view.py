@@ -54,122 +54,172 @@ def add_premade_item(request):
     """
     Add a new premade item (admin view) with FIFO inventory checks
     """
-    available_models = Models.objects.all().order_by("Name")
-    available_materials = Materials.objects.all().order_by("Name")
-    default_infill = 30
+    selected_model = request.GET.get("model")
+    selected_material = request.GET.get("material")
+    selected_filament = request.GET.get("filament")
+    infill_percentage = int(request.GET.get("infill", 30))
+    all_models = Models.objects.order_by("Name")
+
+    available_items = []
+    available_materials = []
+    available_filaments = []
+    
+    if selected_model:
+        model = get_object_or_404(Models, pk=selected_model)
+        available_items = get_available_inventory_items(
+            model=model,
+            selected_filament=selected_filament,
+            quantity=1,
+            infill_percentage=infill_percentage,
+        )
+        
+        available_materials = list(
+            {item["material"] for item in available_items if item["material"]}
+        )
+        available_filaments = list(
+            {item["filament"] for item in available_items if item["filament"]}
+        )
+        
+        if selected_material:
+            available_filaments = [
+                f
+                for f in available_filaments
+                if str(f.Material_id) == str(selected_material)
+            ]
+    else:
+        current_inventory = InventoryChange.objects.available().select_related(
+            "RawMaterial__Filament__Material"
+        )
+        available_materials = (
+            Materials.objects.filter(
+                filament__rawmaterials__inventorychange__in=current_inventory
+            )
+            .distinct()
+            .order_by("Name")
+        )
+    
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-
-    if request.method == "POST":
+    
+    if request.method == "POST" and is_ajax:
         try:
-            form = AdminItemForm(request.POST, request.FILES)
-
-            if not form.is_valid():
-                if is_ajax:
-                    return JsonResponse(
-                        {
-                            "success": False,
-                            "message": "Form validation failed",
-                            "errors": form.errors.get_json_data(),
-                        },
-                        status=400,
-                    )
-                return render(
-                    request,
-                    "admin/premade_item_form.html",
+            model_id = request.POST.get("Model")
+            inventory_id = request.POST.get("InventoryChange")
+            infill_multiplier = request.POST.get("InfillMultiplier")
+            calculated_price = request.POST.get("calculated_price")
+            
+            if not model_id:
+                return JsonResponse(
+                    {"status": "error", "message": "Please select a model"},
+                    status=400,
+                )
+                
+            model = get_object_or_404(Models, pk=model_id)
+            
+            infill_multiplier = Decimal(infill_multiplier)
+            infill_percentage = int(infill_multiplier * model.BaseInfill * 100)
+            
+            available_items = get_available_inventory_items(
+                model=model,
+                quantity=1,
+                infill_percentage=infill_percentage,
+            )
+            
+            if not available_items:
+                return JsonResponse(
                     {
-                        "form": form,
-                        "title": "Add Premade Item",
-                        "available_models": available_models,
-                        "available_materials": available_materials,
-                        "default_infill": default_infill,
+                        "status": "error",
+                        "message": "No inventory available for the selected model",
                     },
+                    status=400,
                 )
-
-            with transaction.atomic():
-                item = form.save(commit=False)
-                infill_percentage = form.cleaned_data.get("infill_percentage")
-                if infill_percentage is not None:
-                    item.InfillMultiplier = item.calculate_infill_multiplier(
-                        infill_percentage
-                    )
-                item.IsCustom = False
-                item.save()
-
-                required_weight = item.calculate_required_weight()
-
-                available_inventory = (
-                    item.InventoryChange.RawMaterial.find_inventory_for_weight(
-                        required_weight
-                    )
+            
+            selected_item = None
+            if inventory_id:
+                selected_item = next(
+                    (
+                        item
+                        for item in available_items
+                        if str(item["inventory"].id) == str(inventory_id)
+                    ),
+                    None,
                 )
-
-                if not available_inventory:
-                    transaction.set_rollback(True)
-                    error_msg = "Insufficient inventory available for the selected filament. Please check available stock."
-                    if is_ajax:
-                        return JsonResponse(
-                            {
-                                "success": False,
-                                "message": error_msg,
-                                "errors": {"__all__": [error_msg]},
-                            },
-                            status=400,
-                        )
-                    messages.error(request, error_msg)
-                    return redirect(request.path_info)
-
-                if item.InventoryChange_id != available_inventory.id:
-                    item.InventoryChange = available_inventory
-                    item.save()
-
-                success_msg = (
-                    f"Premade item '{item.Model.Name}' was created successfully"
+                
+            if not selected_item and available_items:
+                selected_item = available_items[0]
+                
+            if not selected_item:
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "No inventory available for the selected options",
+                    },
+                    status=400,
                 )
-                if is_ajax:
-                    return JsonResponse(
-                        {
-                            "success": True,
-                            "message": success_msg,
-                            "redirect_url": reverse("product-admin-premade-items"),
-                        }
-                    )
-                messages.success(request, success_msg)
-                return redirect("product-admin-premade-items")
-
+                
+            selected_inventory = selected_item["inventory"]
+            temp_order_item = OrderItems(
+                Model=model,
+                InventoryChange=selected_inventory,
+                ItemQuantity=1,
+                IsCustom=False,
+                InfillMultiplier=infill_multiplier,
+            )
+            
+            total_weight = temp_order_item.calculate_required_weight()
+            
+            if not selected_inventory.RawMaterial.find_inventory_for_weight(total_weight):
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "Insufficient inventory available for the selected options",
+                    },
+                    status=400,
+                )
+                
+            price_components = temp_order_item.calculate_price_components()
+            
+            order_item = OrderItems(
+                Model=model,
+                InventoryChange=selected_inventory,
+                InfillMultiplier=infill_multiplier,
+                ItemQuantity=1,
+                IsCustom=False,
+                TotalWeight=price_components["weight"],
+                CostOfGoodsSold=price_components["cost_of_goods"],
+                ItemPrice=price_components["price"],
+            )
+            order_item.save()
+            
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "message": f"Premade item '{model.Name}' was created successfully",
+                    "redirect_url": reverse("product-admin-premade-items"),
+                }
+            )
+            
         except Exception as e:
             error_msg = f"Error creating premade item: {str(e)}"
-            if is_ajax:
-                return JsonResponse(
-                    {"success": False, "message": error_msg}, status=400
-                )
-            messages.error(request, error_msg)
-            return redirect(request.path_info)
-    else:
-        form = AdminItemForm(initial={"IsCustom": False})
-
+            return JsonResponse({"status": "error", "message": error_msg}, status=400)
+    
+    form = AdminItemForm(initial={"IsCustom": False})
+    
     context = {
         "form": form,
         "title": "Add Premade Item",
-        "available_models": available_models,
+        "all_models": all_models,
         "available_materials": available_materials,
-        "default_infill": default_infill,
+        "available_filaments": available_filaments,
+        "selected_model": selected_model,
+        "selected_material": selected_material,
+        "selected_filament": selected_filament,
+        "default_infill": int(model.BaseInfill * 100) if selected_model else infill_percentage,
     }
-
-    if is_ajax:
-        return JsonResponse(
-            {"success": False, "message": "Invalid request", "errors": {}}, status=400
-        )
-
-    return render(request, "admin/premade_item_form.html", context)
-
-    context = {
-        "form": form,
-        "title": "Add Premade Item",
-        "available_models": available_models,
-        "available_materials": available_materials,
-        "default_infill": default_infill,
-    }
-
+    
+    if selected_model:
+        model = get_object_or_404(Models, pk=selected_model)
+        context["model"] = model
+    
     return render(request, "admin/premade_item_form.html", context)
 
 
@@ -178,35 +228,174 @@ def add_premade_item(request):
 def edit_premade_item(request, pk):
     """
     Edit an existing premade item (admin view)
+    Uses the same inventory selection logic as the add_premade_item view
     """
     item = get_object_or_404(OrderItems, pk=pk, Order__isnull=True, IsCustom=False)
-    available_models = Models.objects.all().order_by("Name")
-    available_materials = Materials.objects.all().order_by("Name")
-    default_infill = (
-        int(item.InfillMultiplier * (item.Model.BaseInfill * 100)) if item.Model else 30
-    )
-
-    if request.method == "POST":
-        form = AdminItemForm(request.POST, instance=item)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.IsCustom = False
-            item.save()
-            messages.success(
-                request, f"Premade item '{item.Model.Name}' was updated successfully"
-            )
-            return redirect("product-admin-premade-items")
+    
+    selected_model = request.GET.get("model", str(item.Model_id) if item.Model else None)
+    selected_material = request.GET.get("material", str(item.InventoryChange.RawMaterial.Filament.Material_id) if item.InventoryChange else None)
+    selected_filament = request.GET.get("filament", str(item.InventoryChange.RawMaterial.Filament_id) if item.InventoryChange else None)
+    infill_percentage = int(request.GET.get("infill", int(item.InfillMultiplier * (item.Model.BaseInfill * 100)) if item.Model else 30))
+    
+    all_models = Models.objects.order_by("Name")
+    
+    available_items = []
+    available_materials = []
+    available_filaments = []
+    
+    if selected_model:
+        model = get_object_or_404(Models, pk=selected_model)
+        available_items = get_available_inventory_items(
+            model=model,
+            selected_filament=selected_filament,
+            quantity=1,
+            infill_percentage=infill_percentage,
+        )
+        
+        available_materials = list(
+            {item["material"] for item in available_items if item["material"]}
+        )
+        available_filaments = list(
+            {item["filament"] for item in available_items if item["filament"]}
+        )
+        
+        if selected_material:
+            available_filaments = [
+                f
+                for f in available_filaments
+                if str(f.Material_id) == str(selected_material)
+            ]
     else:
-        form = AdminItemForm(instance=item)
-
+        current_inventory = InventoryChange.objects.available().select_related(
+            "RawMaterial__Filament__Material"
+        )
+        available_materials = (
+            Materials.objects.filter(
+                filament__rawmaterials__inventorychange__in=current_inventory
+            )
+            .distinct()
+            .order_by("Name")
+        )
+    
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    
+    if request.method == "POST" and is_ajax:
+        try:
+            model_id = request.POST.get("Model")
+            inventory_id = request.POST.get("InventoryChange")
+            infill_multiplier = request.POST.get("InfillMultiplier")
+            calculated_price = request.POST.get("calculated_price")
+            
+            if not model_id:
+                return JsonResponse(
+                    {"status": "error", "message": "Please select a model"},
+                    status=400,
+                )
+                
+            model = get_object_or_404(Models, pk=model_id)
+            
+            infill_multiplier = Decimal(infill_multiplier)
+            infill_percentage = int(infill_multiplier * model.BaseInfill * 100)
+            
+            available_items = get_available_inventory_items(
+                model=model,
+                quantity=1,
+                infill_percentage=infill_percentage,
+            )
+            
+            if not available_items:
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "No inventory available for the selected model",
+                    },
+                    status=400,
+                )
+            
+            selected_item = None
+            if inventory_id:
+                selected_item = next(
+                    (
+                        item
+                        for item in available_items
+                        if str(item["inventory"].id) == str(inventory_id)
+                    ),
+                    None,
+                )
+                
+            if not selected_item and available_items:
+                selected_item = available_items[0]
+                
+            if not selected_item:
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "No inventory available for the selected options",
+                    },
+                    status=400,
+                )
+                
+            selected_inventory = selected_item["inventory"]
+            temp_order_item = OrderItems(
+                Model=model,
+                InventoryChange=selected_inventory,
+                ItemQuantity=1,
+                IsCustom=False,
+                InfillMultiplier=infill_multiplier,
+            )
+            
+            total_weight = temp_order_item.calculate_required_weight()
+            
+            if not selected_inventory.RawMaterial.find_inventory_for_weight(total_weight):
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "Insufficient inventory available for the selected options",
+                    },
+                    status=400,
+                )
+                
+            price_components = temp_order_item.calculate_price_components()
+            
+            item.Model = model
+            item.InventoryChange = selected_inventory
+            item.InfillMultiplier = infill_multiplier
+            item.TotalWeight = price_components["weight"]
+            item.CostOfGoodsSold = price_components["cost_of_goods"]
+            item.ItemPrice = price_components["price"]
+            item.save()
+            
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "message": f"Premade item '{model.Name}' was updated successfully",
+                    "redirect_url": reverse("product-admin-premade-items"),
+                }
+            )
+            
+        except Exception as e:
+            error_msg = f"Error updating premade item: {str(e)}"
+            return JsonResponse({"status": "error", "message": error_msg}, status=400)
+    
+    form = AdminItemForm(instance=item)
+    
     context = {
         "form": form,
         "title": "Edit Premade Item",
-        "available_models": available_models,
+        "all_models": all_models,
         "available_materials": available_materials,
-        "default_infill": default_infill,
+        "available_filaments": available_filaments,
+        "selected_model": selected_model,
+        "selected_material": selected_material,
+        "selected_filament": selected_filament,
+        "default_infill": infill_percentage,
+        "item": item,
     }
-
+    
+    if selected_model:
+        model = get_object_or_404(Models, pk=selected_model)
+        context["model"] = model
+    
     return render(request, "admin/premade_item_form.html", context)
 
 
