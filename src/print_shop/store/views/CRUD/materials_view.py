@@ -58,9 +58,14 @@ def edit_material(request, pk):
 def delete_material(request, pk):
     material = get_object_or_404(Materials, pk=pk)
     if request.method == "POST":
-        name = material.Name
-        material.delete()
-        messages.success(request, f"Material {name} was deleted successfully")
+        name = Materials.Name
+        try:
+            material.delete()
+            messages.success(request, f"Material {name} was deleted successfully")
+        except Exception as e:
+            messages.error(
+                request, "Failed to delete material. The material may be in use."
+            )
         return redirect("materials-list")
     return render(
         request, "materials/material_confirm_delete.html", {"material": material}
