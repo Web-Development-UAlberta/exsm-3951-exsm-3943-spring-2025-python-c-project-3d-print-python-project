@@ -124,7 +124,7 @@ python manage.py tailwind install
 
 ## 🌱 Seed the Database (Optional for Development)
 
-For development you can use load the database with two fixtures `initial_seed.json` and `order_seed.json` to get started. 3D models and thumbnails are required to be downloaded and placed in the correct directories.
+For development, you can load the database with two fixtures `initial_seed.json` and `order_seed.json` to get started. 3D models and thumbnails are required to be downloaded and placed in the correct directories.
 
 ### 1. 📥 Download: [3DBenchy.stl](https://github.com/CreativeTools/3DBenchy)
 
