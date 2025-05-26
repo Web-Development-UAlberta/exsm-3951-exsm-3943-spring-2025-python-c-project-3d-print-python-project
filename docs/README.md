@@ -80,6 +80,14 @@ source .venv/Scripts/activate
 source .venv/bin/activate
 ```
 
+#### ▶️ Deactivate the Environment
+
+To exit the virtual environment, run:
+
+```bash
+deactivate
+```
+
 ### 3. Install Dependencies
 
 Navigate to the project root and run:
