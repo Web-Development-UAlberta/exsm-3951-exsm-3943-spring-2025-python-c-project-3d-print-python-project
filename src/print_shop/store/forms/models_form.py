@@ -3,13 +3,8 @@ from store.models import Models
 
 
 class ModelsForm(forms.ModelForm):
+    Thumbnail = forms.ImageField(required=False)
+    
     class Meta:
         model = Models
-        fields = [
-            "Name",
-            "Description",
-            "FilePath",
-            "FixedCost",
-            "EstimatedPrintVolume",
-            "BaseInfill",
-        ]
+        fields = "__all__"

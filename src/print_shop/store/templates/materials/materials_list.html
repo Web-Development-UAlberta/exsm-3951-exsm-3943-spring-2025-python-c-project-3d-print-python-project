@@ -1,17 +1,35 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block content %}
-  <h1>Materials List</h1>
-  <a href="{% url 'add-material' %}">Add New Material</a>
-  <ul>
-    {% for material in materials %}
-      <li>
-        {{ material.Name }}
-        [<a href="{% url 'edit-material' material.id %}">Edit</a>]
-        [<a href="{% url 'delete-material' material.id %}">Delete</a>]
-      </li>
-    {% empty %}
-      <li>No materials found.</li>
-    {% endfor %}
-  </ul>
-{% endblock %}
+  <section class="container mx-auto max-w-4xl bg-white shadow-md rounded-lg overflow-hidden my-8">
+    <div class="flex justify-between items-center bg-gray-50 px-6 py-4 border-b">
+      <h1 class="text-2xl font-bold text-gray-800">Materials List</h1>
+      <a href="{% url 'add-material' %}"
+         class="px-4 py-2 border border-blue-600 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Add New Material
+      </a>
+      <a href="{% url 'add-raw-material' %}"
+         class="px-4 py-2 border border-blue-600 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Back to Raw Materials
+      </a>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for material in materials %}
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col justify-between">
+            <div>
+              <span class="font-semibold text-lg">{{ material.Name }}</span>
+            </div>
+            <div class="flex space-x-2 mt-4">
+              <a href="{% url 'edit-material' material.id %}"
+                 class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">Edit</a>
+              <a href="{% url 'delete-material' material.id %}"
+                 class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">Delete</a>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-span-2 text-center text-gray-500">No materials found.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock content %}

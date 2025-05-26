@@ -123,6 +123,7 @@ def get_available_inventory_items(
 
     return sufficient_items
 
+
 @login_required
 def model_detail(request, model_id):
     """
@@ -246,7 +247,7 @@ def model_detail(request, model_id):
 
             return JsonResponse(
                 {
-                    "success": True,
+                    "status": "success",
                     "message": f"{model.Name} has been added to your cart.",
                     "redirect_url": reverse("cart"),
                 }
@@ -254,8 +255,7 @@ def model_detail(request, model_id):
 
         except Exception as e:
             error_msg = f"Error adding item to cart: {str(e)}"
-            print(f"Error: {error_msg}")
-            return JsonResponse({"success": False, "message": error_msg}, status=400)
+            return JsonResponse({"status": "error", "message": error_msg}, status=400)
 
     context = {
         "model": model,
@@ -330,9 +330,6 @@ def get_filaments_for_material(request, model_id, material_id):
         )
 
     except Exception as e:
-        import traceback
-
-        traceback.print_exc()
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
@@ -435,9 +432,6 @@ def calculate_price(request, model_id, filament_id):
         return JsonResponse(response_data, json_dumps_params={"default": str})
 
     except Exception as e:
-        import traceback
-
-        traceback.print_exc()
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
@@ -490,88 +484,103 @@ def premade_gallery(request):
 
     return render(request, "gallery/premade_gallery.html", context)
 
+
 @login_required
 def premade_item_detail(request, item_id):
     """
     Detail view for a specific premade item
     """
-    item = get_object_or_404(
-        OrderItems.objects.select_related(
-            "Model",
-            "InventoryChange__RawMaterial__Filament__Material",
-            "InventoryChange__RawMaterial__Filament",
-        ),
-        pk=item_id,
-        Order__isnull=True,
-        IsCustom=False,
-    )
+    try:
+        item = get_object_or_404(
+            OrderItems.objects.select_related(
+                "Model",
+                "InventoryChange__RawMaterial__Filament__Material",
+                "InventoryChange__RawMaterial__Filament",
+            ),
+            pk=item_id,
+            Order__isnull=True,
+            IsCustom=False,
+        )
 
-    available_quantity = OrderItems.objects.filter(
-        Model=item.Model,
-        InventoryChange__RawMaterial__Filament=item.InventoryChange.RawMaterial.Filament,
-        Order__isnull=True,
-        IsCustom=False,
-        ItemPrice=item.ItemPrice,
-    ).count()
+        infill_percentage = round(item.Model.BaseInfill * item.InfillMultiplier * 100)
 
-    if request.method == "POST":
-        if not request.user.is_authenticated:
-            messages.info(request, "Please log in to add items to your cart.")
-            return redirect("login")
+        available_quantity = OrderItems.objects.filter(
+            Model=item.Model,
+            InventoryChange__RawMaterial__Filament=item.InventoryChange.RawMaterial.Filament,
+            Order__isnull=True,
+            IsCustom=False,
+            ItemPrice=item.ItemPrice,
+        ).count()
 
-        try:
-            quantity = int(request.POST.get("quantity", 1))
-            if quantity > available_quantity:
-                messages.error(request, f"Cannot add {quantity} items. Only {available_quantity} in stock.")
-                return redirect("premade-item-detail", item_id=item_id)
-            quantity = max(1, min(quantity, available_quantity))
+        if request.method == "POST":
+            if not request.user.is_authenticated:
+                messages.info(request, "Please log in to add items to your cart.")
+                return redirect("login")
 
-            draft_order = get_draft_order(request)
-            if not draft_order:
-                draft_order = Orders.objects.create(
-                    User=request.user,
-                    TotalPrice=0,
-                    ExpeditedService=False,
-                    Shipping=None,
+            try:
+                quantity = int(request.POST.get("quantity", 1))
+                if quantity > available_quantity:
+                    messages.error(
+                        request,
+                        f"Cannot add {quantity} items. Only {available_quantity} in stock.",
+                    )
+                    return redirect("premade-item-detail", item_id=item_id)
+                quantity = max(1, min(quantity, available_quantity))
+
+                draft_order = get_draft_order(request)
+                if not draft_order:
+                    draft_order = Orders.objects.create(
+                        User=request.user,
+                        TotalPrice=0,
+                        ExpeditedService=False,
+                        Shipping=None,
+                    )
+
+                items_to_add = OrderItems.objects.filter(
+                    Model=item.Model,
+                    InventoryChange__RawMaterial__Filament=item.InventoryChange.RawMaterial.Filament,
+                    Order__isnull=True,
+                    IsCustom=False,
+                    ItemPrice=item.ItemPrice,
+                ).order_by("id")[:quantity]
+
+                if not items_to_add.exists():
+                    messages.error(request, "This item is no longer available.")
+                    return redirect("premade-gallery")
+
+                for item_to_add in items_to_add:
+                    item_to_add.Order = draft_order
+                    item_to_add.save()
+
+                draft_order.TotalPrice = sum(
+                    item.ItemPrice * item.ItemQuantity
+                    for item in draft_order.orderitems_set.all()
                 )
+                draft_order.save()
 
-            items_to_add = OrderItems.objects.filter(
-                Model=item.Model,
-                InventoryChange__RawMaterial__Filament=item.InventoryChange.RawMaterial.Filament,
-                Order__isnull=True,
-                IsCustom=False,
-                ItemPrice=item.ItemPrice,
-            ).order_by("id")[:quantity]
+                messages.success(
+                    request, f"{quantity} x {item.Model.Name} added to cart."
+                )
+                return redirect("cart")
 
-            if not items_to_add.exists():
-                messages.error(request, "This item is no longer available.")
-                return redirect("premade-gallery")
+            except (ValueError, Exception):
+                messages.error(
+                    request, "An error occurred while adding the item to your cart."
+                )
+                return redirect("premade-item-detail", item_id=item_id)
 
-            for item_to_add in items_to_add:
-                item_to_add.Order = draft_order
-                item_to_add.save()
+        infill_percentage = round(item.Model.BaseInfill * item.InfillMultiplier * 100)
 
-            draft_order.TotalPrice = sum(
-                item.ItemPrice * item.ItemQuantity
-                for item in draft_order.orderitems_set.all()
-            )
-            draft_order.save()
+        context = {
+            "item": item,
+            "available_quantity": available_quantity,
+            "infill_percentage": infill_percentage,
+        }
 
-            messages.success(request, f"{quantity} x {item.Model.Name} added to cart.")
-            return redirect("cart")
-
-        except (ValueError, Exception) as e:
-            messages.error(
-                request, "An error occurred while adding the item to your cart."
-            )
-            return redirect("premade-item-detail", item_id=item_id)
-
-    infill_percentage = round(item.Model.BaseInfill * item.InfillMultiplier * 100)
-
-    context = {
-        "item": item,
-        "available_quantity": available_quantity,
-        "infill_percentage": infill_percentage,
-    }
-
-    return render(request, "gallery/premade_item_detail.html", context)
+        return render(request, "gallery/premade_item_detail.html", context)
+    except Exception:
+        messages.error(
+            request,
+            "Item is no longer available. It may be in someone's cart.",
+        )
+        return redirect("premade-gallery")

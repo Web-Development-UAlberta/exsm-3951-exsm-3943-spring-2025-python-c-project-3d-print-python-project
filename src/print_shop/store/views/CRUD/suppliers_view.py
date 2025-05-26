@@ -59,9 +59,14 @@ def edit_supplier(request, pk):
 def delete_supplier(request, pk):
     supplier = get_object_or_404(Suppliers, pk=pk)
     if request.method == "POST":
-        name = supplier.Name
-        supplier.delete()
-        messages.success(request, f"Supplier {name} was deleted successfully")
+        name = Suppliers.Name
+        try:
+            supplier.delete()
+            messages.success(request, f"Supplier {name} was deleted successfully")
+        except Exception as e:
+            messages.error(
+                request, f"Failed to delete supplier. The supplier may be in use."
+            )
         return redirect("suppliers-list")
     return render(
         request, "suppliers/supplier_confirm_delete.html", {"supplier": supplier}

@@ -54,8 +54,11 @@ def edit_model(request, pk):
 def delete_model(request, pk):
     model = get_object_or_404(Models, pk=pk)
     if request.method == "POST":
-        name = model.Name
-        model.delete()
-        messages.success(request, f"Model {name} was deleted successfully")
+        name = Models.Name
+        try:
+            model.delete()
+            messages.success(request, f"Model {name} was deleted successfully")
+        except Exception as e:
+            messages.error(request, f"Failed to delete model. The model may be in use.")
         return redirect("models-list")
     return render(request, "models/model_confirm_delete.html", {"model": model})
