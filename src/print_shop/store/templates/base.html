@@ -1,0 +1,125 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}
+        Our Site
+      {% endblock title %}
+    </title>
+    {% tailwind_css %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotateY(0deg);
+            }
+
+            100% {
+                transform: rotateY(360deg);
+            }
+        }
+
+        .logo-spin {
+            animation: spin 5s linear infinite;
+            transform-style: preserve-3d;
+        }
+    </style>
+    {% load static %}
+  </head>
+  <body class="flex flex-col min-h-screen">
+    <!-- Sticky Header -->
+    <header class="sticky top-0 bg-black text-white shadow-md z-50 w-full">
+      <!-- Logo placed independently on far-left -->
+      <div class="absolute top-4 -mt-6 left-4 z-50">
+        <img src="{% static 'images/logo-2-unsplash.png' %}"
+             alt="Logo"
+             class="h-16 sm:h-20 w-auto logo-spin" />
+      </div>
+      <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-center pl-24 sm:pl-0">
+        <nav class="flex flex-wrap justify-center gap-x-4 md:gap-x-6 lg:gap-x-8 text-sm md:text-base text-center">
+          <a href="{% url 'home' %}"
+             class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Home</a>
+          <a href="{% url 'custom-gallery' %}"
+             class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Catalog</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'cart' %}"
+               class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Cart</a>
+            <a href="{% url 'orders-list' %}"
+               class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Orders</a>
+            <a href="{% url 'view-profile' %}"
+               class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Profile</a>
+            <a href="{% url 'logout' %}"
+               class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Logout</a>
+            {% if user.is_staff %}
+              <a href="{% url 'user-profile-list' %}"
+                 class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Manage Users</a>
+              <a href="{% url 'admin_dashboard' %}"
+                 class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Admin</a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'login' %}"
+               class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Login</a>
+            <a href="{% url 'register' %}"
+               class="px-2 py-1.5 rounded hover:bg-blue-500 transition">Register</a>
+          {% endif %}
+        </nav>
+      </div>
+      {% if messages %}
+        <div class="mb-6 mx-auto w-1/2">
+          {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}bg-green-600/50 border-green-400{% elif message.tags == 'error' %}bg-red-600/50 border-red-400{% else %}bg-blue-600/50 border-blue-400{% endif %} border text-white px-6 py-4 rounded-lg mb-4">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </header>
+    <!-- Main Content -->
+    <main class="flex-grow">
+      <div class="container mx-auto px-4 py-8">
+        {% block content %}
+          <h1 class="text-3xl font-bold mb-6">Welcome to our website</h1>
+        {% endblock content %}
+      </div>
+    </main>
+    <!-- Sticky Footer -->
+    <footer class="sticky bottom-0 bg-black text-white py-2 shadow-inner z-40">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center">
+          <!-- Newsletter -->
+          <div>
+            <h2 class="text-lg font-semibold mb-2">Newsletter</h2>
+            <p class="text-gray-400 text-sm">Stay updated with our latest news and offers</p>
+          </div>
+          <!--Email Form -->
+          <div class="flex">
+            <input type="email"
+                   placeholder="Your email address"
+                   class="px-4 py-2 rounded-l bg-gray-800 text-white focus:outline-none" />
+            <button class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-r text-white transition duration-300">Subscribe</button>
+          </div>
+        </div>
+        <div class="mt-6 text-center text-sm text-gray-400">
+          <p>© {% now "Y" %} 3D Print Store. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.5.0/decimal.min.js"
+            integrity="sha512-zSdNRgc1pHbY0WW2GUugq5Z3vs4JPmMatHp73oxcpGbxlq3guygwnuHYW1XXGWsmYKvcBPCUiZ4yAsVgAnTwxw=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"></script>
+  </body>
+</html>

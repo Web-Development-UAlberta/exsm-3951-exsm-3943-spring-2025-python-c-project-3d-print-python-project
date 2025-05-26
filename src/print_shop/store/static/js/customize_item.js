@@ -1,0 +1,352 @@
+/**
+ * Customize Item JS
+ * Handles the dynamic functionality for the custom item form
+ * Uses shared functionality from order_item.js
+ */
+
+/**
+ * Update form based on selected value.
+ */
+function updateFormState(selectedValue) {
+  const filamentContainer = document.getElementById(
+    "filament-select-container"
+  );
+  const filamentSelect = document.getElementById("filament-select");
+  const errorMessage = document.getElementById("filament-error");
+  const addToCartButton = document.querySelector('button[type="submit"]');
+
+  if (selectedValue) {
+    if (filamentContainer) {
+      filamentContainer.classList.remove("hidden");
+    }
+    if (filamentSelect) {
+      filamentSelect.required = true;
+    }
+    if (errorMessage) {
+      errorMessage.classList.add("hidden");
+    }
+    if (addToCartButton) {
+      addToCartButton.disabled = !filamentSelect || !filamentSelect.value;
+    }
+  } else {
+    if (filamentContainer) {
+      filamentContainer.classList.add("hidden");
+    }
+    if (filamentSelect) {
+      filamentSelect.required = false;
+      filamentSelect.value = "";
+    }
+    if (errorMessage) {
+      errorMessage.classList.remove("hidden");
+    }
+    if (addToCartButton) {
+      addToCartButton.disabled = true;
+    }
+    updatePriceDisplay(null);
+  }
+  updateFilamentErrorVisibility();
+}
+
+/**
+ * Calculate the estimated price based on current selections
+ * Uses the shared calculateItemPrice function from order_item.js
+ */
+async function calculatePrice() {
+  try {
+    let modelId = document.querySelector('input[name="Model"]')?.value;
+    if (!modelId) {
+      modelId = document.getElementById("model-id")?.value;
+    }
+
+    const filamentSelect = document.getElementById("filament-select");
+    const infillInput = document.querySelector(".infill-range");
+    const quantityInput = document.querySelector(".quantity-input");
+    const errorMessage = document.getElementById("price-error");
+    const infillValueRaw = infillInput?.value;
+    const quantityValueRaw = quantityInput?.value;
+    let infillValue, quantityValue;
+    try {
+      infillValue = new Decimal(infillValueRaw || "0");
+      quantityValue = new Decimal(quantityValueRaw || "1");
+    } catch (err) {
+      updatePriceDisplay(null);
+      return;
+    }
+
+    if (
+      !modelId ||
+      !filamentSelect?.value ||
+      infillValue.isZero() ||
+      quantityValue.isZero()
+    ) {
+      updatePriceDisplay(null);
+      return;
+    }
+
+    updatePriceDisplay("loading");
+
+    try {
+      const data = await calculateItemPrice({
+        modelId,
+        filamentId: filamentSelect.value,
+        infill: infillValue.toString(),
+        quantity: quantityValue.toString(),
+      });
+
+      if (data.status === "success") {
+        updatePriceDisplay(data.price);
+        const inventoryIdInput = document.getElementById("inventory-id");
+        if (inventoryIdInput && data.inventory_id) {
+          inventoryIdInput.value = data.inventory_id;
+        }
+        if (errorMessage) {
+          errorMessage.classList.add("hidden");
+        }
+      } else {
+        const errorMsg = data.message || "Error calculating price";
+        throw new Error(errorMsg);
+      }
+    } catch (error) {
+      updatePriceDisplay(null);
+
+      if (errorMessage) {
+        errorMessage.textContent = error.message || "Error calculating price";
+        errorMessage.classList.remove("hidden");
+      }
+    }
+  } catch (error) {
+    updatePriceDisplay(null);
+  }
+}
+
+/**
+ * Debounced version of calculatePrice
+ */
+const debouncedCalculatePrice = debounce(calculatePrice, 300);
+window.debouncedCalculatePrice = debouncedCalculatePrice;
+
+/**
+ * Handle material selection change
+ * Fetches available filaments for the selected material and updates the UI
+ */
+async function handleMaterialChange(event) {
+  try {
+    const modelId = document.querySelector('input[name="Model"]')?.value;
+    const materialId = event.target.value;
+    const filamentSelect = document.getElementById("filament-select");
+
+    if (!modelId || !materialId) {
+      updateFormState(false);
+      return;
+    }
+
+    if (filamentSelect) {
+      filamentSelect.innerHTML = '<option value="">Loading colors...</option>';
+      filamentSelect.disabled = true;
+    }
+
+    const data = await fetchFilaments(modelId, materialId);
+    if (!filamentSelect) return;
+    filamentSelect.innerHTML = '<option value="">Select a color</option>';
+    if (
+      data.status === "success" &&
+      data.filaments &&
+      data.filaments.length > 0
+    ) {
+      data.filaments.forEach((filament) => {
+        const option = new Option(
+          `${filament.color_code} - ${filament.name}`,
+          filament.id,
+          false,
+          false
+        );
+        option.dataset.color = filament.color_code;
+        filamentSelect.add(option);
+      });
+
+      filamentSelect.disabled = false;
+      updateFormState(true);
+      updateColorSwatch(filamentSelect);
+      if (filamentSelect.value) {
+        debouncedCalculatePrice();
+      }
+    } else {
+      throw new Error(
+        data.message || "No filaments available for the selected material"
+      );
+    }
+  } catch (error) {
+    const filamentSelect = document.getElementById("filament-select");
+    if (filamentSelect) {
+      filamentSelect.innerHTML =
+        '<option value="">Error loading colors</option>';
+      filamentSelect.disabled = false;
+    }
+    updateFormState(false);
+
+    const errorMessage = document.getElementById("price-error");
+    if (errorMessage) {
+      errorMessage.textContent =
+        error.message || "Error loading material options";
+      errorMessage.classList.remove("hidden");
+    }
+  }
+}
+
+/**
+ * Update the visibility of the filament error message
+ */
+function updateFilamentErrorVisibility() {
+  const errorMessage = document.getElementById("filament-error");
+  const filamentSelect = document.getElementById("filament-select");
+  if (!errorMessage) return;
+  const hasSelection = filamentSelect && filamentSelect.value;
+  if (hasSelection) {
+    errorMessage.classList.add("hidden");
+  } else {
+    errorMessage.classList.remove("hidden");
+  }
+}
+
+/**
+ * Initialize the page when DOM is fully loaded
+ */
+function initializePage() {
+  const materialSelect = document.getElementById("material-select");
+  const filamentSelect = document.getElementById("filament-select");
+  const infillRange = document.querySelector(".infill-range");
+  const infillValue = document.getElementById("infill-value");
+  const quantityInput = document.querySelector(".quantity-input");
+  const form = document.querySelector("form");
+
+  updateFormState(materialSelect.value !== "");
+
+  const handleFilamentChange = (e) => {
+    updateColorSwatch(e.target);
+    updateFilamentErrorVisibility();
+    debouncedCalculatePrice();
+
+    const addToCartButton = document.querySelector('button[type="submit"]');
+    if (addToCartButton) {
+      addToCartButton.disabled = !e.target.value;
+    }
+  };
+
+  const handleQuantityChange = (e) => {
+    debouncedCalculatePrice();
+  };
+
+  if (infillRange) {
+    updateInfillDisplay(infillRange.value);
+  }
+
+  try {
+    if (materialSelect) {
+      materialSelect.addEventListener("change", handleMaterialChange);
+    }
+
+    if (filamentSelect) {
+      filamentSelect.addEventListener("change", handleFilamentChange);
+    }
+
+    if (infillRange) {
+      infillRange.addEventListener("input", (e) => {
+        updateInfillDisplay(e.target.value);
+        debouncedCalculatePrice();
+      });
+    }
+
+    if (quantityInput) {
+      quantityInput.addEventListener("input", handleQuantityChange);
+    }
+
+    if (form) {
+      form.addEventListener("submit", handleFormSubmit);
+    }
+  } catch (error) {
+    alert("An error occurred while initializing the page.");
+  }
+
+  window._eventHandlers = {
+    materialSelect: { element: materialSelect, handler: handleMaterialChange },
+    filamentSelect: { element: filamentSelect, handler: handleFilamentChange },
+    infillRange: { element: infillRange, handler: handleInfillChange },
+    quantityInput: { element: quantityInput, handler: handleQuantityChange },
+  };
+
+  if (materialSelect.value) {
+    handleMaterialChange({ target: materialSelect });
+  }
+
+  if (materialSelect.value && filamentSelect.value) {
+    debouncedCalculatePrice();
+  }
+
+  return () => {
+    Object.values(window._eventHandlers || {}).forEach(
+      ({ element, handler }) => {
+        if (element && handler) {
+          element.removeEventListener("input", handler);
+          element.removeEventListener("change", handler);
+        }
+      }
+    );
+    delete window._eventHandlers;
+  };
+}
+
+/**
+ * Handle form submission via AJAX
+ */
+async function handleFormSubmit(event) {
+  event.preventDefault();
+
+  const form = event.target;
+  const formData = new FormData(form);
+  const submitButton = form.querySelector('button[type="submit"]');
+  const originalButtonText = submitButton.textContent;
+
+  const priceElement = document.getElementById("price-value");
+  if (priceElement && priceElement.textContent !== "--") {
+    formData.append("calculated_price", priceElement.textContent);
+  }
+
+  try {
+    submitButton.disabled = true;
+    submitButton.textContent = "Adding to Cart...";
+
+    const response = await fetch(form.action, {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    });
+
+    if (response.redirected) {
+      window.location.href = response.url;
+    } else {
+      const data = await response.json();
+      if (data.status === "success") {
+        window.location.href = data.redirect_url || "/cart/";
+      } else {
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "text-red-500 text-sm mt-2";
+        errorDiv.textContent = data.message || "Error adding item to cart";
+        const existingError = form.querySelector(".form-error");
+        if (existingError) {
+          existingError.remove();
+        }
+
+        form.appendChild(errorDiv);
+      }
+    }
+  } catch (error) {
+    alert("An error occurred while adding the item to your cart.");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = originalButtonText;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initializePage);
