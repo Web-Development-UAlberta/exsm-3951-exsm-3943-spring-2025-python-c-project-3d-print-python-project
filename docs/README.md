@@ -64,6 +64,19 @@ git pull origin main
 
 ```bash
 python -m venv .venv
+```
+
+#### ▶️ Activate the Environment
+
+**Windows (Git Bash):**
+
+```bash
+source .venv/Scripts/activate
+```
+
+**macOS / Linux:**
+
+```bash
 source .venv/bin/activate
 ```
 
