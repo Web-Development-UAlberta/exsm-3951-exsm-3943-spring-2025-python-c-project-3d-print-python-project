@@ -1,11 +1,16 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block content %}
-  <h1>Delete Material</h1>
-  <p>Are you sure you want to delete "{{ material.Name }}"?</p>
-  <form method="POST">
-    {% csrf_token %}
-    <button type="submit">Confirm Delete</button>
-    <a href="{% url 'materials-list' %}">Cancel</a>
-  </form>
-{% endblock %}
+  <div class="max-w-md mx-auto my-12 p-8 bg-white rounded-lg shadow-lg text-center">
+    <h1 class="text-2xl font-bold mb-6">Delete Material</h1>
+    <p class="mb-8">
+      Are you sure you want to delete <strong>{{ material.Name }}</strong>?
+    </p>
+    <form method="post" class="flex justify-center gap-4">
+      {% csrf_token %}
+      <button type="submit"
+              class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded font-medium">Delete</button>
+      <a href="{% url 'materials-list' %}"
+         class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded font-medium border border-gray-300">Cancel</a>
+    </form>
+  </div>
+{% endblock content %}
