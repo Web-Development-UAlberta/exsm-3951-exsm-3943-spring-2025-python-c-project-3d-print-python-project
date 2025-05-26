@@ -103,9 +103,23 @@ python manage.py tailwind install
 
 <!-- Add Seed data instructions here -->
 
-## 🧪Frontend Testing Setup
+## 🧪 Testing
 
-<!-- Add Testing instructions here -->
+To run the test suite and ensure everything is working correctly, navigate to the Django project root:
+
+```bash
+cd src/print_shop
+```
+
+Then run:
+
+```bash
+python manage.py test
+```
+
+This command will automatically discover and execute all unit tests across your Django app.
+
+Make sure your dependencies are installed before running tests.
 
 ## ▶️ Running the Application
 
