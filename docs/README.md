@@ -89,6 +89,8 @@ DATABASE_URL=mysql://myuser:mypassword@localhost:3306/print_shop
 
 ### 6. Navigate to the Django Project Root
 
+All `python manage.py` commands should be run from the Django project root.
+
 ```bash
 cd src/print_shop
 ```
@@ -99,9 +101,75 @@ cd src/print_shop
 python manage.py tailwind install
 ```
 
-## 🌱 Seed the Database
+## 🌱 Seed the Database (Optional for Development)
 
-<!-- Add Seed data instructions here -->
+For development you can use load the database with two fixtures `initial_seed.json` and `order_seed.json` to get started. 3D models and thumbnails are required to be downloaded and placed in the correct directories.
+
+### 1. 📥 Download: [3DBenchy.stl](https://github.com/CreativeTools/3DBenchy)
+
+### 2. 🖼️ Download and rename the image to `benchy.png`: [3DBenchy Image](http://www.3dbenchy.com/wp-content/uploads/2018/01/3DBenchy-LowPoly-Wireframe-Dark-Side-view-3DBenchy.com_.png)
+
+### 3. 📥 Download: [Infinity_cube_2.stl](https://www.thingiverse.com/thing:6589139/files)
+
+### 4. 🖼️ Download and rename the image to `infinity_cube.png`: [Infinity Cube Image](https://cdn.thingiverse.com/assets/0a/75/b0/f6/7c/large_display_1b212582-9c97-4080-9d24-5190f5188e01.png)
+
+### 5. 📂 Put models in `src/print_shop/media/models`
+
+### 6. 📂 Put thumbnails in `src/print_shop/media/thumbnails`
+
+### 7. 🚮 If you have existing data in your database you can **flush** it
+
+```bash
+python manage.py flush
+```
+
+### 8. 🌱 Seed initial 3D models
+
+```bash
+python manage.py initial_seed
+```
+
+### 9. 🧾 Seed order data:
+
+```bash
+python manage.py order_seed
+```
+
+### 📝 Custom Fixtures
+
+If you want to create or update your own fixtures:
+
+- Fixtures are stored in `src/print_shop/store/fixtures/`
+- Use JSON format with Django model fields
+- See [FIXTURE-Examples.md](FIXTURE-Examples.md) for examples
+
+#### 1. Dump the entire database:
+
+```bash
+python manage.py dumpdata > store/fixtures/complete_store_data.json
+```
+
+#### 2. Flush the database to prevent any conflicts:
+
+```bash
+python manage.py flush
+```
+
+#### 3. Load the entire database after you make the desired changes:
+
+```bash
+python manage.py loaddata store/fixtures/complete_store_data.json
+```
+
+## 🛠️ Create a superuser
+
+You will need an initial superuser to access the admin interface within the application.
+
+```bash
+python manage.py createsuperuser
+```
+
+Follow the prompts to create a superuser.
 
 ## 🧪 Testing
 
@@ -144,6 +212,14 @@ Starting development server at http://127.0.0.1:8000/
 👉 To open the site, press Ctrl + Click on the URL or paste it into your browser.
 
 🛑 To stop the server, use CTRL + BREAK (or CTRL + C on macOS/Linux).
+
+If you did not create a superuser during the setup process, you can create one by running the following command:
+
+```bash
+python manage.py createsuperuser
+```
+
+Follow the prompts to create a superuser as it will be required to access the admin interface.
 
 ## 🙌 Credits & Resources
 
