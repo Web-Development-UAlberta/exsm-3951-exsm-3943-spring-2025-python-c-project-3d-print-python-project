@@ -1,9 +1,33 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 {% block content %}
-  <h1>{{ form.instance.pk|yesno:"Edit Model,Add New Model" }}</h1>
-  <form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit">{{ form.instance.pk|yesno:"Save Changes,Create Model" }}</button>
-  </form>
+  <div class="max-w-xl mx-auto my-12 p-8 bg-white rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold mb-6 text-center">
+      {% if form.instance.pk %}
+        Edit Model
+      {% else %}
+        Add New Model
+      {% endif %}
+    </h1>
+    <form method="post"
+          enctype="multipart/form-data"
+          class="flex flex-col gap-6">
+      {% csrf_token %}
+      <div class="[&_input]:border [&_input]:border-gray-300 [&_input]:rounded [&_input]:p-2 [&_input]:w-full [&_select]:border [&_select]:border-gray-300 [&_select]:rounded [&_select]:p-2 [&_select]:w-full [&_textarea]:border [&_textarea]:border-gray-300 [&_textarea]:rounded [&_textarea]:p-2 [&_textarea]:w-full [&_input[type=file]]:border [&_input[type=file]]:border-gray-300 [&_input[type=file]]:rounded [&_input[type=file]]:p-2 [&_input[type=file]]:w-full [&_label]:font-medium [&_label]:text-gray-700 [&_label]:mb-1 [&_label]:block">
+        {{ form|crispy }}
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-medium">
+          {% if form.instance.pk %}
+            Save Changes
+          {% else %}
+            Create Model
+          {% endif %}
+        </button>
+        <a href="{% url 'models-list' %}"
+           class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded font-medium border border-gray-300">Cancel</a>
+      </div>
+    </form>
+  </div>
 {% endblock content %}

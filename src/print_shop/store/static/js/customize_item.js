@@ -1,4 +1,10 @@
 /**
+ * Customize Item JS
+ * Handles the dynamic functionality for the custom item form
+ * Uses shared functionality from order_item.js
+ */
+
+/**
  * Update form based on selected value.
  */
 function updateFormState(selectedValue) {
@@ -39,56 +45,6 @@ function updateFormState(selectedValue) {
     updatePriceDisplay(null);
   }
   updateFilamentErrorVisibility();
-}
-
-/**
- * Update the visibility of the filament error message
- */
-function updateFilamentErrorVisibility() {
-  const errorMessage = document.getElementById("filament-error");
-  const filamentSelect = document.getElementById("filament-select");
-  if (!errorMessage) return;
-  const hasSelection = filamentSelect && filamentSelect.value;
-  if (hasSelection) {
-    errorMessage.classList.add("hidden");
-  } else {
-    errorMessage.classList.remove("hidden");
-  }
-}
-
-/**
- * Update the price display with smooth transitions
- */
-function updatePriceDisplay(price) {
-  const priceElement = document.getElementById("price-value");
-  const priceContainer = document.getElementById("price-estimate");
-  const errorMessage = document.getElementById("price-error");
-
-  if (!priceElement || !priceContainer) return;
-  priceContainer.style.opacity = "0.5";
-  priceContainer.style.transition = "opacity 150ms ease-in-out";
-  if (errorMessage) {
-    errorMessage.classList.add("hidden");
-  }
-  setTimeout(() => {
-    if (price === null) {
-      priceElement.textContent = "--";
-      priceContainer.classList.remove("text-green-600", "font-bold");
-    } else if (price === "loading") {
-      priceElement.textContent = "Calculating...";
-      priceContainer.classList.remove("text-green-600", "font-bold");
-    } else {
-      try {
-        const formattedPrice = new Decimal(price).toFixed(2);
-        priceElement.textContent = formattedPrice;
-        priceContainer.classList.add("text-green-600", "font-bold");
-      } catch (err) {
-        priceElement.textContent = price;
-        priceContainer.classList.remove("text-green-600", "font-bold");
-      }
-    }
-    priceContainer.style.opacity = "1";
-  }, 150);
 }
 
 /**
@@ -148,11 +104,9 @@ async function calculatePrice() {
         }
       } else {
         const errorMsg = data.message || "Error calculating price";
-        console.error("Error in response:", errorMsg);
         throw new Error(errorMsg);
       }
     } catch (error) {
-      console.error("Error calculating price:", error);
       updatePriceDisplay(null);
 
       if (errorMessage) {
@@ -161,7 +115,6 @@ async function calculatePrice() {
       }
     }
   } catch (error) {
-    console.error("Error in calculatePrice:", error);
     updatePriceDisplay(null);
   }
 }
@@ -191,16 +144,8 @@ async function handleMaterialChange(event) {
       filamentSelect.innerHTML = '<option value="">Loading colors...</option>';
       filamentSelect.disabled = true;
     }
-    const response = await fetch(
-      `/store/api/model/${modelId}/material/${materialId}/filaments/`
-    );
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `HTTP error! status: ${response.status}`
-      );
-    }
-    const data = await response.json();
+
+    const data = await fetchFilaments(modelId, materialId);
     if (!filamentSelect) return;
     filamentSelect.innerHTML = '<option value="">Select a color</option>';
     if (
@@ -218,6 +163,7 @@ async function handleMaterialChange(event) {
         option.dataset.color = filament.color_code;
         filamentSelect.add(option);
       });
+
       filamentSelect.disabled = false;
       updateFormState(true);
       updateColorSwatch(filamentSelect);
@@ -230,7 +176,6 @@ async function handleMaterialChange(event) {
       );
     }
   } catch (error) {
-    console.error("Error in handleMaterialChange:", error);
     const filamentSelect = document.getElementById("filament-select");
     if (filamentSelect) {
       filamentSelect.innerHTML =
@@ -249,6 +194,21 @@ async function handleMaterialChange(event) {
 }
 
 /**
+ * Update the visibility of the filament error message
+ */
+function updateFilamentErrorVisibility() {
+  const errorMessage = document.getElementById("filament-error");
+  const filamentSelect = document.getElementById("filament-select");
+  if (!errorMessage) return;
+  const hasSelection = filamentSelect && filamentSelect.value;
+  if (hasSelection) {
+    errorMessage.classList.add("hidden");
+  } else {
+    errorMessage.classList.remove("hidden");
+  }
+}
+
+/**
  * Initialize the page when DOM is fully loaded
  */
 function initializePage() {
@@ -258,13 +218,6 @@ function initializePage() {
   const infillValue = document.getElementById("infill-value");
   const quantityInput = document.querySelector(".quantity-input");
   const form = document.querySelector("form");
-
-  if (!materialSelect || !filamentSelect) {
-    console.error(
-      "Required elements (materialSelect or filamentSelect) not found"
-    );
-    return;
-  }
 
   updateFormState(materialSelect.value !== "");
 
@@ -311,7 +264,7 @@ function initializePage() {
       form.addEventListener("submit", handleFormSubmit);
     }
   } catch (error) {
-    console.error("Error adding event listeners:", error);
+    alert("An error occurred while initializing the page.");
   }
 
   window._eventHandlers = {
@@ -374,7 +327,7 @@ async function handleFormSubmit(event) {
       window.location.href = response.url;
     } else {
       const data = await response.json();
-      if (data.success) {
+      if (data.status === "success") {
         window.location.href = data.redirect_url || "/cart/";
       } else {
         const errorDiv = document.createElement("div");
@@ -389,7 +342,6 @@ async function handleFormSubmit(event) {
       }
     }
   } catch (error) {
-    console.error("Error:", error);
     alert("An error occurred while adding the item to your cart.");
   } finally {
     submitButton.disabled = false;

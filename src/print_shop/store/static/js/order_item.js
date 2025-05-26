@@ -28,7 +28,7 @@ function updatePriceDisplay(price) {
   const priceError = document.getElementById("price-error");
 
   if (!priceValue || !priceEstimate) {
-    console.error("Required price display elements not found");
+    alert("Error loading page");
     return;
   }
 
@@ -91,6 +91,33 @@ function handleInfillChange(e) {
 }
 
 /**
+ * Update the infill slider based on model selection
+ */
+function updateInfillSlider(modelSelect) {
+  if (!modelSelect) return;
+
+  const infillRange =
+    document.querySelector(".infill-range") ||
+    document.getElementById("infill-percentage");
+  if (!infillRange) return;
+
+  const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+  if (selectedOption && selectedOption.dataset.baseInfill) {
+    try {
+      const baseInfillDecimal = new Decimal(selectedOption.dataset.baseInfill);
+      const baseInfill = baseInfillDecimal.times(100).round().toNumber() || 30;
+      infillRange.value = baseInfill;
+      updateInfillDisplay(baseInfill);
+      infillRange.disabled = false;
+    } catch (error) {
+      infillRange.value = 30;
+      updateInfillDisplay(30);
+      infillRange.disabled = false;
+    }
+  }
+}
+
+/**
  * Fetches filaments for a given model and material
  * from the custom API endpoint
  */
@@ -143,7 +170,7 @@ async function calculateItemPrice(config) {
     try {
       errorData = JSON.parse(errorText);
     } catch (e) {
-      console.error("Failed to parse error response as JSON");
+      alert("Failed to fetch price");
     }
     const errorMessage =
       errorData.message || `HTTP error! status: ${response.status}`;
